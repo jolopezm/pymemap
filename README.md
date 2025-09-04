@@ -4,41 +4,39 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ## 📱 Funcionalidades Principales
 
--   **Geolocalización**: Encuentra PYMEs cercanas basándose en tu ubicación actual
--   **Motor de búsqueda**: Busca servicios específicos por categorías y filtros
--   **Sistema de calificaciones**: Califica y consulta reseñas de otros usuarios
--   **Solicitud de servicios**: Contrata servicios directamente desde la app
--   **Wallet integrada**: Sistema de pagos propio para transacciones seguras
--   **Multi-plataforma**: Disponible en iOS, Android y web
+- **Geolocalización**: Encuentra PYMEs cercanas basándose en tu ubicación actual
+- **Motor de búsqueda**: Busca servicios específicos por categorías y filtros
+- **Sistema de calificaciones**: Califica y consulta reseñas de otros usuarios
+- **Solicitud de servicios**: Contrata servicios directamente desde la app
+- **Wallet integrada**: Sistema de pagos propio para transacciones seguras
+- **Multi-plataforma**: Disponible en iOS, Android y web
 
 ## 🛠️ Stack Tecnológico
 
 ### Backend
-
--   **Framework**: FastAPI 0.116.1
--   **Base de datos**: MongoDB con Motor (driver asíncrono)
--   **Autenticación**: JWT con python-jose
--   **Seguridad**: Bcrypt para hashing de contraseñas
--   **Variables de entorno**: python-dotenv
--   **Servidor**: Uvicorn
--   **ORM**: Pydantic para validación de datos
+- **Framework**: FastAPI 0.116.1
+- **Base de datos**: MongoDB con Motor (driver asíncrono)
+- **Autenticación**: JWT con python-jose
+- **Seguridad**: Bcrypt para hashing de contraseñas
+- **Variables de entorno**: python-dotenv
+- **Servidor**: Uvicorn
+- **ORM**: Pydantic para validación de datos
 
 ### Frontend (Mobile & Web)
-
--   **Framework**: Expo ~53.0.20 con React Native 0.79.5
--   **React**: 19.0.0
--   **Routing**: Expo Router ~5.1.4
--   **Navegación**: React Navigation (screens & safe-area-context)
--   **HTTP Client**: Axios 1.11.0
--   **Storage**: AsyncStorage para persistencia local
--   **Desarrollo**: TypeScript 5.8.3
+- **Framework**: Expo ~53.0.20 con React Native 0.79.5
+- **Lenguaje**: JavaScript
+- **React**: 19.0.0
+- **Routing**: Expo Router ~5.1.4
+- **Navegación**: React Navigation (screens & safe-area-context)
+- **HTTP Client**: Axios 1.11.0
+- **Storage**: AsyncStorage para persistencia local
 
 ### DevOps & Tools
-
--   **Linting**: ESLint con configuración Expo y Prettier
--   **Formateo**: Prettier
--   **CORS**: Configurado para desarrollo cross-origin
--   **SSL**: Certificados SSL con certifi
+- **Linting**: ESLint con configuración Expo y Prettier
+- **Formateo**: Prettier
+- **CORS**: Configurado para desarrollo cross-origin
+- **SSL**: Certificados SSL con certifi
+=======
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -73,15 +71,14 @@ pymemap/
 ## 🎯 Plataformas Objetivo
 
 ### Móvil (Clientes y Negocios)
-
--   **iOS**: App nativa via Expo
--   **Android**: App nativa via Expo
--   Funcionalidades completas de búsqueda, contratación y pagos
+- **iOS**: App nativa via Expo
+- **Android**: App nativa via Expo
+- Funcionalidades completas de búsqueda, contratación y pagos
 
 ### Web
+- **Clientes**: Página informativa
+- **Negocios**: Panel de administración completo
 
--   **Clientes**: Página informativa
--   **Negocios**: Panel de administración completo
 
 ## 🚀 Instalación y Configuración
 
