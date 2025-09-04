@@ -36,6 +36,7 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Formateo**: Prettier
 - **CORS**: Configurado para desarrollo cross-origin
 - **SSL**: Certificados SSL con certifi
+=======
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -78,9 +79,11 @@ pymemap/
 - **Clientes**: Página informativa
 - **Negocios**: Panel de administración completo
 
+
 ## 🚀 Instalación y Configuración
 
 ### Backend
+
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -89,6 +92,7 @@ uvicorn app.main:app --reload
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -101,6 +105,7 @@ npm run web:dev
 ## 🔧 Variables de Entorno
 
 Crear archivo `.env` en el directorio backend:
+
 ```env
 MONGO_URI=mongodb+srv://tu-conexion-mongodb
 JWT_SECRET_KEY=tu-clave-secreta
