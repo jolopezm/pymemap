@@ -41,30 +41,29 @@ export function validateBirthdate(birthdate) {
         return { valid: false, error: 'La fecha de nacimiento es requerida' }
     }
 
-    // Verificar formato ISO (YYYY-MM-DD) que viene del DatePicker
-    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
+    // Verificar formatos aceptados: DD/MM/YYYY, DD-MM-YYYY o YYYY-MM-DD
     const ddmmyyyyRegex = /^\d{2}\/\d{2}\/\d{4}$/
     const ddmmyyyyDashRegex = /^\d{2}-\d{2}-\d{4}$/
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
 
     if (
-        !isoDateRegex.test(birthdate) &&
         !ddmmyyyyRegex.test(birthdate) &&
-        !ddmmyyyyDashRegex.test(birthdate)
+        !ddmmyyyyDashRegex.test(birthdate) &&
+        !isoDateRegex.test(birthdate)
     ) {
         return {
             valid: false,
-            error: 'Formato de fecha inválido',
+            error: 'Formato de fecha inválido. Use DD/MM/YYYY',
         }
     }
 
-    // Verificar que la fecha sea válida y no sea futura
+    // Convertir a objeto Date para validación
     let dateToCheck
-    if (isoDateRegex.test(birthdate)) {
-        dateToCheck = new Date(birthdate)
-    } else {
-        // Convertir DD/MM/YYYY o DD-MM-YYYY a formato ISO
+    if (ddmmyyyyRegex.test(birthdate) || ddmmyyyyDashRegex.test(birthdate)) {
         const parts = birthdate.split(/[\/\-]/)
-        dateToCheck = new Date(parts[2], parts[1] - 1, parts[0])
+        dateToCheck = new Date(parts[2], parts[1] - 1, parts[0]) // año, mes-1, día
+    } else {
+        dateToCheck = new Date(birthdate) // formato ISO
     }
 
     if (isNaN(dateToCheck.getTime())) {
@@ -78,7 +77,7 @@ export function validateBirthdate(birthdate) {
         }
     }
 
-    // Verificar edad mínima (ej: 13 años)
+    // Verificar edad mínima (13 años)
     const minDate = new Date()
     minDate.setFullYear(minDate.getFullYear() - 13)
     if (dateToCheck > minDate) {

@@ -1,22 +1,16 @@
 import React, { useState } from 'react'
-import {
-    View,
-    Text,
-    Button,
-    Pressable,
-    TextInput,
-    Platform,
-} from 'react-native'
+import { View, Text, Pressable, TextInput, Modal } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sing-in'
 import { User } from '../classes/user'
-import DatePicker from '../components/DatePicker'
 import globalStyles from '../styles/global'
+import { Calendar } from '../components/calendar'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
     const [confirmPassword, setConfirmPassword] = useState('')
     const [passwordVisibility, setPasswordVisibility] = useState(true)
+    const [modalVisible, setModalVisible] = useState(false)
     const [error, setError] = useState('')
     const router = useRouter()
 
@@ -116,12 +110,51 @@ export default function SignIn() {
                 </View>
             )}
 
-            <DatePicker
-                value={user.birthdate}
-                onChange={date => updateUser('birthdate', date)}
-                placeholder="Seleccionar fecha de nacimiento"
-                style={globalStyles.textField}
-            />
+            <Pressable onPress={() => setModalVisible(true)}>
+                <TextInput
+                    placeholder="Fecha de nacimiento (DD/MM/YYYY)"
+                    value={user.birthdate}
+                    style={globalStyles.textField}
+                    editable={false}
+                    pointerEvents="none"
+                />
+            </Pressable>
+
+            <Modal
+                animationType="slide"
+                transparent={false}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(!modalVisible)
+                }}
+            >
+                <View style={globalStyles.container}>
+                    <Text style={globalStyles.title}>
+                        Seleccionar fecha de nacimiento
+                    </Text>
+                    <Calendar
+                        selected={user.birthdate || null}
+                        onDateSelect={date => {
+                            const formattedDate =
+                                date.toLocaleDateString('es-ES')
+                            updateUser('birthdate', formattedDate)
+                            setModalVisible(false)
+                        }}
+                    />
+                    <Pressable
+                        style={globalStyles.button}
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <Text style={{ color: '#fff' }}>Seleccionar</Text>
+                    </Pressable>
+                    <Pressable
+                        style={[globalStyles.button, globalStyles.button.red]}
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <Text style={{ color: '#fff' }}>Cerrar</Text>
+                    </Pressable>
+                </View>
+            </Modal>
 
             {passwordVisibility ? (
                 <Pressable
@@ -135,10 +168,13 @@ export default function SignIn() {
                     style={[
                         globalStyles.button,
                         globalStyles.button.outlineBlack,
+                        {
+                            color: '#000',
+                        },
                     ]}
                     onPress={() => setPasswordVisibility(!passwordVisibility)}
                 >
-                    <Text style={{ color: '#000' }}>Ocultar contraseña</Text>
+                    <Text>Ocultar contraseña</Text>
                 </Pressable>
             )}
 
