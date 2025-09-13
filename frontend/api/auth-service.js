@@ -52,7 +52,15 @@ export async function getToken() {
 
 // Funcion para iniciar sesion
 export async function login(userData) {
-    const response = await axios.post(`${API_URL}/login`, userData)
+    const params = new URLSearchParams()
+    params.append('username', userData.email)
+    params.append('password', userData.password)
+
+    const response = await axios.post(`${API_URL}/login`, params.toString(), {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    })
 
     if (response.data.access_token) {
         await AsyncStorage.setItem('token', response.data.access_token)

@@ -1,47 +1,60 @@
-import React, { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
     View,
     Text,
-    Button,
     Pressable,
     TextInput,
     ActivityIndicator,
-    Alert,
 } from 'react-native'
-import { Link, useRouter } from 'expo-router'
+import { Link, useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import { handleLogin } from '../utils/handle-login'
+import { handleAutoLogin } from '../utils/auto-login' // Importar la nueva función
 import { User } from '../classes/user'
 import globalStyles from '../styles/global'
+import { Toast } from 'toastify-react-native'
 
-export default function Login({ title, onPress }) {
+export default function Login() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const params = useLocalSearchParams()
     const router = useRouter()
     const { login: authLogin } = useAuth()
+    const autoLoginAttempted = useRef(false) // Ref to track if auto-login was tried
 
-    const handleLoginPress = async () => {
+    useEffect(() => {
+        // Check if we have params and if we haven't tried to auto-login yet
+        if (params.email && params.password && !autoLoginAttempted.current) {
+            // Mark that we are attempting auto-login
+            autoLoginAttempted.current = true
+            handleAutoLogin(params, setLoading, setError, authLogin, router)
+        }
+    }, [params, authLogin, router]) // Keep dependencies, but the ref prevents re-triggering
+
+    const handleLoginPress = async (
+        email = user.email,
+        password = user.password
+    ) => {
         setError('')
         setLoading(true)
 
         try {
-            // Usar la función utilitaria para validar y hacer login
-            const result = await handleLogin(user.email, user.password)
+            const result = await handleLogin(email, password)
 
             if (result.success) {
-                // Si es exitoso, actualizar el contexto de autenticación
-                await authLogin(user.email, user.password)
+                await authLogin(email, password)
                 router.push('/home')
             } else {
-                // Si falla, mostrar el error
                 setError(result.error)
             }
         } catch (error) {
-            console.error('Error durante login:', error)
             setError('Error inesperado. Por favor intenta de nuevo.')
         } finally {
             setLoading(false)
+            if (error) {
+                Toast.error(error, { duration: 3000 })
+            }
         }
     }
 
