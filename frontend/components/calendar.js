@@ -1,35 +1,75 @@
 import { useState, useEffect } from 'react'
-import { View, Platform } from 'react-native'
 import DateTimePicker from 'react-native-ui-datepicker'
 
 export function Calendar({ selected, onDateSelect }) {
-    const [date, setDate] = useState(selected || new Date())
+    let today = new Date()
+    const [internalSelected, setInternalSelected] = useState(undefined)
 
-    // Actualizar fecha cuando cambie la prop selected
     useEffect(() => {
         if (selected) {
-            setDate(selected)
+            const [day, month, year] = selected.split('/').map(Number)
+            const dateObj = new Date(year, month - 1, day)
+            setInternalSelected(dateObj)
+        } else {
+            setInternalSelected(undefined)
         }
     }, [selected])
 
-    const handleDateChange = ({ date: newDate }) => {
-        setDate(newDate)
-        if (onDateSelect && newDate) {
-            onDateSelect(newDate)
-        }
-    }
-
     return (
-        <View>
-            <DateTimePicker
-                mode="single"
-                date={date}
-                onChange={handleDateChange}
-                locale="es"
-                timePicker={false}
-                maxDate={new Date()}
-                minDate={new Date(1900, 0, 1)}
-            />
-        </View>
+        <DateTimePicker
+            mode="single"
+            date={internalSelected}
+            onChange={({ date }) => {
+                setInternalSelected(date)
+                if (onDateSelect) onDateSelect(date)
+            }}
+            locale="es"
+            maxDate={today}
+            showOutsideDays={false}
+            styles={{
+                month_selector: {
+                    padding: 10,
+                    borderRadius: 5,
+                    backgroundColor: '#f0f0f0',
+                },
+                year_selector: {
+                    padding: 10,
+                    borderRadius: 5,
+                    backgroundColor: '#f0f0f0',
+                },
+                day: {
+                    margin: 2,
+                    borderRadius: 5,
+                    backgroundColor: '#f0f0f0',
+                },
+                month: {
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: 5,
+                },
+                year: {
+                    backgroundColor: '#e0e0e0',
+                    borderRadius: 5,
+                },
+                today: {
+                    borderColor: 'black',
+                    borderWidth: 1,
+                },
+                selected: {
+                    backgroundColor: 'black',
+                },
+                selected_label: {
+                    color: 'white',
+                },
+                disabled: {
+                    opacity: 0.5,
+                },
+                button_next: {
+                    backgroundColor: '#e0e0e0',
+                },
+                button_prev: {
+                    backgroundColor: '#e0e0e0',
+                },
+            }}
+        />
     )
 }

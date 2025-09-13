@@ -10,7 +10,6 @@ export async function handleSignIn({
     confirmPassword,
     birthdate,
 }) {
-    // Usar validación genérica
     const validation = validateSignUpData({
         rut,
         name,
@@ -31,11 +30,10 @@ export async function handleSignIn({
         const result = await createUser(newUser)
         return { success: true, user: newUser, data: result }
     } catch (error) {
-        console.error('Error completo en handleSignIn:', error)
-        console.error('Error response:', error.response?.data)
-        console.error('Error status:', error.response?.status)
+        //console.error('Error completo en handleSignIn:', error)
+        //console.error('Error response:', error.response?.data)
+        //console.error('Error status:', error.response?.status)
 
-        // Manejar errores específicos del backend
         if (error.response?.status === 400) {
             return {
                 success: false,

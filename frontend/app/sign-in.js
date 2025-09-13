@@ -2,9 +2,13 @@ import React, { useState } from 'react'
 import { View, Text, Pressable, TextInput, Modal } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sing-in'
+import { handleLogin } from '../utils/handle-login'
 import { User } from '../classes/user'
 import globalStyles from '../styles/global'
 import { Calendar } from '../components/calendar'
+import { Toast } from 'toastify-react-native'
+import { dateFormatter } from '../utils/date-formatter'
+import { rutFormatter } from '../utils/rut-formatter'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -35,21 +39,20 @@ export default function SignIn() {
             })
 
             if (result.success) {
-                router.push('/home')
-            } else {
-                console.error('Datos entregados por el usuario:', {
-                    rut: user.rut,
-                    name: user.name,
-                    email: user.email,
-                    password: user.password,
-                    confirmPassword,
-                    birthdate: user.birthdate,
+                router.push({
+                    pathname: '/login',
+                    params: {
+                        email: user.email,
+                        password: user.password,
+                    },
                 })
+            } else {
                 setError(result.error)
+                Toast.error(error, { duration: 3000 })
             }
         } catch (error) {
-            console.error('Error en handleSignInPress:', error)
             setError('Error al registrar usuario')
+            Toast.error(error, { duration: 3000 })
         }
     }
 
@@ -59,7 +62,8 @@ export default function SignIn() {
             <TextInput
                 placeholder="RUT"
                 value={user.rut}
-                onChangeText={value => updateUser('rut', value)}
+                maxLength={12}
+                onChangeText={value => updateUser('rut', rutFormatter(value))}
                 style={globalStyles.textField}
             />
 
@@ -134,12 +138,9 @@ export default function SignIn() {
                     </Text>
                     <Calendar
                         selected={user.birthdate || null}
-                        onDateSelect={date => {
-                            const formattedDate =
-                                date.toLocaleDateString('es-ES')
-                            updateUser('birthdate', formattedDate)
-                            setModalVisible(false)
-                        }}
+                        onDateSelect={date =>
+                            updateUser('birthdate', dateFormatter(date))
+                        }
                     />
                     <Pressable
                         style={globalStyles.button}
@@ -182,7 +183,6 @@ export default function SignIn() {
                 <Text style={{ color: '#fff' }}>Confirmar</Text>
             </Pressable>
 
-            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
             <Text style={{ marginTop: 10 }}>¿Ya estás registrado?</Text>
             <Pressable
                 style={globalStyles.button}

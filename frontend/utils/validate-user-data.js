@@ -1,9 +1,20 @@
-// Validaciones individuales
+export function validateRUT(rut) {
+    if (!rut) {
+        return { valid: false, error: 'El RUT es requerido' }
+    }
+    if (!/^\d{1,2}(\.\d{3}){2}-[\dkK]$/.test(rut)) {
+        return { valid: false, error: 'Formato de RUT inválido' }
+    }
+
+    return { valid: true }
+}
+
 export function validateEmail(email) {
     if (!email) {
         return { valid: false, error: 'El email es requerido' }
     }
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    // Añadimos .trim() para eliminar espacios
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
         return { valid: false, error: 'Formato de email inválido' }
     }
     return { valid: true }
@@ -41,7 +52,6 @@ export function validateBirthdate(birthdate) {
         return { valid: false, error: 'La fecha de nacimiento es requerida' }
     }
 
-    // Verificar formatos aceptados: DD/MM/YYYY, DD-MM-YYYY o YYYY-MM-DD
     const ddmmyyyyRegex = /^\d{2}\/\d{2}\/\d{4}$/
     const ddmmyyyyDashRegex = /^\d{2}-\d{2}-\d{4}$/
     const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
@@ -57,13 +67,12 @@ export function validateBirthdate(birthdate) {
         }
     }
 
-    // Convertir a objeto Date para validación
     let dateToCheck
     if (ddmmyyyyRegex.test(birthdate) || ddmmyyyyDashRegex.test(birthdate)) {
         const parts = birthdate.split(/[\/\-]/)
-        dateToCheck = new Date(parts[2], parts[1] - 1, parts[0]) // año, mes-1, día
+        dateToCheck = new Date(parts[2], parts[1] - 1, parts[0])
     } else {
-        dateToCheck = new Date(birthdate) // formato ISO
+        dateToCheck = new Date(birthdate)
     }
 
     if (isNaN(dateToCheck.getTime())) {
@@ -77,11 +86,10 @@ export function validateBirthdate(birthdate) {
         }
     }
 
-    // Verificar edad mínima (13 años)
     const minDate = new Date()
-    minDate.setFullYear(minDate.getFullYear() - 13)
+    minDate.setFullYear(minDate.getFullYear() - 18)
     if (dateToCheck > minDate) {
-        return { valid: false, error: 'Debes tener al menos 13 años' }
+        return { valid: false, error: 'Debes tener al menos 18 años' }
     }
 
     return { valid: true }
@@ -98,7 +106,6 @@ export function runValidations(validations) {
     return { valid: true }
 }
 
-// Validaciones específicas para cada caso
 export function validateLoginData(email, password) {
     return runValidations([
         () => validateEmail(email),
@@ -115,7 +122,7 @@ export function validateSignUpData({
     birthdate,
 }) {
     return runValidations([
-        () => validateRequiredField(rut, 'RUT'),
+        () => validateRUT(rut),
         () => validateRequiredField(name, 'Nombre'),
         () => validateBirthdate(birthdate),
         () => validateEmail(email),
