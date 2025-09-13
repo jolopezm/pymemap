@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Button, Pressable, TextInput } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { createUser } from '../api/user-service';
 import globalStyles from '../styles/global';
 
@@ -65,39 +66,57 @@ export default function SignIn() {
         style={globalStyles.textField}
       />
 
-      {passwordVisibility ? (
-        <View>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            style={globalStyles.textField}
-            secureTextEntry
+      <View style={{ position: 'relative', width: '100%', alignItems: 'center' }}>
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          style={[globalStyles.textField, { paddingRight: 40 }]}
+          secureTextEntry={!passwordVisibility}
+        />
+        <Pressable
+          onPress={() => setPasswordVisibility(!passwordVisibility)}
+          style={{
+            position: 'absolute',
+            right: '25%',
+            top: '50%',
+            transform: [{ translateY: -12 }],
+            padding: 5
+          }}
+        >
+          <Ionicons 
+            name={passwordVisibility ? 'eye' : 'eye-off'} 
+            size={24} 
+            color="black"
           />
-          <TextInput
-            placeholder="Enter your password again"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={globalStyles.textField}
-            secureTextEntry
+        </Pressable>
+      </View>
+      
+      <View style={{ position: 'relative', width: '100%', alignItems: 'center' }}>
+        <TextInput
+          placeholder="Enter your password again"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={[globalStyles.textField, { paddingRight: 40 }]}
+          secureTextEntry={!passwordVisibility}
+        />
+        <Pressable
+          onPress={() => setPasswordVisibility(!passwordVisibility)}
+          style={{
+            position: 'absolute',
+            right: '25%',
+            top: '50%',
+            transform: [{ translateY: -12 }],
+            padding: 5
+          }}
+        >
+          <Ionicons 
+            name={passwordVisibility ? 'eye' : 'eye-off'} 
+            size={24} 
+            color="black"
           />
-        </View>
-      ) : (
-        <View>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            style={globalStyles.textField}
-          />
-          <TextInput
-            placeholder="Enter your password again"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={globalStyles.textField}
-          />
-        </View>
-      )}
+        </Pressable>
+      </View>
 
       <TextInput
         placeholder="Birthdate"
@@ -106,21 +125,7 @@ export default function SignIn() {
         style={globalStyles.textField}
       />
 
-      {passwordVisibility ? (
-        <Pressable
-          style={globalStyles.button}
-          onPress={() => setPasswordVisibility(!passwordVisibility)}
-        >
-          <Text style={{ color: '#fff' }}>Ver contraseña</Text>
-        </Pressable>
-      ) : (
-        <Pressable
-          style={[globalStyles.button, globalStyles.button.outlineBlack]}
-          onPress={() => setPasswordVisibility(!passwordVisibility)}
-        >
-          <Text style={{ color: '#000' }}>Ocultar contraseña</Text>
-        </Pressable>
-      )}
+
 
       <Pressable style={globalStyles.button} onPress={handleSignIn}>
         <Text style={{ color: '#fff' }}>Confirmar</Text>
