@@ -1,4 +1,5 @@
 import { createUser } from '../api/user-service'
+import { sendAuthCode } from '../api/auth-service'
 import { User } from '../classes/user'
 import { validateSignUpData } from './validate-user-data'
 
@@ -28,12 +29,9 @@ export async function handleSignIn({
         console.log('Enviando usuario al backend:', newUser)
 
         const result = await createUser(newUser)
+        await sendAuthCode(email)
         return { success: true, user: newUser, data: result }
     } catch (error) {
-        //console.error('Error completo en handleSignIn:', error)
-        //console.error('Error response:', error.response?.data)
-        //console.error('Error status:', error.response?.status)
-
         if (error.response?.status === 400) {
             return {
                 success: false,

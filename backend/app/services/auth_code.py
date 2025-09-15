@@ -10,13 +10,11 @@ load_dotenv()
 resend.api_key = os.environ["RESEND_API_KEY"]
 
 def generate_auth_code():
-    """Genera un código de autenticación alfanumérico de 6 caracteres"""
     characters = string.ascii_letters + string.digits
     auth_code = ''.join(random.choice(characters) for _ in range(6))
     return auth_code
 
 def save_code_to_db(email: str, code: str):
-    """Guarda el código de autenticación en la base de datos (simulado)"""
     auth_code_entry = {
         "email": email,
         "auth_code": code,
@@ -28,9 +26,8 @@ def save_code_to_db(email: str, code: str):
     print(f"Guardando en DB: {auth_code_entry}")
     return True
 
-def send_auth_code_via_email(email: str, code: str):
-    """Envía el código de autenticación al email proporcionado (simulado)"""
-   
+def send_auth_code_via_email(email: str):
+    code = generate_auth_code()
     params: resend.Emails.SendParams = {
         "from": "onboarding@resend.dev",
         "to": [email],

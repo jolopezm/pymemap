@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { View, Text, Pressable, TextInput, Modal } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sing-in'
-import { handleLogin } from '../utils/handle-login'
 import { User } from '../classes/user'
 import globalStyles from '../styles/global'
 import { Calendar } from '../components/calendar'
@@ -40,11 +39,8 @@ export default function SignIn() {
 
             if (result.success) {
                 router.push({
-                    pathname: '/login',
-                    params: {
-                        email: user.email,
-                        password: user.password,
-                    },
+                    pathname: '/auth-code',
+                    params: { email: user.email },
                 })
             } else {
                 setError(result.error)

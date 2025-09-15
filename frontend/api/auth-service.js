@@ -75,6 +75,34 @@ export async function logout() {
 }
 
 export async function sendAuthCode(email) {
-    const response = await axios.post(`${API_URL}/send-auth-code`, { email })
+    const params = new URLSearchParams()
+    params.append('email', email)
+
+    const response = await axios.post(
+        `${API_URL}/send-auth-code`,
+        params.toString(),
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }
+    )
+    return response.data
+}
+
+export async function verifyAuthCode(authData) {
+    const params = new URLSearchParams()
+    params.append('email', authData.email)
+    params.append('code', authData.auth_code) // <-- nombre correcto para el backend
+
+    const response = await axios.post(
+        `${API_URL}/verify-auth-code`,
+        params.toString(),
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }
+    )
     return response.data
 }

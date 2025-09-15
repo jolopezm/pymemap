@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Form, status
 from datetime import timedelta
 
 from ..db import db
@@ -9,7 +9,7 @@ from ..auth import (
     Token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from app.services.auth_code import send_auth_code_via_email, generate_auth_code
+from app.services.auth_code import send_auth_code_via_email
 
 router = APIRouter()
 
@@ -33,18 +33,29 @@ async def login(form_data: UserLogin):
     return Token(access_token=access_token, token_type="bearer")
 
 @router.post("/send-auth-code")
-async def send_auth_code(email: str):
-    """Genera y envía un código de autenticación al email proporcionado"""
+async def send_auth_code(email: str = Form(...)):
     user = await db.users.find_one({"email": email})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User with this email does not exist"
         )
-    
-    auth_code = generate_auth_code()
-    # Aquí podrías guardar el código en la base de datos asociado al usuario si es necesario
-    
-    send_auth_code_via_email(email, auth_code)
+
+    send_auth_code_via_email(email)
     
     return {"message": "Authentication code sent to email"}
+
+@router.post("/verify-auth-code")
+async def verify_auth_code(email: str = Form(...), code: str = Form(...)):
+    """Verifica el código de autenticación proporcionado"""
+    auth_code_entry = await db.auth_codes.find_one({"email": email, "auth_code": code})
+    if not auth_code_entry:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid authentication code"
+        )
+    
+    # Aquí podrías eliminar el código de la base de datos si es necesario
+    await db.auth_codes.delete_one({"_id": auth_code_entry["_id"]})
+    
+    return {"message": "Authentication code verified successfully"}
