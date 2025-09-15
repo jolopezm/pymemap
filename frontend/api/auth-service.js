@@ -73,3 +73,8 @@ export async function logout() {
     await AsyncStorage.removeItem('token')
     await AsyncStorage.removeItem('user')
 }
+
+export async function sendAuthCode(email) {
+    const response = await axios.post(`${API_URL}/send-auth-code`, { email })
+    return response.data
+}

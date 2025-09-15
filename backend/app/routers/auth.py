@@ -9,6 +9,7 @@ from ..auth import (
     Token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from app.services.auth_code import send_auth_code_via_email, generate_auth_code
 
 router = APIRouter()
 
@@ -30,3 +31,20 @@ async def login(form_data: UserLogin):
     )
     
     return Token(access_token=access_token, token_type="bearer")
+
+@router.post("/send-auth-code")
+async def send_auth_code(email: str):
+    """Genera y envía un código de autenticación al email proporcionado"""
+    user = await db.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this email does not exist"
+        )
+    
+    auth_code = generate_auth_code()
+    # Aquí podrías guardar el código en la base de datos asociado al usuario si es necesario
+    
+    send_auth_code_via_email(email, auth_code)
+    
+    return {"message": "Authentication code sent to email"}
