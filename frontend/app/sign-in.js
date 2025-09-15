@@ -8,6 +8,7 @@ import { Calendar } from '../components/calendar'
 import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
 import { rutFormatter } from '../utils/rut-formatter'
+import { sendAuthCode } from '../api/auth-service' // Asegúrate de tener esta función
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -37,10 +38,15 @@ export default function SignIn() {
                 birthdate: user.birthdate,
             })
 
+            // Asumiendo que el registro fue exitoso
             if (result.success) {
+                // Enviamos el código de autenticación
+                await sendAuthCode(user.email)
+
+                // Redirigimos a la página del código, pasando el email y la contraseña
                 router.push({
                     pathname: '/auth-code',
-                    params: { email: user.email },
+                    params: { email: user.email, password: user.password },
                 })
             } else {
                 setError(result.error)

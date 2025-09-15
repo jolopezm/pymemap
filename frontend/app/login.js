@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
     View,
     Text,
@@ -7,54 +7,59 @@ import {
     ActivityIndicator,
 } from 'react-native'
 import { Link, useLocalSearchParams, useRouter } from 'expo-router'
+// No necesitamos importar 'login' desde el servicio aquí, usaremos el del contexto
 import { useAuth } from '../context/auth-context'
-import { handleLogin } from '../utils/handle-login'
-import { handleAutoLogin } from '../utils/auto-login' // Importar la nueva función
-import { User } from '../classes/user'
 import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
 
 export default function Login() {
-    const [user, setUser] = useState(new User('', '', '', '', ''))
+    const [user, setUser] = useState({ email: '', password: '' })
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const params = useLocalSearchParams()
     const router = useRouter()
-    const { login: authLogin } = useAuth()
-    const autoLoginAttempted = useRef(false) // Ref to track if auto-login was tried
+    // 1. Corregir el nombre de la función extraída del contexto
+    const { login } = useAuth()
+    const autoLoginAttempted = useRef(false)
 
     useEffect(() => {
-        // Check if we have params and if we haven't tried to auto-login yet
-        if (params.email && params.password && !autoLoginAttempted.current) {
-            // Mark that we are attempting auto-login
-            autoLoginAttempted.current = true
-            handleAutoLogin(params, setLoading, setError, authLogin, router)
-        }
-    }, [params, authLogin, router]) // Keep dependencies, but the ref prevents re-triggering
+        const { email, password } = params
 
-    const handleLoginPress = async (
-        email = user.email,
-        password = user.password
-    ) => {
+        if (email && password && !autoLoginAttempted.current) {
+            autoLoginAttempted.current = true
+
+            const performAutoLogin = async () => {
+                try {
+                    // 2. Usar el nombre correcto de la función
+                    await login({ email, password })
+                    router.push('/home')
+                } catch (error) {
+                    console.error('El auto-login falló:', error)
+                    setError('El auto-login falló. Inicia sesión manualmente.')
+                }
+            }
+
+            performAutoLogin()
+        }
+    }, [params, login, router])
+
+    // 3. Simplificar la función de login manual
+    const handleLoginPress = async () => {
         setError('')
         setLoading(true)
 
         try {
-            const result = await handleLogin(email, password)
-
-            if (result.success) {
-                await authLogin(email, password)
-                router.push('/home')
-            } else {
-                setError(result.error)
-            }
-        } catch (error) {
-            setError('Error inesperado. Por favor intenta de nuevo.')
+            // Usamos directamente la función 'login' del contexto
+            await login({ email: user.email, password: user.password })
+            router.push('/home')
+        } catch (e) {
+            const errorMessage =
+                e.response?.data?.detail ||
+                'Credenciales incorrectas o error de servidor.'
+            setError(errorMessage)
+            Toast.error(errorMessage, { duration: 3000 })
         } finally {
             setLoading(false)
-            if (error) {
-                Toast.error(error, { duration: 3000 })
-            }
         }
     }
 
