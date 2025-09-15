@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Form, status
+from fastapi import APIRouter, HTTPException, Form, status, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
 from ..db import db
@@ -14,9 +15,9 @@ from app.services.auth_code import send_auth_code_via_email
 router = APIRouter()
 
 @router.post("/login", response_model=Token)
-async def login(form_data: UserLogin):
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Autenticates the user and returns an access token"""
-    user = await db.users.find_one({"email": form_data.email})
+    user = await db.users.find_one({"email": form_data.username})
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
