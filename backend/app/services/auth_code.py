@@ -18,12 +18,11 @@ def save_code_to_db(email: str, code: str):
     auth_code_entry = {
         "email": email,
         "auth_code": code,
-        "expires_at": datetime.utcnow() + timedelta(minutes=1)
+        "expires_at": datetime.utcnow() + timedelta(minutes=10)
     }
 
     db.auth_codes.insert_one(auth_code_entry)
     db.auth_codes.create_index("expires_at", expireAfterSeconds=0)
-    print(f"Guardando en DB: {auth_code_entry}")
     return True
 
 def send_auth_code_via_email(email: str):
@@ -32,11 +31,9 @@ def send_auth_code_via_email(email: str):
         "from": "onboarding@resend.dev",
         "to": [email],
         "subject": "Codigo de Autenticación",
-        "html": f"<p>Su código de autenticación es: <strong>{code}</strong></p>",
+        "html": f"<p>Que fue cara de verga, Su código de autenticación es: <strong>{code}</strong></p>",
     }
 
     save_code_to_db(email, code)
     email = resend.Emails.send(params)
-    
-    print(f"Enviando código {code} al email {email}")
-    return True
+    return {'success': True, 'code': code}

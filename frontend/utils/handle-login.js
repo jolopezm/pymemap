@@ -13,7 +13,6 @@ export const handleLogin = async (email, password) => {
         const result = await login(user)
         return { success: true, data: result }
     } catch (error) {
-        // Manejar diferentes tipos de errores
         if (error.response?.status === 401) {
             return { success: false, error: 'Credenciales incorrectas' }
         }

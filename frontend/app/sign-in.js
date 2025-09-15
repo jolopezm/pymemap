@@ -8,7 +8,6 @@ import { Calendar } from '../components/calendar'
 import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
 import { rutFormatter } from '../utils/rut-formatter'
-import { sendAuthCode } from '../api/auth-service' // Asegúrate de tener esta función
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -38,23 +37,25 @@ export default function SignIn() {
                 birthdate: user.birthdate,
             })
 
-            // Asumiendo que el registro fue exitoso
             if (result.success) {
-                // Enviamos el código de autenticación
-                await sendAuthCode(user.email)
-
-                // Redirigimos a la página del código, pasando el email y la contraseña
                 router.push({
                     pathname: '/auth-code',
-                    params: { email: user.email, password: user.password },
+                    params: {
+                        email: user.email,
+                        password: user.password,
+                        code: result.code,
+                    },
                 })
+                console.log('Código enviado:', result.code)
             } else {
                 setError(result.error)
-                Toast.error(error, { duration: 3000 })
+                Toast.error(result.error, { duration: 3000 })
             }
         } catch (error) {
-            setError('Error al registrar usuario')
-            Toast.error(error, { duration: 3000 })
+            const errorMessage =
+                error.response?.data?.detail || 'Error al registrar usuario'
+            setError(errorMessage)
+            Toast.error(errorMessage, { duration: 3000 })
         }
     }
 

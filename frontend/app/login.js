@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
     View,
     Text,
@@ -7,7 +7,6 @@ import {
     ActivityIndicator,
 } from 'react-native'
 import { Link, useLocalSearchParams, useRouter } from 'expo-router'
-// No necesitamos importar 'login' desde el servicio aquí, usaremos el del contexto
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
@@ -18,7 +17,6 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const params = useLocalSearchParams()
     const router = useRouter()
-    // 1. Corregir el nombre de la función extraída del contexto
     const { login } = useAuth()
     const autoLoginAttempted = useRef(false)
 
@@ -30,7 +28,6 @@ export default function Login() {
 
             const performAutoLogin = async () => {
                 try {
-                    // 2. Usar el nombre correcto de la función
                     await login({ email, password })
                     router.push('/home')
                 } catch (error) {
@@ -43,21 +40,19 @@ export default function Login() {
         }
     }, [params, login, router])
 
-    // 3. Simplificar la función de login manual
     const handleLoginPress = async () => {
         setError('')
         setLoading(true)
 
         try {
-            // Usamos directamente la función 'login' del contexto
             await login({ email: user.email, password: user.password })
             router.push('/home')
         } catch (e) {
-            const errorMessage =
+            e =
                 e.response?.data?.detail ||
                 'Credenciales incorrectas o error de servidor.'
-            setError(errorMessage)
-            Toast.error(errorMessage, { duration: 3000 })
+            setError(e)
+            Toast.error(e, { duration: 3000 })
         } finally {
             setLoading(false)
         }
@@ -83,10 +78,6 @@ export default function Login() {
                 onChangeText={password => setUser({ ...user, password })}
                 secureTextEntry
             />
-
-            {error ? (
-                <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
-            ) : null}
 
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" />

@@ -29,8 +29,13 @@ export async function handleSignIn({
         console.log('Enviando usuario al backend:', newUser)
 
         const result = await createUser(newUser)
-        await sendAuthCode(email)
-        return { success: true, user: newUser, data: result }
+        const resultEmail = await sendAuthCode(email)
+        return {
+            success: true,
+            user: newUser,
+            data: result,
+            code: resultEmail.code,
+        }
     } catch (error) {
         if (error.response?.status === 400) {
             return {

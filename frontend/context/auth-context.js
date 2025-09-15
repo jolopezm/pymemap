@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react'
+import { createContext, useState, useContext, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
     getCurrentUser,
@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-    // Verificar si hay un usuario autenticado al cargar la app
     useEffect(() => {
         checkAuthStatus()
     }, [])
@@ -31,14 +30,11 @@ export const AuthProvider = ({ children }) => {
             const token = await AsyncStorage.getItem('token')
 
             if (token) {
-                // Intentar obtener la información del usuario actual
                 const userData = await getCurrentUser()
                 setUser(userData)
                 setIsAuthenticated(true)
             }
         } catch (error) {
-            //console.error('Error checking auth status:', error);
-            // Si hay error, limpiar el estado
             setUser(null)
             setIsAuthenticated(false)
         } finally {
@@ -48,10 +44,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async userData => {
         try {
-            // Hacer login y obtener el token
-            const response = await loginService(userData)
-
-            // Obtener información del usuario
+            await loginService(userData)
             const user = await getCurrentUser()
 
             setUser(user)
@@ -59,12 +52,7 @@ export const AuthProvider = ({ children }) => {
 
             return { success: true, data: user }
         } catch (error) {
-            //console.error('Login error:', error);
-            return {
-                success: false,
-                error:
-                    error.response?.data?.detail || 'Error al iniciar sesión',
-            }
+            throw error
         }
     }
 
@@ -74,7 +62,10 @@ export const AuthProvider = ({ children }) => {
             setUser(null)
             setIsAuthenticated(false)
         } catch (error) {
-            //console.error('Logout error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.detail || 'Error al cerrar sesión',
+            }
         }
     }
 

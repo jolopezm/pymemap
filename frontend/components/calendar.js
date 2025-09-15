@@ -64,9 +64,11 @@ export function Calendar({ selected, onDateSelect }) {
                     opacity: 0.5,
                 },
                 button_next: {
+                    borderRadius: 5,
                     backgroundColor: '#e0e0e0',
                 },
                 button_prev: {
+                    borderRadius: 5,
                     backgroundColor: '#e0e0e0',
                 },
             }}

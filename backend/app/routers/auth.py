@@ -31,7 +31,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         expires_delta=access_token_expires
     )
     
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bear    er")
 
 @router.post("/send-auth-code")
 async def send_auth_code(email: str = Form(...)):
@@ -42,9 +42,8 @@ async def send_auth_code(email: str = Form(...)):
             detail="User with this email does not exist"
         )
 
-    send_auth_code_via_email(email)
-    
-    return {"message": "Authentication code sent to email"}
+    response = send_auth_code_via_email(email)
+    return {"message": "Authentication code sent successfully", "code": response['code']}
 
 @router.post("/verify-auth-code")
 async def verify_auth_code(email: str = Form(...), code: str = Form(...)):
@@ -56,7 +55,6 @@ async def verify_auth_code(email: str = Form(...), code: str = Form(...)):
             detail="Invalid authentication code"
         )
     
-    # Aquí podrías eliminar el código de la base de datos si es necesario
     await db.auth_codes.delete_one({"_id": auth_code_entry["_id"]})
-    
+    await db.users.update_one({"email": email}, {"$set": {"isAuthenticated": True}})
     return {"message": "Authentication code verified successfully"}
