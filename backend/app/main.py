@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import users, auth, business
 
 app = FastAPI(
-    title="PymeMap API",
-    description="Esta es una API de ejemplo con rutas modulares de la aplicacion PymeMap.",
+    title="Pymap API",
+    description="Esta es una API de ejemplo con rutas modulares de la aplicacion Pymap.",
     version="beta",
 )
 

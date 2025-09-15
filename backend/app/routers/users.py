@@ -30,7 +30,6 @@ async def create_user(user: User):
     user_dict["password"] = get_password_hash(user.password)
     
     await db.users.insert_one(user_dict)
-    # Return the created user by finding it again, as insert_one doesn't return the full document
     created_user = await db.users.find_one({"email": user.email})
     return UserResponse(**created_user)
 

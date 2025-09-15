@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
+
 class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
@@ -22,6 +23,7 @@ class User(BaseModel):
     email: str = Field()
     password: str = Field()
     birthdate: str = Field()
+    isAuthenticated: bool = Field(default=False)
 
 class UserLogin(BaseModel):
     email: str = Field()
@@ -35,7 +37,7 @@ class UserResponse(BaseModel):
     birthdate: str = Field(...)
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         

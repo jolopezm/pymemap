@@ -1,71 +1,110 @@
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://localhost:8000'
 
 // Se incluye el token de autenticación en cada solicitud
 axios.interceptors.request.use(
-    async (config) => {
-        const token = await AsyncStorage.getItem('token');
+    async config => {
+        const token = await AsyncStorage.getItem('token')
         if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            config.headers['Authorization'] = `Bearer ${token}`
         }
-        return config;
+        return config
     },
-    (error) => {
-        return Promise.reject(error);
+    error => {
+        return Promise.reject(error)
     }
-);
-
+)
 
 // Funcion para obtener el usuario actual
 export async function getCurrentUser() {
     try {
-        const token = await AsyncStorage.getItem('token');
+        const token = await AsyncStorage.getItem('token')
         if (!token) {
-            return null;
+            return null
         }
 
-        const response = await axios.get(`${API_URL}/users/me`);
+        const response = await axios.get(`${API_URL}/users/me`)
 
         // Guardar la informacion del usuario en AsyncStorage
         await AsyncStorage.setItem('user', JSON.stringify(response.data))
-        return response.data;
+        return response.data
     } catch (error) {
         // Si el token es invalido, limpiar el storage
         if (error.response?.status === 401) {
-            await logout();
+            await logout()
         }
-        throw error;
+        throw error
     }
 }
 
-// Funcion para verificar si el usuario esta autenticado 
+// Funcion para verificar si el usuario esta autenticado
 export async function isAuthenticated() {
-    const token = await AsyncStorage.getItem('token');
-    return !!token;
+    const token = await AsyncStorage.getItem('token')
+    return !!token
 }
 
 // Funcion para obtener el token de autenticacion
 export async function getToken() {
-    return await AsyncStorage.getItem('token');
+    return await AsyncStorage.getItem('token')
 }
 
 // Funcion para iniciar sesion
-export async function login(email, password) {
-    const response = await axios.post(`${API_URL}/login`, {
-        email,
-        password,
-    });
+export async function login({ email, password }) {
+    const params = new URLSearchParams()
+    params.append('username', email) // FastAPI espera 'username' para el login
+    params.append('password', password)
 
+    const response = await axios.post(`${API_URL}/login`, params.toString(), {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    })
+
+    // Guardar el token después de un login exitoso
     if (response.data.access_token) {
-        await AsyncStorage.setItem('token', response.data.access_token);
+        await AsyncStorage.setItem('token', response.data.access_token)
     }
-    return response.data;
+
+    return response.data
 }
 
 // Funcion para cerrar sesion
 export async function logout() {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('token')
+    await AsyncStorage.removeItem('user')
+}
+
+export async function sendAuthCode(email) {
+    const params = new URLSearchParams()
+    params.append('email', email)
+
+    const response = await axios.post(
+        `${API_URL}/send-auth-code`,
+        params.toString(),
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }
+    )
+    return response.data
+}
+
+export async function verifyAuthCode(authData) {
+    const params = new URLSearchParams()
+    params.append('email', authData.email)
+    params.append('code', authData.auth_code) // <-- nombre correcto para el backend
+
+    const response = await axios.post(
+        `${API_URL}/verify-auth-code`,
+        params.toString(),
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        }
+    )
+    return response.data
 }
