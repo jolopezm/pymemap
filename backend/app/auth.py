@@ -5,6 +5,8 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from .models.token import TokenData
+from .db import db
+from .models.users import UserResponse
 
 SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion"
 ALGORITHM = "HS256"
@@ -27,7 +29,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -47,4 +49,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    return token_data
+    
+    user = await db.users.find_one({"email": token_data.email})
+    if user is None:
+        raise credentials_exception
+    return UserResponse(**user)

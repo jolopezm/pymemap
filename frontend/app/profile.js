@@ -30,7 +30,7 @@ export default function Profile() {
                     setUserId(parsedUser._id || '')
                 }
             } catch (error) {
-                //console.error('Error fetching user data:', error);
+                console.error('Error fetching user data:', error)
             }
         }
 
@@ -39,7 +39,7 @@ export default function Profile() {
                 const data = await getBusiness()
                 setBusinesses(data || [])
             } catch (error) {
-                //console.error('Error fetching businesses:', error);
+                console.error('Error fetching businesses:', error)
             }
         }
 
@@ -61,7 +61,7 @@ export default function Profile() {
             await logout()
             router.push('/login')
         } catch (error) {
-            //console.error('Error deleting account:', error);
+            console.error('Error deleting account:', error)
         }
     }
 
@@ -130,7 +130,10 @@ export default function Profile() {
                     </Pressable>
                 )}
 
-                <Pressable style={globalStyles.button} onPress={null}>
+                <Pressable
+                    style={globalStyles.button}
+                    onPress={() => router.push('/change-password')}
+                >
                     <Text style={{ color: '#fff' }}>Cambiar contraseña</Text>
                 </Pressable>
 

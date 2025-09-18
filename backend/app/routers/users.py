@@ -3,7 +3,8 @@ from bson import ObjectId
 
 from ..db import db
 from ..models.users import User, UserResponse, UserUpdate
-from ..auth import get_current_user, get_password_hash, TokenData
+from ..models.token import TokenData
+from ..auth import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
 
@@ -89,3 +90,39 @@ async def delete_user(user_id: str, current_user: TokenData = Depends(get_curren
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+@router.post("/{user_id}/change-password", status_code=status.HTTP_200_OK)
+async def change_password(user_id: str, passwords: dict, current_user: TokenData = Depends(get_current_user)):
+    """Cambia la contraseña de un usuario - Ruta protegida"""
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
+    
+    old_password = passwords.get("old_password")
+    new_password = passwords.get("new_password")
+    
+    if not old_password or not new_password:
+        raise HTTPException(
+            status_code=400, 
+            detail="Se requieren la contraseña antigua y la nueva"
+        )
+    
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if not verify_password(old_password, user["password"]):
+        raise HTTPException(
+            status_code=401, 
+            detail="Contraseña antigua incorrecta"
+        )
+    
+    hashed_new_password = get_password_hash(new_password)
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": {"password": hashed_new_password}}
+    )
+    
+    return {"mensaje": "Contraseña actualizada exitosamente"}

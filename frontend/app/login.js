@@ -51,6 +51,19 @@ export default function Login() {
 
         try {
             await login({ email: user.email, password: user.password })
+            const authData = await AsyncStorage.getItem('authData')
+            if (authData) {
+                const parsedData = JSON.parse(authData)
+
+                if (parsedData.user) {
+                    delete parsedData.user.password
+                }
+
+                await AsyncStorage.setItem(
+                    'authData',
+                    JSON.stringify(parsedData)
+                )
+            }
             router.push('/home')
         } catch (e) {
             e =
@@ -83,6 +96,13 @@ export default function Login() {
                 onChangeText={password => setUser({ ...user, password })}
                 secureTextEntry
             />
+
+            <Text>
+                ¿Olvidaste tu contraseña?
+                <Link href="/forgot-password">
+                    <Text style={{ color: 'blue' }}> Recuperar</Text>
+                </Link>
+            </Text>
 
             {loading ? (
                 <LoadingSpinner />
