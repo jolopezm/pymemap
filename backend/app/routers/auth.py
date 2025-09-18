@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Form, status, Depends
+from fastapi import APIRouter, HTTPException, status
 from datetime import timedelta
-import resend
 
 from ..db import db
 from ..models.users import UserLogin

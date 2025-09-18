@@ -1,16 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-    View,
-    Text,
-    Pressable,
-    TextInput,
-    ActivityIndicator,
-} from 'react-native'
+import { View, Text, Pressable, TextInput } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import LoadingSpinner from '../components/loading-spinner'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
@@ -90,7 +85,7 @@ export default function Login() {
             />
 
             {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
+                <LoadingSpinner />
             ) : (
                 <Pressable
                     style={globalStyles.button}
