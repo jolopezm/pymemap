@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { verifyAuthCode } from '../api/auth-service'
-import { useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -8,6 +8,7 @@ export default function AuthCodeForm() {
     const [email, setEmail] = useState('')
     const [code, setCode] = useState('')
     const router = useRouter()
+    const { from } = useLocalSearchParams()
     const [timeLeft, setTimeLeft] = useState(600)
 
     const minutes = Math.floor(timeLeft / 60)
@@ -72,8 +73,16 @@ export default function AuthCodeForm() {
         try {
             await verifyAuthCode({ email: email, code: code })
             await AsyncStorage.removeItem('authCodeExpiresAt')
-            router.push('/login')
-            Toast.success('Correo verificado.', { duration: 3000 })
+            if (from === 'forgot-password') {
+                router.push('/reset-password')
+                Toast.success(
+                    'Correo verificado. Ahora puedes cambiar tu contraseña.',
+                    { duration: 3000 }
+                )
+            } else {
+                router.push('/login')
+                Toast.success('Correo verificado.', { duration: 3000 })
+            }
         } catch (error) {
             console.error('Error al verificar el código:', error)
             Toast.error(

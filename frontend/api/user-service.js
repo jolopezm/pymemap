@@ -45,6 +45,11 @@ export async function changePassword(userId, passwords) {
     return response.data
 }
 
+export async function resetPassword(data) {
+    const response = await axios.post(`${API_URL}/users/reset-password`, data)
+    return response.data
+}
+
 export async function deleteUser(userId) {
     const headers = await getAuthHeaders()
     const response = await axios.delete(`${API_URL}/users/${userId}`, {

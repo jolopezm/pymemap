@@ -20,7 +20,10 @@ export default function ForgotPassword() {
             Toast.info(
                 'Se ha enviado un correo para restablecer la contraseña.'
             )
-            router.push('/auth-code')
+            router.push({
+                pathname: '/auth-code',
+                params: { from: 'forgot-password' },
+            })
         } catch (error) {
             console.error(
                 'Error al enviar el correo de restablecimiento:',

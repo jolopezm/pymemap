@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from bson import ObjectId
 
 from ..db import db
-from ..models.users import User, UserResponse, UserUpdate
+from ..models.users import User, UserResponse, UserUpdate, ResetPasswordRequest
 from ..models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
 
@@ -90,6 +90,21 @@ async def delete_user(user_id: str, current_user: TokenData = Depends(get_curren
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(request: ResetPasswordRequest):
+    """Restablece la contraseña de un usuario usando su email (ruta pública)."""
+    user = await db.users.find_one({"email": request.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    hashed_new_password = get_password_hash(request.new_password)
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {"password": hashed_new_password}}
+    )
+
+    return {"mensaje": "Contraseña restablecida exitosamente"}
 
 @router.post("/{user_id}/change-password", status_code=status.HTTP_200_OK)
 async def change_password(user_id: str, passwords: dict, current_user: TokenData = Depends(get_current_user)):
