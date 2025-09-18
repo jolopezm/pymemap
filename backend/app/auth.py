@@ -7,20 +7,21 @@ from fastapi.security import OAuth2PasswordBearer
 from .models.token import TokenData
 from .db import db
 from .models.users import UserResponse
+import os
+from dotenv import load_dotenv
 
-SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+load_dotenv()
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ALGORITHM = os.getenv("JWT_ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_password(plain_password, hashed_password):
-    """Verifica una contraseña contra su hash"""
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    """Hashea una contraseña"""
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -35,7 +36,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Obtiene el usuario actual desde el token"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
