@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Form, status, Depends
 from datetime import timedelta
+import resend
 
 from ..db import db
 from ..models.users import UserLogin
@@ -48,7 +49,7 @@ async def send_auth_code(request: dict):
         )
 
     response = send_auth_code_via_email(email)
-    return {"message": "Código de autenticación enviado con éxito", "code": response['code']}
+    return response
 
 @router.post("/verify-auth-code")
 async def verify_auth_code(request: dict):

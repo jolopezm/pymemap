@@ -8,7 +8,7 @@ resend.api_key = os.environ["RESEND_API_KEY"]
 
 params: resend.Emails.SendParams = {
     "from": "onboarding@resend.dev",
-    "to": ["joselopezmignone7@gmail.com"],
+    "to": ["joselopasdezmignone7@gmail.com"],
     "subject": "hello world",
     "html": "<strong>it works!</strong>",
 }

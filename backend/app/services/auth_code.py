@@ -23,7 +23,6 @@ def save_code_to_db(email: str, code: str):
 
     db.auth_codes.insert_one(auth_code_entry)
     db.auth_codes.create_index("expires_at", expireAfterSeconds=0)
-    return True
 
 def send_auth_code_via_email(email: str):
     code = generate_auth_code()
@@ -33,7 +32,10 @@ def send_auth_code_via_email(email: str):
         "subject": "Codigo de Autenticación",
         "html": f"<p>Que fue cara de verga, Su código de autenticación es: <strong>{code}</strong></p>",
     }
-
-    save_code_to_db(email, code)
-    email = resend.Emails.send(params)
-    return {'success': True, 'code': code}
+    
+    try:
+        save_code_to_db(email, code)    
+        email_response = resend.Emails.send(params)
+        return {'response': email_response, 'code': code}
+    except resend.exceptions.ResendError as e:
+        return {"mensaje": f"Error al enviar email: {e}", "code": code}
