@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TextInput, Pressable, Alert } from 'react-native'
+import { View, Text, TextInput, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { resetPassword } from '../api/user-service'
 import globalStyles from '../styles/global'
-import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useAuth } from '../context/auth-context'
+import { Toast } from 'toastify-react-native'
 
 export default function ResetPassword() {
     const [email, setEmail] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmNewPassword, setConfirmNewPassword] = useState('')
     const router = useRouter()
+    const { login } = useAuth()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -34,11 +36,12 @@ export default function ResetPassword() {
         setLoading(true)
         try {
             await resetPassword({ email, new_password: newPassword })
+            await login({ email, password: newPassword })
             await AsyncStorage.removeItem('authData')
-            Toast.success('Éxito', {
+            Toast.success('Contraseña restablecida y sesión iniciada.', {
                 duration: 3000,
             })
-            router.push('/login')
+            router.push('/home')
         } catch (err) {
             const errorMessage =
                 err.response?.data?.detail ||
