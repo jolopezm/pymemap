@@ -1,5 +1,5 @@
-import { useState } from 'react' // No necesitas useEffect
-import { View, Text, TextInput, Pressable, Alert } from 'react-native' // Añadido Alert
+import { useState } from 'react'
+import { View, Text, TextInput, Pressable, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import { changePassword } from '../api/user-service'
@@ -7,17 +7,14 @@ import ProtectedRoute from '../components/protected-route'
 import globalStyles from '../styles/global'
 
 export default function ChangePassword() {
-    // Eliminamos el estado userId, ya no es necesario
     const [currentPassword, setCurrentPassword] = useState('')
     const [passwordVisibility, setPasswordVisibility] = useState(true)
     const [newPassword, setNewPassword] = useState('')
     const [confirmNewPassword, setConfirmNewPassword] = useState('')
-    const { user } = useAuth() // Usaremos este como única fuente de verdad
+    const { user } = useAuth()
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-
-    // Eliminamos el useEffect completo, ya no es necesario
 
     const handleChangePassword = async () => {
         setError('')
@@ -30,7 +27,6 @@ export default function ChangePassword() {
         }
 
         try {
-            // Usamos directamente el ID del usuario del contexto
             const userId = user?._id
             if (!userId) {
                 setError(
