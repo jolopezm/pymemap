@@ -14,6 +14,7 @@ async def get_users(current_user: TokenData = Depends(get_current_user)):
     users = []
     cursor = db.users.find({}, {"password": 0}) 
     async for document in cursor:
+        document["_id"] = str(document["_id"])
         users.append(UserResponse(**document))
     return users
 
@@ -32,6 +33,7 @@ async def create_user(user: User):
     
     await db.users.insert_one(user_dict)
     created_user = await db.users.find_one({"email": user.email})
+    created_user["_id"] = str(created_user["_id"])
     return UserResponse(**created_user)
 
 @router.get("/me", response_model=UserResponse)
@@ -43,6 +45,7 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado"
         )
+    user["_id"] = str(user["_id"])
     return UserResponse(**user)
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -55,6 +58,7 @@ async def get_user(user_id: str, current_user: TokenData = Depends(get_current_u
         )
     user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
     if user:
+        user["_id"] = str(user["_id"])
         return UserResponse(**user)
     raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -76,6 +80,7 @@ async def update_user(user_id: str, user: UserUpdate, current_user: TokenData = 
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+    updated_user["_id"] = str(updated_user["_id"])
     return UserResponse(**updated_user)
 
 
