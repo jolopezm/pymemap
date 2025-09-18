@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from bson import ObjectId
 
 from ..db import db
-from ..models import User, UserResponse, UserUpdate
+from ..models.users import User, UserResponse, UserUpdate
 from ..auth import get_current_user, get_password_hash, TokenData
 
 router = APIRouter()

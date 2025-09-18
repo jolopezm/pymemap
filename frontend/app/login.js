@@ -6,22 +6,24 @@ import {
     TextInput,
     ActivityIndicator,
 } from 'react-native'
-import { Link, useLocalSearchParams, useRouter } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const params = useLocalSearchParams()
     const router = useRouter()
     const { login } = useAuth()
     const autoLoginAttempted = useRef(false)
 
-    useEffect(() => {
-        const { email, password } = params
+    useEffect(async () => {
+        const data = await AsyncStorage.getItem('user')
+        const user = data ? JSON.parse(data) : {}
+        const { email, password } = user
 
         if (email && password && !autoLoginAttempted.current) {
             autoLoginAttempted.current = true
@@ -38,7 +40,7 @@ export default function Login() {
 
             performAutoLogin()
         }
-    }, [params, login, router])
+    }, [login, router])
 
     const handleLoginPress = async () => {
         setError('')

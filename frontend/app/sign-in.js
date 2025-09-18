@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { View, Text, Pressable, TextInput, Modal } from 'react-native'
 import { Link, useRouter } from 'expo-router'
-import { handleSignIn } from '../utils/handle-sing-in'
+import { handleSignIn } from '../utils/handle-sign-in'
 import { User } from '../classes/user'
 import globalStyles from '../styles/global'
 import { Calendar } from '../components/calendar'
 import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
 import { rutFormatter } from '../utils/rut-formatter'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -38,22 +39,26 @@ export default function SignIn() {
             })
 
             if (result.success) {
-                router.push({
-                    pathname: '/auth-code',
-                    params: {
-                        email: user.email,
-                        password: user.password,
-                        code: result.code,
-                    },
+                await AsyncStorage.setItem('user', JSON.stringify(user))
+                router.push('/auth-code')
+                Toast.info('Código de verificación enviado al email', {
+                    duration: 3000,
                 })
-                console.log('Código enviado:', result.code)
             } else {
                 setError(result.error)
-                Toast.error(result.error, { duration: 3000 })
+                Toast.error(result.error || 'Error desconocido', {
+                    duration: 3000,
+                })
             }
         } catch (error) {
+            console.error(
+                'Error capturado en handleSignInPress:',
+                JSON.stringify(error, null, 2)
+            )
             const errorMessage =
-                error.response?.data?.detail || 'Error al registrar usuario'
+                error.response?.data?.detail ||
+                error.message || // Añadimos un fallback al mensaje del error
+                'Error al registrar usuario'
             setError(errorMessage)
             Toast.error(errorMessage, { duration: 3000 })
         }

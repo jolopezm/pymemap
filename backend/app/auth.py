@@ -4,25 +4,14 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from .models.token import TokenData
 
-# Configuración
-SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion"  # Cambiar en producción
+SECRET_KEY = "tu-clave-secreta-super-segura-cambiar-en-produccion"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Contexto para hashear contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: Optional[str] = None
 
 def verify_password(plain_password, hashed_password):
     """Verifica una contraseña contra su hash"""
@@ -58,9 +47,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    
-    # Aquí podrías buscar el usuario en la base de datos
-    # user = await get_user_by_email(email=token_data.email)
-    # if user is None:
-    #     raise credentials_exception
     return token_data

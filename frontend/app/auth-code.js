@@ -1,25 +1,22 @@
 import { useEffect, useState } from 'react'
 import { verifyAuthCode } from '../api/auth-service'
-import { useRouter, useLocalSearchParams } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { Toast } from 'toastify-react-native'
 
 export default function AuthCodeForm() {
     const [code, setCode] = useState('')
-    const params = useLocalSearchParams()
     const router = useRouter()
 
-    // 1. La inicialización del estado ahora es una función que lee del localStorage
     const [timeLeft, setTimeLeft] = useState(() => {
         const expirationTime = localStorage.getItem('authCodeExpiresAt')
         if (expirationTime) {
             const remaining = Math.round((expirationTime - Date.now()) / 1000)
             return remaining > 0 ? remaining : 0
         }
-        return 600 // Valor inicial solo si no hay nada guardado
+        return 600
     })
 
     useEffect(() => {
-        // 2. Guardar la marca de tiempo de expiración si no existe
         const expirationTime = localStorage.getItem('authCodeExpiresAt')
         if (!expirationTime) {
             localStorage.setItem(
@@ -33,12 +30,11 @@ export default function AuthCodeForm() {
                 'El código ha expirado. Por favor, solicita uno nuevo.',
                 { duration: 3000 }
             )
-            localStorage.removeItem('authCodeExpiresAt') // Limpiar al expirar
+            localStorage.removeItem('authCodeExpiresAt')
             return
         }
 
         const timerId = setInterval(() => {
-            // Actualizamos el estado basado en el tiempo real, no solo restando 1
             const newTimeLeft = Math.round(
                 (localStorage.getItem('authCodeExpiresAt') - Date.now()) / 1000
             )
@@ -54,16 +50,10 @@ export default function AuthCodeForm() {
     const handleSubmit = e => {
         e.preventDefault()
         verifyAuthCode({ email: params.email, auth_code: code })
-            .then(response => {
-                console.log('Código verificado:', response)
-                localStorage.removeItem('authCodeExpiresAt') // 3. Limpiar al tener éxito
-                router.push({
-                    pathname: '/login',
-                    params: {
-                        email: params.email,
-                        password: params.password,
-                    },
-                })
+            .then(() => {
+                localStorage.removeItem('authCodeExpiresAt')
+                router.push('/login')
+                Toast.success('Correo verificado.', { duration: 3000 })
             })
             .catch(error => {
                 console.error('Error al verificar el código:', error)
