@@ -1,44 +1,49 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-    View,
-    Text,
-    Pressable,
-    TextInput,
-    ActivityIndicator,
-} from 'react-native'
-import { Link, useLocalSearchParams, useRouter } from 'expo-router'
+import { View, Text, Pressable, TextInput } from 'react-native'
+import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import LoadingSpinner from '../components/loading-spinner'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const params = useLocalSearchParams()
     const router = useRouter()
     const { login } = useAuth()
     const autoLoginAttempted = useRef(false)
 
     useEffect(() => {
-        const { email, password } = params
+        const autoLogin = async () => {
+            const authData = await AsyncStorage.getItem('authData')
+            const parsedData = authData ? JSON.parse(authData) : {}
+            const { email, password } = parsedData.user || {}
 
-        if (email && password && !autoLoginAttempted.current) {
-            autoLoginAttempted.current = true
+            if (email && password && !autoLoginAttempted.current) {
+                autoLoginAttempted.current = true
 
-            const performAutoLogin = async () => {
+                setLoading(true)
                 try {
                     await login({ email, password })
                     router.push('/home')
-                } catch (error) {
-                    console.error('El auto-login falló:', error)
-                    setError('El auto-login falló. Inicia sesión manualmente.')
+                    Toast.success('Haz iniciado sesión exitosamente', {
+                        duration: 3000,
+                    })
+                } catch (e) {
+                    Toast.error(
+                        'No se pudo iniciar sesión automáticamente. Por favor, inicia sesión manualmente.',
+                        { duration: 3000 }
+                    )
+                } finally {
+                    setLoading(false)
                 }
             }
-
-            performAutoLogin()
         }
-    }, [params, login, router])
+
+        autoLogin()
+    }, [login, router])
 
     const handleLoginPress = async () => {
         setError('')
@@ -46,6 +51,19 @@ export default function Login() {
 
         try {
             await login({ email: user.email, password: user.password })
+            const authData = await AsyncStorage.getItem('authData')
+            if (authData) {
+                const parsedData = JSON.parse(authData)
+
+                if (parsedData.user) {
+                    delete parsedData.user.password
+                }
+
+                await AsyncStorage.setItem(
+                    'authData',
+                    JSON.stringify(parsedData)
+                )
+            }
             router.push('/home')
         } catch (e) {
             e =
@@ -79,8 +97,15 @@ export default function Login() {
                 secureTextEntry
             />
 
+            <Text>
+                ¿Olvidaste tu contraseña?
+                <Link href="/forgot-password">
+                    <Text style={{ color: 'blue' }}> Recuperar</Text>
+                </Link>
+            </Text>
+
             {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
+                <LoadingSpinner />
             ) : (
                 <Pressable
                     style={globalStyles.button}
