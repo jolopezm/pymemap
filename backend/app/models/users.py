@@ -15,14 +15,14 @@ class UserLogin(BaseModel):
     password: str = Field()
 
 class UserResponse(BaseModel):
-    id: str = Field(alias="_id")
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     rut: str = Field(...)
     name: str = Field(...)
     email: str = Field(...)
     birthdate: str = Field(...)
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         
