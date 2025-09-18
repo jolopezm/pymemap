@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { verifyAuthCode } from '../api/auth-service'
 import { useRouter } from 'expo-router'
 import { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function AuthCodeForm() {
+    const [email, setEmail] = useState('')
     const [code, setCode] = useState('')
     const router = useRouter()
 
@@ -15,6 +17,9 @@ export default function AuthCodeForm() {
         }
         return 600
     })
+
+    const minutes = Math.floor(timeLeft / 60)
+    const seconds = timeLeft % 60
 
     useEffect(() => {
         const expirationTime = localStorage.getItem('authCodeExpiresAt')
@@ -44,12 +49,21 @@ export default function AuthCodeForm() {
         return () => clearInterval(timerId)
     }, [timeLeft])
 
-    const minutes = Math.floor(timeLeft / 60)
-    const seconds = timeLeft % 60
+    useEffect(() => {
+        const fetchData = async () => {
+            const authData = await AsyncStorage.getItem('authData')
+            if (authData) {
+                const parsedData = JSON.parse(authData)
+                setEmail(parsedData.user?.email || '')
+                setCode(parsedData.code || '')
+            }
+        }
+        fetchData()
+    }, [])
 
     const handleSubmit = e => {
         e.preventDefault()
-        verifyAuthCode({ email: params.email, auth_code: code })
+        verifyAuthCode({ email: email, code: code })
             .then(() => {
                 localStorage.removeItem('authCodeExpiresAt')
                 router.push('/login')
@@ -71,7 +85,7 @@ export default function AuthCodeForm() {
                     onChange={e => setCode(e.target.value)}
                     required
                 />
-                <p>Código: {params.code}</p>
+                <p>Código: {code}</p>
                 <p>
                     Tiempo restante: {minutes}:
                     {String(seconds).padStart(2, '0')}

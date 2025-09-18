@@ -26,8 +26,6 @@ export async function handleSignIn({
 
     try {
         const newUser = new User(rut, name, email, password, birthdate)
-        console.log('Enviando usuario al backend:', newUser)
-
         const result = await createUser(newUser)
         const resultEmail = await sendAuthCode(email)
         return {

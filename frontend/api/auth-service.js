@@ -56,19 +56,16 @@ export async function login({ email, password }) {
 
 export async function logout() {
     await AsyncStorage.removeItem('token')
-    await AsyncStorage.removeItem('user')
+    await AsyncStorage.removeItem('authData')
 }
 
 export async function sendAuthCode(email) {
-    const params = new URLSearchParams()
-    params.append('email', email)
-
     const response = await axios.post(
         `${API_URL}/send-auth-code`,
-        params.toString(),
+        JSON.stringify({ email }),
         {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
         }
     )
@@ -76,16 +73,12 @@ export async function sendAuthCode(email) {
 }
 
 export async function verifyAuthCode(authData) {
-    const params = new URLSearchParams()
-    params.append('email', authData.email)
-    params.append('code', authData.auth_code)
-
     const response = await axios.post(
         `${API_URL}/verify-auth-code`,
-        params.toString(),
+        { ...authData },
         {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
         }
     )

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from ..db import db
-from ..models.utility_classes import Business
+from ..models.sellers import Business
 
 router = APIRouter()
 

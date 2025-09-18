@@ -39,7 +39,9 @@ export default function SignIn() {
             })
 
             if (result.success) {
-                await AsyncStorage.setItem('user', JSON.stringify(user))
+                await AsyncStorage.setItem('authData', JSON.stringify(result))
+                console.log('Usuario guardado en AsyncStorage:', result)
+
                 router.push('/auth-code')
                 Toast.info('Código de verificación enviado al email', {
                     duration: 3000,

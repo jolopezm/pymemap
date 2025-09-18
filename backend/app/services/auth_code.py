@@ -11,13 +11,13 @@ resend.api_key = os.environ["RESEND_API_KEY"]
 
 def generate_auth_code():
     characters = string.ascii_letters + string.digits
-    auth_code = ''.join(random.choice(characters) for _ in range(6))
-    return auth_code
+    code = ''.join(random.choice(characters) for _ in range(6))
+    return code
 
 def save_code_to_db(email: str, code: str):
     auth_code_entry = {
         "email": email,
-        "auth_code": code,
+        "code": code,
         "expires_at": datetime.utcnow() + timedelta(minutes=10)
     }
 

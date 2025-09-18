@@ -20,26 +20,34 @@ export default function Login() {
     const { login } = useAuth()
     const autoLoginAttempted = useRef(false)
 
-    useEffect(async () => {
-        const data = await AsyncStorage.getItem('user')
-        const user = data ? JSON.parse(data) : {}
-        const { email, password } = user
+    useEffect(() => {
+        const autoLogin = async () => {
+            const authData = await AsyncStorage.getItem('authData')
+            const parsedData = authData ? JSON.parse(authData) : {}
+            const { email, password } = parsedData.user || {}
 
-        if (email && password && !autoLoginAttempted.current) {
-            autoLoginAttempted.current = true
+            if (email && password && !autoLoginAttempted.current) {
+                autoLoginAttempted.current = true
 
-            const performAutoLogin = async () => {
+                setLoading(true)
                 try {
                     await login({ email, password })
                     router.push('/home')
-                } catch (error) {
-                    console.error('El auto-login falló:', error)
-                    setError('El auto-login falló. Inicia sesión manualmente.')
+                    Toast.success('Haz iniciado sesión exitosamente', {
+                        duration: 3000,
+                    })
+                } catch (e) {
+                    Toast.error(
+                        'No se pudo iniciar sesión automáticamente. Por favor, inicia sesión manualmente.',
+                        { duration: 3000 }
+                    )
+                } finally {
+                    setLoading(false)
                 }
             }
-
-            performAutoLogin()
         }
+
+        autoLogin()
     }, [login, router])
 
     const handleLoginPress = async () => {

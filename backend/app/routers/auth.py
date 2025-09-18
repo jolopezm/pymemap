@@ -3,10 +3,10 @@ from datetime import timedelta
 
 from ..db import db
 from ..models.users import UserLogin
+from ..models.token import Token
 from ..auth import (
     create_access_token,
     verify_password,
-    Token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.services.auth_code import send_auth_code_via_email
@@ -61,7 +61,7 @@ async def verify_auth_code(request: dict):
             detail="Email y código de autenticación son requeridos"
         )
     
-    auth_code_entry = await db.auth_codes.find_one({"email": email, "auth_code": code})
+    auth_code_entry = await db.auth_codes.find_one({"email": email, "code": code})
     if not auth_code_entry:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
