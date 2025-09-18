@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { View, Text, Pressable, TextInput, Modal } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sing-in'

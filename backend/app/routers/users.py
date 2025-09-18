@@ -23,7 +23,7 @@ async def create_user(user: User):
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Correo electrónico ya registrado"
         )
         
     user_dict = user.dict()
@@ -40,7 +40,7 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="Usuario no encontrado"
         )
     return UserResponse(**user)
 
@@ -48,26 +48,32 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
 async def get_user(user_id: str, current_user: TokenData = Depends(get_current_user)):
     """Obtiene un usuario por su ID - Ruta protegida"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
     if user:
         return UserResponse(**user)
-    raise HTTPException(status_code=404, detail="User not found")
+    raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user: UserUpdate, current_user: TokenData = Depends(get_current_user)):
     """Actualiza un usuario por su ID - Ruta protegida (sin password)"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     
     user_dict = {k: v for k, v in user.dict(exclude_unset=True).items() if v is not None}
     if not user_dict:
-        raise HTTPException(status_code=400, detail="No data to update")
-    
+        raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+
     result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_dict})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
     updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
     return UserResponse(**updated_user)
 
@@ -76,7 +82,10 @@ async def update_user(user_id: str, user: UserUpdate, current_user: TokenData = 
 async def delete_user(user_id: str, current_user: TokenData = Depends(get_current_user)):
     """Elimina un usuario por su ID - Ruta protegida"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")

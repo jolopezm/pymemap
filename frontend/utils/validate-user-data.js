@@ -13,7 +13,6 @@ export function validateEmail(email) {
     if (!email) {
         return { valid: false, error: 'El email es requerido' }
     }
-    // Añadimos .trim() para eliminar espacios
     if (!/\S+@\S+\.\S+/.test(email.trim())) {
         return { valid: false, error: 'Formato de email inválido' }
     }
@@ -95,7 +94,6 @@ export function validateBirthdate(birthdate) {
     return { valid: true }
 }
 
-// Función genérica para ejecutar múltiples validaciones
 export function runValidations(validations) {
     for (const validation of validations) {
         const result = validation()

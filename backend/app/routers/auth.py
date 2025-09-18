@@ -21,7 +21,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Correo electrónico o contraseña incorrectos",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -39,11 +39,11 @@ async def send_auth_code(email: str = Form(...)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User with this email does not exist"
+            detail="No existe un usuario con este correo"
         )
 
     response = send_auth_code_via_email(email)
-    return {"message": "Authentication code sent successfully", "code": response['code']}
+    return {"message": "Código de autenticación enviado con éxito", "code": response['code']}
 
 @router.post("/verify-auth-code")
 async def verify_auth_code(email: str = Form(...), code: str = Form(...)):
@@ -52,9 +52,9 @@ async def verify_auth_code(email: str = Form(...), code: str = Form(...)):
     if not auth_code_entry:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid authentication code"
+            detail="Código de autenticación inválido o expirado"
         )
     
     await db.auth_codes.delete_one({"_id": auth_code_entry["_id"]})
     await db.users.update_one({"email": email}, {"$set": {"isAuthenticated": True}})
-    return {"message": "Authentication code verified successfully"}
+    return {"message": "Código de autenticación verificado con éxito"}

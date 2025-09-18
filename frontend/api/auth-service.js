@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const API_URL = 'http://localhost:8000'
 
-// Se incluye el token de autenticación en cada solicitud
 axios.interceptors.request.use(
     async config => {
         const token = await AsyncStorage.getItem('token')
@@ -17,7 +16,6 @@ axios.interceptors.request.use(
     }
 )
 
-// Funcion para obtener el usuario actual
 export async function getCurrentUser() {
     try {
         const token = await AsyncStorage.getItem('token')
@@ -27,11 +25,9 @@ export async function getCurrentUser() {
 
         const response = await axios.get(`${API_URL}/users/me`)
 
-        // Guardar la informacion del usuario en AsyncStorage
         await AsyncStorage.setItem('user', JSON.stringify(response.data))
         return response.data
     } catch (error) {
-        // Si el token es invalido, limpiar el storage
         if (error.response?.status === 401) {
             await logout()
         }
@@ -39,21 +35,18 @@ export async function getCurrentUser() {
     }
 }
 
-// Funcion para verificar si el usuario esta autenticado
 export async function isAuthenticated() {
     const token = await AsyncStorage.getItem('token')
     return !!token
 }
 
-// Funcion para obtener el token de autenticacion
 export async function getToken() {
     return await AsyncStorage.getItem('token')
 }
 
-// Funcion para iniciar sesion
 export async function login({ email, password }) {
     const params = new URLSearchParams()
-    params.append('username', email) // FastAPI espera 'username' para el login
+    params.append('username', email)
     params.append('password', password)
 
     const response = await axios.post(`${API_URL}/login`, params.toString(), {
@@ -62,7 +55,6 @@ export async function login({ email, password }) {
         },
     })
 
-    // Guardar el token después de un login exitoso
     if (response.data.access_token) {
         await AsyncStorage.setItem('token', response.data.access_token)
     }
@@ -70,7 +62,6 @@ export async function login({ email, password }) {
     return response.data
 }
 
-// Funcion para cerrar sesion
 export async function logout() {
     await AsyncStorage.removeItem('token')
     await AsyncStorage.removeItem('user')
@@ -95,7 +86,7 @@ export async function sendAuthCode(email) {
 export async function verifyAuthCode(authData) {
     const params = new URLSearchParams()
     params.append('email', authData.email)
-    params.append('code', authData.auth_code) // <-- nombre correcto para el backend
+    params.append('code', authData.auth_code)
 
     const response = await axios.post(
         `${API_URL}/verify-auth-code`,
