@@ -1,7 +1,6 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-const API_URL = 'http://localhost:8000'
+import { API_URL } from '../config/api'
 
 // Función para obtener headers con autenticación
 async function getAuthHeaders() {
