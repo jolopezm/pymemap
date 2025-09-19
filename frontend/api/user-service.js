@@ -2,7 +2,6 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
 
-// Función para obtener headers con autenticación
 async function getAuthHeaders() {
     const token = await AsyncStorage.getItem('token')
     if (token) {
