@@ -1,15 +1,22 @@
-import { View, Text, Pressable } from 'react-native'
+import { useState } from 'react'
+import { View, Text, Pressable, Button } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
+import DefaultModal from '../components/default-modal'
 import globalStyles from '../styles/global'
 
 export default function Home() {
     const { user, isAuthenticated, logout } = useAuth()
     const router = useRouter()
+    const [modalVisible, setModalVisible] = useState(false)
 
     const handleLogout = async () => {
         await logout()
         router.replace('/login')
+    }
+
+    const handleModal = () => {
+        setModalVisible(!modalVisible)
     }
 
     return (
@@ -48,6 +55,20 @@ export default function Home() {
                 >
                     <Text style={{ color: '#fff' }}>Iniciar Sesión</Text>
                 </Pressable>
+            )}
+
+            <Button title="Abrir modal" onPress={handleModal} />
+            {modalVisible && (
+                <DefaultModal
+                    visible={modalVisible}
+                    onRequestClose={handleModal}
+                >
+                    <Text style={globalStyles.title}>
+                        Código de autenticacion
+                    </Text>
+                    <Text>Contenido del modal</Text>
+                    <Button title="Cerrar modal" onPress={handleModal} />
+                </DefaultModal>
             )}
 
             <Link href="/about">
