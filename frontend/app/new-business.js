@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Button, Pressable, TextInput } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    TextInput,
+    FlatList,
+    StyleSheet,
+} from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { createBusiness } from '../api/business-service'
+import { getGeocodingSuggestions } from '../api/mapbox-service' // Importamos el nuevo servicio
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import globalStyles from '../styles/global'
@@ -9,6 +17,7 @@ import globalStyles from '../styles/global'
 export default function NewBusiness() {
     const [name, setName] = useState('')
     const [address, setAddress] = useState('')
+    const [addressSuggestions, setAddressSuggestions] = useState([])
     const [category, setCategory] = useState('')
     const [description, setDescription] = useState('')
     const [ownerId, setOwnerId] = useState('')
@@ -30,6 +39,26 @@ export default function NewBusiness() {
 
         fetchUserData()
     }, [])
+
+    // Efecto para buscar direcciones con debouncing
+    useEffect(() => {
+        if (address.trim().length < 3) {
+            setAddressSuggestions([])
+            return
+        }
+
+        const handler = setTimeout(() => {
+            const fetchSuggestions = async () => {
+                const suggestions = await getGeocodingSuggestions(address)
+                setAddressSuggestions(suggestions)
+            }
+            fetchSuggestions()
+        }, 500) // Espera 500ms después de que el usuario deja de escribir
+
+        return () => {
+            clearTimeout(handler) // Limpia el temporizador si el usuario sigue escribiendo
+        }
+    }, [address])
 
     const handleSignIn = () => {
         if (!name || !address || !category || !description || !ownerId) {
@@ -54,6 +83,11 @@ export default function NewBusiness() {
             })
     }
 
+    const handleSelectAddress = suggestion => {
+        setAddress(suggestion.place_name) // Actualiza el campo de dirección
+        setAddressSuggestions([]) // Oculta las sugerencias
+    }
+
     return (
         <View style={globalStyles.container}>
             <Text style={globalStyles.title}>Registro de negocio</Text>
@@ -63,12 +97,29 @@ export default function NewBusiness() {
                 onChangeText={setName}
                 style={globalStyles.textField}
             />
-            <TextInput
-                placeholder="Address"
-                value={address}
-                onChangeText={setAddress}
-                style={globalStyles.textField}
-            />
+            <View>
+                <TextInput
+                    placeholder="Address"
+                    value={address}
+                    onChangeText={setAddress}
+                    style={globalStyles.textField}
+                />
+                {addressSuggestions.length > 0 && (
+                    <FlatList
+                        data={addressSuggestions}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item }) => (
+                            <Pressable
+                                style={styles.suggestionItem}
+                                onPress={() => handleSelectAddress(item)}
+                            >
+                                <Text>{item.place_name}</Text>
+                            </Pressable>
+                        )}
+                        style={styles.suggestionsContainer}
+                    />
+                )}
+            </View>
             <TextInput
                 placeholder="Category"
                 value={category}
@@ -101,3 +152,20 @@ export default function NewBusiness() {
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    suggestionsContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 5,
+        marginTop: -10,
+        marginBottom: 10,
+        maxHeight: 150,
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    suggestionItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+})
