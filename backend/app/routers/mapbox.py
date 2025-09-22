@@ -44,7 +44,7 @@ async def get_geocoding_suggestions(
         "autocomplete": "true", # Esencial para obtener sugerencias mientras se escribe
     }
 
-    # Si se especifica una región y la conocemos, añadimos el filtro de bounding box.
+    # Si se especifica una regi
     if region and region.lower() in REGION_BOUNDING_BOXES:
         bbox = REGION_BOUNDING_BOXES[region.lower()]
         params["bbox"] = ",".join(map(str, bbox))

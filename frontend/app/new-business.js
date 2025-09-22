@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { createBusiness } from '../api/business-service'
-import { getGeocodingSuggestions } from '../api/mapbox-service' // Importamos el nuevo servicio
+import { getGeocodingSuggestions } from '../api/mapbox-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import globalStyles from '../styles/global'
@@ -33,14 +33,13 @@ export default function NewBusiness() {
                     setOwnerId(parsedUser._id || '')
                 }
             } catch (error) {
-                //console.error('Error fetching user data:', error);
+                console.error('Error fetching user data:', error)
             }
         }
 
         fetchUserData()
     }, [])
 
-    // Efecto para buscar direcciones con debouncing
     useEffect(() => {
         if (address.trim().length < 3) {
             setAddressSuggestions([])
@@ -53,10 +52,10 @@ export default function NewBusiness() {
                 setAddressSuggestions(suggestions)
             }
             fetchSuggestions()
-        }, 500) // Espera 500ms después de que el usuario deja de escribir
+        }, 500)
 
         return () => {
-            clearTimeout(handler) // Limpia el temporizador si el usuario sigue escribiendo
+            clearTimeout(handler)
         }
     }, [address])
 
@@ -84,8 +83,8 @@ export default function NewBusiness() {
     }
 
     const handleSelectAddress = suggestion => {
-        setAddress(suggestion.place_name) // Actualiza el campo de dirección
-        setAddressSuggestions([]) // Oculta las sugerencias
+        setAddress(suggestion.place_name)
+        setAddressSuggestions([])
     }
 
     return (
@@ -162,6 +161,12 @@ const styles = StyleSheet.create({
         maxHeight: 150,
         borderWidth: 1,
         borderColor: '#ddd',
+        zIndex: 1,
+        width: '100%',
+        position: 'absolute',
+        top: 50,
+        left: 0,
+        right: 0,
     },
     suggestionItem: {
         padding: 10,

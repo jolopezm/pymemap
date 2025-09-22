@@ -3,6 +3,7 @@ import { View, Text, Pressable, Button } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import DefaultModal from '../components/default-modal'
+import MapboxMap from '../components/MapboxMap' // Importamos el nuevo componente
 import globalStyles from '../styles/global'
 
 export default function Home() {
@@ -18,6 +19,10 @@ export default function Home() {
     const handleModal = () => {
         setModalVisible(!modalVisible)
     }
+
+    // Coordenadas de ejemplo (Plaza de Armas, Santiago)
+    // Formato: [longitud, latitud]
+    const exampleCoordinates = [-70.6504, -33.4378]
 
     return (
         <View style={globalStyles.container}>
@@ -57,17 +62,18 @@ export default function Home() {
                 </Pressable>
             )}
 
-            <Button title="Abrir modal" onPress={handleModal} />
+            <Button title="Abrir modal con mapa" onPress={handleModal} />
             {modalVisible && (
                 <DefaultModal
                     visible={modalVisible}
                     onRequestClose={handleModal}
                 >
-                    <Text style={globalStyles.title}>
-                        Código de autenticacion
-                    </Text>
-                    <Text>Contenido del modal</Text>
-                    <Button title="Cerrar modal" onPress={handleModal} />
+                    <Text style={globalStyles.title}>Ubicación de Ejemplo</Text>
+                    <MapboxMap
+                        centerCoordinate={exampleCoordinates}
+                        markerCoordinate={exampleCoordinates}
+                    />
+                    <Button title="Cerrar" onPress={handleModal} />
                 </DefaultModal>
             )}
 

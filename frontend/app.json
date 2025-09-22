@@ -1,35 +1,31 @@
 {
     "expo": {
-        "name": "pymap",
-        "slug": "pymap",
-        "scheme": "pymap",
+        "name": "pymemap",
+        "slug": "pymemap",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
-        "newArchEnabled": true,
         "splash": {
-            "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
+        "assetBundlePatterns": ["**/*"],
         "ios": {
             "supportsTablet": true
         },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
-            },
-            "edgeToEdgeEnabled": true
+            }
         },
-        "web": {
-            "favicon": "./assets/favicon.png",
-            "bundler": "metro"
-        },
-        "experiments": {
-            "turboModules": true
-        },
-        "plugins": ["expo-router"]
+        "web": {},
+        "plugins": [
+            [
+                "@rnmapbox/maps",
+                {
+                    "RNMapboxMapsDownloadToken": "pk.eyJ1Ijoiam9sb3Blem0iLCJhIjoiY21mdDE1dGRmMHB1cTJxcHJtNDFnczdqdSJ9.LT3d92adNrJLJWgiplHrBA"
+                }
+            ]
+        ]
     }
 }

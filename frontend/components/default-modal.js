@@ -53,12 +53,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContainer: {
+        width: '90%', // Un poco más ancho para el mapa
         margin: 20,
-        padding: 20,
+        padding: 0, // Quitamos el padding para que el mapa ocupe todo el espacio
         borderRadius: 10,
         justifyContent: 'center',
-        alignItems: 'center',
         backgroundColor: 'rgba(250, 250, 250, 1)',
+        overflow: 'hidden', // Importante para que los bordes redondeados corten el mapa
     },
     closeButton: {
         position: 'absolute',
