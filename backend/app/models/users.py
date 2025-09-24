@@ -1,21 +1,7 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, Any
 from bson import ObjectId
-
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+from pydantic import BaseModel, Field, EmailStr, field_validator, field_serializer
+from pydantic.config import ConfigDict
 
 class User(BaseModel):
     rut: str = Field()
@@ -30,16 +16,25 @@ class UserLogin(BaseModel):
     password: str = Field()
 
 class UserResponse(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: str = Field(alias="_id")
     rut: str = Field(...)
     name: str = Field(...)
     email: str = Field(...)
     birthdate: str = Field(...)
+    
+    # Pydantic v2 config
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
 
-    class Config:
-        validate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    # Convert ObjectId to string before validation
+    @field_validator('id', mode='before')
+    @classmethod
+    def _id_to_str(cls, v: Any) -> str:
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    # Ensure JSON serialization of id is a string
+    @field_serializer('id')
+    def _serialize_id(self, v: str) -> str:
+        return str(v)
         
 class UserUpdate(BaseModel):
     rut: str | None = None
