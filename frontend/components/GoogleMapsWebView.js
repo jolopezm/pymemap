@@ -1,18 +1,14 @@
+import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { WebView } from 'react-native-webview'
 
-function GoogleMapsWebView({ address, width = '100%', height = 400 }) {
+function GoogleMapsWebView({ address, height = 900, width = '100%' }) {
     const encodedAddress = encodeURIComponent(address)
-    const src = `https://www.google.com/maps?q=${encodedAddress}&output=embed`
+    const src = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
 
     return (
-        <View style={[styles.container, { width, height }]}>
-            <WebView
-                source={{ uri: src }}
-                style={{ flex: 1 }}
-                javaScriptEnabled
-                domStorageEnabled
-            />
+        <View style={[styles.container, { height, width }]}>
+            <WebView source={{ uri: src }} style={{ flex: 1 }} />
         </View>
     )
 }
@@ -20,6 +16,7 @@ function GoogleMapsWebView({ address, width = '100%', height = 400 }) {
 const styles = StyleSheet.create({
     container: {
         overflow: 'hidden',
+        backgroundColor: '#fff',
     },
 })
 

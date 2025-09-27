@@ -79,7 +79,7 @@ export default function Home() {
                 Ubicación de ejemplo
             </Text>
             {/* Mapa de Google Maps */}
-            <GoogleMapsWebView address={address} height="200px" />
+            <GoogleMapsWebView address={address} height={200} />
 
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
