@@ -5,6 +5,7 @@ import { useAuth } from '../context/auth-context'
 import { changePassword } from '../api/user-service'
 import ProtectedRoute from '../components/protected-route'
 import globalStyles from '../styles/global'
+import Screen from '../components/screen'
 
 export default function ChangePassword() {
     const [currentPassword, setCurrentPassword] = useState('')
@@ -56,7 +57,7 @@ export default function ChangePassword() {
     }
     return (
         <ProtectedRoute>
-            <View style={globalStyles.container}>
+            <Screen>
                 <Text style={globalStyles.title}>Cambiar Contraseña</Text>
 
                 {passwordVisibility ? (
@@ -140,7 +141,7 @@ export default function ChangePassword() {
                         {loading ? 'Cambiando...' : 'Cambiar contraseña'}
                     </Text>
                 </Pressable>
-            </View>
+            </Screen>
         </ProtectedRoute>
     )
 }

@@ -5,6 +5,7 @@ import { createBusiness } from '../api/business-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import globalStyles from '../styles/global'
+import Screen from '../components/screen'
 
 export default function NewBusiness() {
     const [name, setName] = useState('')
@@ -55,7 +56,7 @@ export default function NewBusiness() {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>Registro de negocio</Text>
             <TextInput
                 placeholder="Name"
@@ -98,6 +99,6 @@ export default function NewBusiness() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </View>
+        </Screen>
     )
 }
