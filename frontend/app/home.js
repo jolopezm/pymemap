@@ -4,9 +4,13 @@ import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import DefaultModal from '../components/default-modal'
 import globalStyles from '../styles/global'
+import GoogleMapsWebView from '../components/GoogleMapsWebView'
 
 export default function Home() {
     const { user, isAuthenticated, logout } = useAuth()
+    const [address, setAddress] = useState(
+        'Juan de Dios Vial 100, Providencia, Chile'
+    )
     const router = useRouter()
     const [modalVisible, setModalVisible] = useState(false)
 
@@ -70,6 +74,12 @@ export default function Home() {
                     <Button title="Cerrar modal" onPress={handleModal} />
                 </DefaultModal>
             )}
+
+            <Text style={[globalStyles.title, { marginTop: 20 }]}>
+                Ubicación de ejemplo
+            </Text>
+            {/* Mapa de Google Maps */}
+            <GoogleMapsWebView address={address} height="200px" />
 
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>

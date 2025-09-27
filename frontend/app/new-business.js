@@ -12,6 +12,7 @@ import { createBusiness } from '../api/business-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fetchAddressSuggestions } from '../api/gmaps-service'
 import globalStyles from '../styles/global'
+import GoogleMapsWebView from '../components/GoogleMapsWebView'
 
 export default function NewBusiness() {
     const [name, setName] = useState('')
@@ -115,6 +116,11 @@ export default function NewBusiness() {
                     style={{ maxHeight: 150, marginBottom: 10 }}
                 />
             )}
+            {address ? (
+                <View style={{ height: 200, width: '100%', marginBottom: 20 }}>
+                    <GoogleMapsWebView address={address} height="200px" />
+                </View>
+            ) : null}
             <TextInput
                 placeholder="Category"
                 value={category}
