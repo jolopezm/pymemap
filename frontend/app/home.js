@@ -4,6 +4,7 @@ import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import DefaultModal from '../components/default-modal'
 import globalStyles from '../styles/global'
+import Screen from '../components/screen'
 import GoogleMapsWebView from '../components/GoogleMapsWebView'
 
 export default function Home() {
@@ -24,7 +25,7 @@ export default function Home() {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>
                 Bienvenido, {isAuthenticated ? user?.name : 'Invitado'}
             </Text>
@@ -84,6 +85,6 @@ export default function Home() {
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
             </Link>
-        </View>
+        </Screen>
     )
 }

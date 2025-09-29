@@ -9,6 +9,9 @@ import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
 import { rutFormatter } from '../utils/rut-formatter'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Screen from '../components/screen'
+import { SafeAreaView, SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
+import { Platform } from 'react-native'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -66,8 +69,10 @@ export default function SignIn() {
         }
     }
 
+    const openDateModal = () => setModalVisible(true)
+
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>Registro de usuario</Text>
             <TextInput
                 placeholder="RUT"
@@ -124,7 +129,7 @@ export default function SignIn() {
                 </View>
             )}
 
-            <Pressable onPress={() => setModalVisible(true)}>
+            <Pressable onPress={openDateModal}>
                 <TextInput
                     placeholder="Fecha de nacimiento (DD/MM/YYYY)"
                     value={user.birthdate}
@@ -136,35 +141,48 @@ export default function SignIn() {
 
             <Modal
                 animationType="slide"
-                transparent={false}
+                transparent={true}
+                statusBarTranslucent={true}
                 visible={modalVisible}
-                onRequestClose={() => {
-                    setModalVisible(!modalVisible)
-                }}
+                presentationStyle="overFullScreen"
+                onRequestClose={() => setModalVisible(false)}
             >
-                <View style={globalStyles.container}>
-                    <Text style={globalStyles.title}>
-                        Seleccionar fecha de nacimiento
-                    </Text>
-                    <Calendar
-                        selected={user.birthdate || null}
-                        onDateSelect={date =>
-                            updateUser('birthdate', dateFormatter(date))
-                        }
-                    />
-                    <Pressable
-                        style={globalStyles.button}
-                        onPress={() => setModalVisible(false)}
-                    >
-                        <Text style={{ color: '#fff' }}>Seleccionar</Text>
-                    </Pressable>
-                    <Pressable
-                        style={[globalStyles.button, globalStyles.button.red]}
-                        onPress={() => setModalVisible(false)}
-                    >
-                        <Text style={{ color: '#fff' }}>Cerrar</Text>
-                    </Pressable>
-                </View>
+                <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+                    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top','bottom']}>
+                        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, justifyContent: 'flex-start' }}>
+                            <Text style={globalStyles.title}>
+                                Seleccionar fecha de nacimiento
+                            </Text>
+                            <View style={{ alignSelf: 'stretch' }}>
+                                <Calendar
+                                    selected={user.birthdate || null}
+                                    onDateSelect={date =>
+                                        updateUser(
+                                            'birthdate',
+                                            dateFormatter(date)
+                                        )
+                                    }
+                                    style={{ width: '100%' }}
+                                />
+                            </View>
+                            <Pressable
+                                style={globalStyles.button}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={{ color: '#fff' }}>Seleccionar</Text>
+                            </Pressable>
+                            <Pressable
+                                style={[
+                                    globalStyles.button,
+                                    globalStyles.button.red,
+                                ]}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={{ color: '#fff' }}>Cerrar</Text>
+                            </Pressable>
+                        </View>
+                    </SafeAreaView>
+                </SafeAreaProvider>
             </Modal>
 
             {passwordVisibility ? (
@@ -204,6 +222,6 @@ export default function SignIn() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </View>
+        </Screen>
     )
 }

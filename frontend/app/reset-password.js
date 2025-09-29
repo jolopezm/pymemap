@@ -6,6 +6,7 @@ import globalStyles from '../styles/global'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth } from '../context/auth-context'
 import { Toast } from 'toastify-react-native'
+import Screen from '../components/screen'
 
 export default function ResetPassword() {
     const [email, setEmail] = useState('')
@@ -53,7 +54,7 @@ export default function ResetPassword() {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>Restablecer Contraseña</Text>
             <TextInput
                 value={newPassword}
@@ -79,6 +80,6 @@ export default function ResetPassword() {
                     {loading ? 'Restableciendo...' : 'Restablecer Contraseña'}
                 </Text>
             </Pressable>
-        </View>
+        </Screen>
     )
 }

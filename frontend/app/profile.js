@@ -7,6 +7,7 @@ import { getBusiness } from '../api/business-service'
 import { updateUser, deleteUser } from '../api/user-service'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
+import Screen from '../components/screen'
 
 export default function Profile() {
     const [name, setName] = useState('')
@@ -67,7 +68,7 @@ export default function Profile() {
 
     return (
         <ProtectedRoute>
-            <View style={globalStyles.container}>
+            <Screen>
                 <Text style={globalStyles.title}>Perfil de usuario</Text>
                 <TextInput
                     value={name}
@@ -147,7 +148,7 @@ export default function Profile() {
                 <Link href="/home">
                     <Text style={{ color: 'blue' }}>Ir a home</Text>
                 </Link>
-            </View>
+            </Screen>
         </ProtectedRoute>
     )
 }

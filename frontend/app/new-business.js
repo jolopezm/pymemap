@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fetchAddressSuggestions } from '../api/gmaps-service'
 import globalStyles from '../styles/global'
 import GoogleMapsWebView from '../components/GoogleMapsWebView'
+import Screen from '../components/screen'
 
 export default function NewBusiness() {
     const [name, setName] = useState('')
@@ -78,7 +79,7 @@ export default function NewBusiness() {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>Registro de negocio</Text>
             <TextInput
                 placeholder="Name"
@@ -150,6 +151,6 @@ export default function NewBusiness() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </View>
+        </Screen>
     )
 }

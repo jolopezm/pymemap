@@ -6,6 +6,7 @@ import globalStyles from '../styles/global'
 import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import LoadingSpinner from '../components/loading-spinner'
+import Screen from '../components/screen'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
@@ -77,7 +78,7 @@ export default function Login() {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
             <Text style={globalStyles.title}>Iniciar Sesión</Text>
 
             <TextInput
@@ -126,6 +127,6 @@ export default function Login() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </View>
+        </Screen>
     )
 }
