@@ -14,6 +14,8 @@ import { fetchAddressSuggestions } from '../api/gmaps-service'
 import globalStyles from '../styles/global'
 import GoogleMapsWebView from '../components/gmaps-view'
 import Screen from '../components/screen'
+import NameCategoryForm from '../templates/name-category-form'
+import AddressMapForm from '../templates/address-map-form'
 
 export default function NewBusiness() {
     const [name, setName] = useState('')
@@ -23,6 +25,7 @@ export default function NewBusiness() {
     const [ownerId, setOwnerId] = useState('')
     const [error, setError] = useState('')
     const [suggestions, setSuggestions] = useState([])
+    const [step, setStep] = useState(1)
     const router = useRouter()
 
     useEffect(() => {
@@ -78,79 +81,45 @@ export default function NewBusiness() {
             })
     }
 
+    // Props para los formularios
+    const formProps = {
+        name,
+        setName,
+        category,
+        setCategory,
+        description,
+        setDescription,
+        ownerId,
+        setOwnerId,
+        error,
+        setError,
+        onNext: () => setStep(2),
+    }
+
+    const addressProps = {
+        address,
+        setAddress,
+        suggestions,
+        setSuggestions,
+        fetchAddressSuggestions,
+        error,
+        setError,
+        onBack: () => setStep(1),
+        onSubmit: () => {
+            handleSignIn()
+        },
+    }
+
     return (
-        <Screen>
-            <Text style={globalStyles.title}>Registro de negocio</Text>
-            <TextInput
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-                style={globalStyles.textField}
-            />
-            <TextInput
-                placeholder="Address"
-                value={address}
-                onChangeText={handleAddressChange}
-                style={globalStyles.textField}
-            />
-            {/* Sugerencias de direcciones */}
-            {suggestions.length > 0 && (
-                <FlatList
-                    data={suggestions}
-                    keyExtractor={item => item.place_id}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            onPress={() => handleSuggestionPress(item)}
-                        >
-                            <Text
-                                style={{
-                                    padding: 8,
-                                    backgroundColor: '#eee',
-                                    borderBottomWidth: 1,
-                                    borderColor: '#ccc',
-                                }}
-                            >
-                                {item.description}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                    style={{ maxHeight: 150, marginBottom: 10 }}
-                />
+        <>
+            {step === 1 ? (
+                <NameCategoryForm {...formProps} />
+            ) : (
+                <AddressMapForm {...addressProps} />
             )}
-            {address ? (
-                <View style={{ height: 200, width: '100%', marginBottom: 20 }}>
-                    <GoogleMapsWebView address={address} height="200px" />
-                </View>
-            ) : null}
-            <TextInput
-                placeholder="Category"
-                value={category}
-                onChangeText={setCategory}
-                style={globalStyles.textField}
-            />
-            <TextInput
-                placeholder="Description"
-                value={description}
-                onChangeText={setDescription}
-                style={globalStyles.textField}
-            />
-            <TextInput
-                placeholder="OwnerId"
-                value={ownerId}
-                onChangeText={setOwnerId}
-                style={globalStyles.textField}
-                editable={false}
-            />
-
-            <Pressable style={globalStyles.button} onPress={handleSignIn}>
-                <Text style={{ color: '#fff' }}>Confirmar</Text>
-            </Pressable>
-
-            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </Screen>
+        </>
     )
 }
