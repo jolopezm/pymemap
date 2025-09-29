@@ -4,9 +4,10 @@ export default StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
+        paddingHorizontal: 16,
+        paddingVertical: 16,
         fontFamily: 'inherit',
     },
 
@@ -18,24 +19,26 @@ export default StyleSheet.create({
     },
 
     textField: {
-        height: 40,
+        minHeight: 44,
         borderColor: 'red',
         borderWidth: 1,
         marginBottom: 10,
-        width: 200,
+        width: '100%',
         paddingHorizontal: 10,
         borderRadius: 5,
     },
 
     button: {
         backgroundColor: '#2d3238ff',
-        padding: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         borderRadius: 5,
         borderWidth: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        margin: 5,
-        width: 200,
+        marginVertical: 6,
+        width: '100%',
+        minHeight: 48,
 
         red: {
             backgroundColor: '#ff4d4d',
