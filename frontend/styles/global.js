@@ -57,4 +57,26 @@ export default StyleSheet.create({
             borderColor: '#000',
         },
     },
+
+    card: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        marginBottom: 10,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+    },
+
+    badge: {
+        backgroundColor: '#eee',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        fontSize: 12,
+        textAlign: 'center',
+    },
 })

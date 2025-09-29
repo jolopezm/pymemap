@@ -1,20 +1,26 @@
 import React from 'react'
 import { Text, TextInput, Pressable } from 'react-native'
+import DropDownPicker from 'react-native-dropdown-picker'
 import globalStyles from '../styles/global'
 
-export default function NameCategoryForm({
+export default function BusinessDataForm({
     name,
     setName,
     category,
     setCategory,
     description,
     setDescription,
-    ownerId,
-    setOwnerId,
     error,
-    setError,
     onNext,
 }) {
+    const [open, setOpen] = React.useState(false)
+    const [items, setItems] = React.useState([
+        { label: 'Restaurante', value: 'restaurante' },
+        { label: 'Tienda', value: 'tienda' },
+        { label: 'Cafetería', value: 'cafeteria' },
+        { label: 'Otro', value: 'otro' },
+    ])
+
     return (
         <>
             <Text style={globalStyles.title}>Registro de negocio</Text>
@@ -24,25 +30,27 @@ export default function NameCategoryForm({
                 onChangeText={setName}
                 style={globalStyles.textField}
             />
-            <TextInput
-                placeholder="Category"
+            <DropDownPicker
+                placeholder="Selecciona una categoría"
+                open={open}
                 value={category}
-                onChangeText={setCategory}
+                items={items}
+                setOpen={setOpen}
+                setValue={setCategory}
+                setItems={setItems}
+                onChangeValue={setCategory}
                 style={globalStyles.textField}
             />
             <TextInput
                 placeholder="Description"
+                multiline
+                numberOfLines={3}
+                maxLength={150}
                 value={description}
                 onChangeText={setDescription}
                 style={globalStyles.textField}
             />
-            <TextInput
-                placeholder="OwnerId"
-                value={ownerId}
-                onChangeText={setOwnerId}
-                style={globalStyles.textField}
-                editable={false}
-            />
+
             <Pressable style={globalStyles.button} onPress={onNext}>
                 <Text style={{ color: '#fff' }}>Siguiente</Text>
             </Pressable>
