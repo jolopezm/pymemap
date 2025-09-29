@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { View, Text, Pressable, Button } from 'react-native'
+import { View, Text, Pressable, Button, Platform } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import DefaultModal from '../components/default-modal'
 import globalStyles from '../styles/global'
 import Screen from '../components/screen'
-import GoogleMapsWebView from '../components/GoogleMapsWebView'
+import GmapsView from '../components/gmaps-view'
 
 export default function Home() {
     const { user, isAuthenticated, logout } = useAuth()
@@ -23,6 +23,8 @@ export default function Home() {
     const handleModal = () => {
         setModalVisible(!modalVisible)
     }
+
+    const isMobile = Platform.OS === 'ios' || Platform.OS === 'android'
 
     return (
         <Screen>
@@ -79,8 +81,8 @@ export default function Home() {
             <Text style={[globalStyles.title, { marginTop: 20 }]}>
                 Ubicación de ejemplo
             </Text>
-            {/* Mapa de Google Maps */}
-            <GoogleMapsWebView address={address} height={200} />
+
+            <GmapsView address={address} height={400} isOnMobile={isMobile} />
 
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>

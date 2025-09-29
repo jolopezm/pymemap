@@ -12,7 +12,7 @@ import { createBusiness } from '../api/business-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fetchAddressSuggestions } from '../api/gmaps-service'
 import globalStyles from '../styles/global'
-import GoogleMapsWebView from '../components/GoogleMapsWebView'
+import GoogleMapsWebView from '../components/gmaps-view'
 import Screen from '../components/screen'
 
 export default function NewBusiness() {
