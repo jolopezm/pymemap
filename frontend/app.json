@@ -2,7 +2,6 @@
     "expo": {
         "name": "pymap",
         "slug": "pymap",
-        "scheme": "pymap",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TextInput, Pressable } from 'react-native'
+import { Text, TextInput, Pressable, FlatList } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import ProtectedRoute from '../components/protected-route'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -8,6 +8,7 @@ import { updateUser, deleteUser } from '../api/user-service'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import Screen from '../components/screen'
+import Item from '../plantillas/business-item'
 
 export default function Profile() {
     const [name, setName] = useState('')
@@ -93,27 +94,18 @@ export default function Profile() {
                 />
 
                 <Text style={globalStyles.title}>Mis negocios:</Text>
-                {businesses.length > 0 ? (
-                    businesses
-                        .filter(
+                {businesses.filter(
+                    business => String(business.owner_id) === String(userId)
+                ).length > 0 ? (
+                    <FlatList
+                        style={{ width: '100%', maxHeight: 250 }}
+                        data={businesses.filter(
                             business =>
                                 String(business.owner_id) === String(userId)
-                        )
-                        .map(business => (
-                            <View key={business._id}>
-                                <Text
-                                    style={{ fontSize: 16, fontWeight: 'bold' }}
-                                >
-                                    Nombre: {business.name}
-                                </Text>
-                                <Text>Dirección: {business.address}</Text>
-                                <Text>Categoría: {business.category}</Text>
-                                <Text>Descripción: {business.description}</Text>
-                                <Text>
-                                    OwnerId: {String(business.owner_id)}
-                                </Text>
-                            </View>
-                        ))
+                        )}
+                        renderItem={({ item }) => <Item business={item} />}
+                        keyExtractor={item => item._id}
+                    />
                 ) : (
                     <Text>No tienes negocios registrados.</Text>
                 )}

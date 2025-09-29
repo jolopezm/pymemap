@@ -219,3 +219,6 @@ frontend/ios/
 # OS/Editor noise
 .DS_Store
 Thumbs.db
+
+# ignore the files with the following extensions
+*.pyc

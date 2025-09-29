@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import users, auth, business, mapbox
+from .routers import gmaps, users, auth, business
 
 app = FastAPI(
     title="Pymap API",
@@ -28,7 +28,7 @@ app.add_middleware(
 app.include_router(auth.router, tags=["Authentication"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(business.router, prefix="/business", tags=["Business"])
-app.include_router(mapbox.router, tags=["Mapbox"])
+app.include_router(gmaps.router, tags=["Gmaps"])
 
 
 @app.get("/")

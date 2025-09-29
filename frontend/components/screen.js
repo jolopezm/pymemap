@@ -10,7 +10,6 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-// Reusable screen wrapper with Safe Area, Keyboard handling and optional scroll
 export default function Screen({
     children,
     scroll = true,
@@ -43,13 +42,18 @@ export default function Screen({
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                <TouchableWithoutFeedback
+                    onPress={Keyboard.dismiss}
+                    accessible={false}
+                >
                     <Container {...containerProps}>
                         <View
                             style={{
                                 flexGrow: 1,
                                 width: '100%',
-                                alignSelf: resolvedMaxWidth ? 'center' : 'stretch',
+                                alignSelf: resolvedMaxWidth
+                                    ? 'center'
+                                    : 'stretch',
                                 maxWidth: resolvedMaxWidth,
                             }}
                         >
