@@ -5,6 +5,7 @@ import { useAuth } from '../context/auth-context'
 import DefaultModal from '../components/default-modal'
 import globalStyles from '../styles/global'
 import Screen from '../components/screen'
+import SearchBar from '../components/search-bar'
 
 export default function Home() {
     const { user, isAuthenticated, logout } = useAuth()
@@ -21,10 +22,12 @@ export default function Home() {
     }
 
     return (
-        <Screen>
+        <>
             <Text style={globalStyles.title}>
                 Bienvenido, {isAuthenticated ? user?.name : 'Invitado'}
             </Text>
+
+            <SearchBar />
 
             {isAuthenticated ? (
                 <View>
@@ -75,6 +78,6 @@ export default function Home() {
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
             </Link>
-        </Screen>
+        </>
     )
 }
