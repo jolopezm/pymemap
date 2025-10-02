@@ -54,12 +54,28 @@ export default function Home() {
 
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-            {results.length > 0 && (
-                <View style={{ width: '100%', marginBottom: 10 }}>
+            {results.length > 0 ? (
+                <View
+                    style={{
+                        width: '100%',
+                        marginBottom: 10,
+                        zIndex: 2,
+                        position: 'absolute',
+                        top: 100,
+                    }}
+                >
                     {results.map(business => (
                         <Item key={business._id} business={business} />
                     ))}
                 </View>
+            ) : (
+                searchTerm.length > 0 && (
+                    <View>
+                        <Text style={{ marginVertical: 20 }}>
+                            No se encontraron resultados
+                        </Text>
+                    </View>
+                )
             )}
 
             {isAuthenticated ? (
