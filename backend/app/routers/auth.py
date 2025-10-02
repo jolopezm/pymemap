@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from datetime import timedelta
+import traceback
 
 from ..db import db
 from ..models.users import UserLogin
@@ -15,21 +16,39 @@ router = APIRouter()
 
 @router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin):
-    user = await db.users.find_one({"email": user_credentials.email})
-    if not user or not verify_password(user_credentials.password, user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo electrónico o contraseña incorrectos",
-            headers={"WWW-Authenticate": "Bearer"},
+    try:
+        print(f"Intentando login para: {user_credentials.email}")
+        user = await db.users.find_one({"email": user_credentials.email})
+        if not user:
+            print("Usuario no encontrado")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Correo electrónico o contraseña incorrectos",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        if not verify_password(user_credentials.password, user["password"]):
+            print("Contraseña incorrecta")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Correo electrónico o contraseña incorrectos",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user["email"], "name": user["name"]}, 
+            expires_delta=access_token_expires
         )
-    
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user["email"], "name": user["name"]}, 
-        expires_delta=access_token_expires
-    )
-    
-    return Token(access_token=access_token, token_type="bearer")
+        print("Login exitoso")
+        return Token(access_token=access_token, token_type="bearer")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print("ERROR INTERNO EN /login:", traceback.format_exc())
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor"
+        )
 
 @router.post("/send-auth-code")
 async def send_auth_code(request: dict):
