@@ -36,16 +36,21 @@ export default function Screen({
               ],
           }
 
+    // Solo usar TouchableWithoutFeedback en mobile
+    const Wrapper =
+        Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback
+    const wrapperProps =
+        Platform.OS === 'web'
+            ? {}
+            : { onPress: Keyboard.dismiss, accessible: false }
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <TouchableWithoutFeedback
-                    onPress={Keyboard.dismiss}
-                    accessible={false}
-                >
+                <Wrapper {...wrapperProps}>
                     <Container {...containerProps}>
                         <View
                             style={{
@@ -60,7 +65,7 @@ export default function Screen({
                             {children}
                         </View>
                     </Container>
-                </TouchableWithoutFeedback>
+                </Wrapper>
             </KeyboardAvoidingView>
         </SafeAreaView>
     )

@@ -17,7 +17,7 @@ app = FastAPI(
 #     "http://localhost:3000",
 #     "https://tu-dominio-de-frontend.com",
 # ]
-origins = ["*"]
+origins = ["http://localhost:8081"]
 
 app.add_middleware(
     CORSMiddleware,
