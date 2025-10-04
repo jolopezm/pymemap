@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from bson import ObjectId
 
 from ..db import db
-from ..models.users import User, UserResponse, UserUpdate, ResetPasswordRequest
-from ..models.token import TokenData
+from models.users import User, UserResponse, UserUpdate, ResetPasswordRequest
+from models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
