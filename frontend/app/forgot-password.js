@@ -4,6 +4,8 @@ import { Toast } from 'toastify-react-native'
 import { User } from '../classes/user'
 import { sendAuthCode } from '../api/auth-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Screen from '../components/screen'
+import { View, Text, TextInput, Button } from 'react-native'
 
 export default function ForgotPassword() {
     const [user, setUser] = useState(new User())
@@ -36,21 +38,30 @@ export default function ForgotPassword() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label>Email:</label>
-                <input
-                    type="text"
-                    id="email"
+        <Screen>
+            <View>
+                <Text style={{ fontSize: 24, marginBottom: 20 }}>
+                    Restablecer Contraseña
+                </Text>
+                <TextInput
+                    placeholder="Email"
+                    style={{
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        padding: 10,
+                        marginBottom: 20,
+                    }}
                     value={user.email}
-                    onChange={e =>
-                        setUser(prev => ({ ...prev, email: e.target.value }))
+                    onChangeText={email =>
+                        setUser(prev => ({ ...prev, email }))
                     }
                 />
-            </div>
-            <button type="submit" disabled={loading}>
-                {loading ? 'Enviando...' : 'Solicitar Código'}
-            </button>
-        </form>
+                <Button
+                    title={loading ? 'Enviando...' : 'Solicitar Código'}
+                    onPress={handleSubmit}
+                    disabled={loading}
+                />
+            </View>
+        </Screen>
     )
 }

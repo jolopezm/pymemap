@@ -78,7 +78,7 @@ export default function Login() {
     }
 
     return (
-        <>
+        <Screen>
             <Text style={globalStyles.title}>Iniciar Sesión</Text>
 
             <TextInput
@@ -127,6 +127,6 @@ export default function Login() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </>
+        </Screen>
     )
 }
