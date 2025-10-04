@@ -47,11 +47,7 @@ export default function Home() {
     }, [searchTerm])
 
     return (
-        <>
-            <Text style={globalStyles.title}>
-                Bienvenido, {isAuthenticated ? user?.name : 'Invitado'}
-            </Text>
-
+        <Screen>
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
             {results.length > 0 ? (
@@ -127,6 +123,6 @@ export default function Home() {
             <Link href="/about">
                 <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
             </Link>
-        </>
+        </Screen>
     )
 }

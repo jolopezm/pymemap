@@ -84,7 +84,7 @@ export default function NewBusiness() {
     }
 
     return (
-        <>
+        <Screen>
             {step === 1 ? (
                 <BusinessDataForm {...formProps} />
             ) : (
@@ -93,6 +93,6 @@ export default function NewBusiness() {
             <Link href="/home">
                 <Text style={{ color: 'blue' }}>Ir a home</Text>
             </Link>
-        </>
+        </Screen>
     )
 }

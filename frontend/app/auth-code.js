@@ -3,6 +3,8 @@ import { verifyAuthCode } from '../api/auth-service'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { View, Text, TextInput, Button } from 'react-native'
+import Screen from '../components/screen'
 
 export default function AuthCodeForm() {
     const [email, setEmail] = useState('')
@@ -92,25 +94,34 @@ export default function AuthCodeForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label>Código de Autenticación:</label>
-                <input
-                    type="text"
-                    id="code"
+        <Screen>
+            <View style={{ padding: 20 }}>
+                <Text style={{ fontSize: 24, marginBottom: 20 }}>
+                    Verificación de Código
+                </Text>
+                <TextInput
+                    placeholder="Código de Autenticación"
+                    style={{
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        padding: 10,
+                        marginBottom: 20,
+                    }}
                     value={code}
-                    onChange={e => setCode(e.target.value)}
-                    required
+                    onChangeText={setCode}
+                    keyboardType="numeric"
+                    maxLength={6}
                 />
-                <p>Código: {code}</p>
-                <p>
+                <Text>
                     Tiempo restante: {minutes}:
                     {String(seconds).padStart(2, '0')}
-                </p>
-            </div>
-            <button type="submit" disabled={timeLeft === 0}>
-                Verificar Código
-            </button>
-        </form>
+                </Text>
+                <Button
+                    title="Verificar Código"
+                    onPress={handleSubmit}
+                    disabled={timeLeft === 0}
+                />
+            </View>
+        </Screen>
     )
 }

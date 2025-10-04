@@ -32,6 +32,9 @@ const styles = StyleSheet.create({
     },
 
     icon: {
-        padding: 8,
+        padding: 10,
+        position: 'absolute',
+        right: 0,
+        transform: [{ translateY: -3 }],
     },
 })
