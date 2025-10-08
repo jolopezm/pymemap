@@ -45,41 +45,46 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ```
 pymemap/
-├── backend/                 # API REST con FastAPI
-│   ├── app/
-│   │   ├── main.py         # Punto de entrada de la API
-│   │   ├── db.py           # Configuración de MongoDB
-│   │   ├── models.py       # Modelos de datos con Pydantic
-│   │   ├── auth.py         # Lógica de autenticación
-│   │   ├── routers/        # Endpoints modulares
-│   │   │   ├── auth.py     # Rutas de autenticación
-│   │   │   ├── users.py    # Gestión de usuarios
-│   │   │   └── business.py # Gestión de negocios
-│   │   └── services/       # Lógica de negocio
-│   └── requirements.txt    # Dependencias de Python
+├── backend/                    # API REST con FastAPI
+│   ├── app/                   # Código fuente de la API
+│   │   ├── main.py           # Punto de entrada de la API
+│   │   ├── db.py             # Configuración de MongoDB
+│   │   ├── models.py         # Modelos de datos con Pydantic
+│   │   ├── auth.py           # Lógica de autenticación
+│   │   ├── schemas.py        # Schemas de validación
+│   │   ├── routers/          # Endpoints modulares
+│   │   │   ├── auth.py       # Rutas de autenticación
+│   │   │   ├── users.py      # Gestión de usuarios
+│   │   │   └── business.py   # Gestión de negocios
+│   │   ├── services/         # Lógica de negocio
+│   │   └── models/           # Modelos adicionales
+│   ├── requirements.txt      # Dependencias de Python
+│   ├── run_server.sh         # Script de inicio (Linux/macOS)
+│   ├── run_server.bat        # Script de inicio (Windows)
+│   ├── .env                  # Variables de entorno
+│   └── test_backend_multiplataforma.py  # Tests del backend
 │
-└── frontend/               # App móvil con Expo/React Native
-    ├── app/               # Páginas de la aplicación
-    │   ├── _layout.js     # Layout principal
-    │   ├── home.js        # Página principal
-    │   ├── login.js       # Autenticación
-    │   ├── profile.js     # Perfil de usuario
-    │   └── new-business.js # Registro de negocios
-    ├── api/               # Servicios de API
-    ├── components/        # Componentes reutilizables
-    ├── context/           # Context API para estado global
-    └── styles/            # Estilos globales
-Native
-    ├── app/               # Páginas de la aplicación
-    │   ├── _layout.js     # Layout principal
-    │   ├── home.js        # Página principal
-    │   ├── login.js       # Autenticación
-    │   ├── profile.js     # Perfil de usuario
-    │   └── new-business.js # Registro de negocios
-    ├── api/               # Servicios de API
-    ├── components/        # Componentes reutilizables
-    ├── context/           # Context API para estado global
-    └── styles/            # Estilos globales
+└── frontend/                  # App móvil con Expo/React Native
+    ├── app/                  # Páginas de la aplicación (Expo Router)
+    │   ├── _layout.js        # Layout principal
+    │   ├── index.js          # Página de inicio
+    │   ├── home.js           # Página principal
+    │   ├── login.js          # Autenticación
+    │   ├── profile.js        # Perfil de usuario
+    │   ├── settings.js       # Configuraciones
+    │   └── new-business.js   # Registro de negocios
+    ├── api/                  # Servicios de API
+    │   ├── auth-service.js   # Servicios de autenticación
+    │   ├── user-service.js   # Servicios de usuarios
+    │   └── business-service.js # Servicios de negocios
+    ├── components/           # Componentes reutilizables
+    ├── context/              # Context API para estado global
+    ├── config/               # Configuraciones
+    │   └── api.js           # Configuración inteligente de API
+    ├── styles/               # Estilos globales
+    ├── assets/               # Recursos (imágenes, iconos)
+    ├── utils/                # Utilidades
+    └── package.json          # Dependencias de Node.js
 ```
 
 ## 🎯 Plataformas Objetivo
