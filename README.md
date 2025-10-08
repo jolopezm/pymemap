@@ -15,23 +15,24 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ### Backend
 
-- **Framework**: FastAPI 0.116.1
-- **Base de datos**: MongoDB con Motor (driver asíncrono)
-- **Autenticación**: JWT con python-jose
-- **Seguridad**: Bcrypt para hashing de contraseñas
-- **Variables de entorno**: python-dotenv
-- **Servidor**: Uvicorn
-- **ORM**: Pydantic para validación de datos
+- **Framework**: FastAPI 0.111.0
+- **Base de datos**: MongoDB con Motor 3.7.1 (driver asíncrono)
+- **Autenticación**: JWT con python-jose 3.3.0
+- **Seguridad**: Bcrypt 3.2.2 para hashing de contraseñas
+- **Variables de entorno**: python-dotenv 1.0.1
+- **Servidor**: Uvicorn 0.29.0
+- **Validación**: Pydantic 2.11.9 para validación de datos
+- 
 
 ### Frontend (Mobile & Web)
 
-- **Framework**: Expo ~53.0.20 con React Native 0.79.5
+- **Framework**: Expo 54.0.7 con React Native 0.81.4
 - **Lenguaje**: JavaScript
-- **React**: 19.0.0
-- **Routing**: Expo Router ~5.1.4
-- **Navegación**: React Navigation (screens & safe-area-context)
-- **HTTP Client**: Axios 1.11.0
-- **Storage**: AsyncStorage para persistencia local
+- **React**: 19.1.0
+- **Routing**: Expo Router 5.1.6
+- **Navegación**: React Navigation (screens 4.11.1 & safe-area-context 5.6.1)
+- **HTTP Client**: Axios 1.12.2
+- **Storage**: AsyncStorage 2.2.0 para persistencia local
 
 ### DevOps & Tools
 
@@ -68,6 +69,17 @@ pymemap/
     ├── components/        # Componentes reutilizables
     ├── context/           # Context API para estado global
     └── styles/            # Estilos globales
+Native
+    ├── app/               # Páginas de la aplicación
+    │   ├── _layout.js     # Layout principal
+    │   ├── home.js        # Página principal
+    │   ├── login.js       # Autenticación
+    │   ├── profile.js     # Perfil de usuario
+    │   └── new-business.js # Registro de negocios
+    ├── api/               # Servicios de API
+    ├── components/        # Componentes reutilizables
+    ├── context/           # Context API para estado global
+    └── styles/            # Estilos globales
 ```
 
 ## 🎯 Plataformas Objetivo
@@ -83,7 +95,7 @@ pymemap/
 - **Clientes**: Página informativa
 - **Negocios**: Panel de administración completo
 
-## � Prerrequisitos
+## 📢 Prerrequisitos
 
 ### Para todos los sistemas operativos:
 
@@ -93,7 +105,7 @@ pymemap/
 
 ---
 
-## �🚀 Instalación y Configuración
+## 🚀 Instalación y Configuración
 
 ### 🔧 **Variables de Entorno (IMPORTANTE - Hacer primero)**
 
@@ -243,7 +255,7 @@ El frontend detecta automáticamente el entorno:
 
 No necesitas cambiar configuraciones manualmente.
 
-## � **Troubleshooting**
+## 🔥🧯 **Troubleshooting**
 
 ### **Backend no inicia:**
 
@@ -357,7 +369,3 @@ npx expo start --android
 Para más información sobre el proyecto PymeMap, no dudes en contactarnos.
 
 ---
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
