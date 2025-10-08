@@ -21,16 +21,23 @@ const LoadingComp =
 
 export default function BusinessProfile() {
     // Obtener el objeto completo de search params y aceptar variantes
-    const searchParams = useSearchParams()
+    const params = useSearchParams()
     const router = useRouter()
+
+    console.log('[BusinessProfile] Raw params:', params)
+    console.log('[BusinessProfile] params.get("id"):', params?.get('id'))
+
+    // URLSearchParams requiere usar .get() para acceder a los valores
     const idRaw =
-        (searchParams &&
-            (searchParams.id ??
-                searchParams.businessId ??
-                searchParams.bizId)) ||
+        params?.get('id') ??
+        params?.get('businessId') ??
+        params?.get('bizId') ??
         null
+
     // Decodificar el ID para manejar caracteres especiales como espacios o acentos.
     const id = idRaw != null ? decodeURIComponent(String(idRaw)) : null
+
+    console.log('[BusinessProfile] Resolved id:', id)
     const [business, setBusiness] = React.useState(null)
     const [loading, setLoading] = React.useState(true)
     const [lastResult, setLastResult] = React.useState(null)
@@ -41,7 +48,7 @@ export default function BusinessProfile() {
         const fetch = async () => {
             try {
                 setLoading(true)
-                console.log('[BusinessProfile] searchParams=', searchParams)
+                console.log('[BusinessProfile] params=', params)
                 console.log('[BusinessProfile] resolved id=', id)
                 // El servicio se encarga de toda la lógica de búsqueda
                 const foundBusiness = await getBusiness(id)
@@ -110,7 +117,7 @@ export default function BusinessProfile() {
                             Debug id resolved: {String(id ?? '')}
                         </Text>
                         <Text style={{ fontSize: 12, color: '#333' }}>
-                            Debug searchParams: {JSON.stringify(searchParams)}
+                            Debug params: {JSON.stringify(params)}
                         </Text>
                         <Text style={{ fontSize: 12, color: '#333' }}>
                             Resultado raw: {JSON.stringify(lastResult)}
