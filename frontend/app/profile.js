@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Text, TextInput, Pressable, FlatList } from 'react-native'
+import { Text, TextInput, Pressable, FlatList, View } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import ProtectedRoute from '../components/protected-route'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -9,6 +9,7 @@ import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
 import Screen from '../components/screen'
 import Item from '../plantillas/business-item'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function Profile() {
     const [name, setName] = useState('')
@@ -70,28 +71,29 @@ export default function Profile() {
     return (
         <ProtectedRoute>
             <Screen>
-                <Text style={globalStyles.title}>Perfil de usuario</Text>
-                <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    style={globalStyles.textField}
-                    editable={isEditting}
-                    placeholder="Nombre"
-                />
-                <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    style={globalStyles.textField}
-                    editable={isEditting}
-                    placeholder="Email"
-                />
-                <TextInput
-                    value={birthdate}
-                    onChangeText={setBirthdate}
-                    style={globalStyles.textField}
-                    editable={isEditting}
-                    placeholder="Fecha de nacimiento"
-                />
+                <View style={globalStyles.card}>
+                    <TextInput
+                        value={name}
+                        onChangeText={setName}
+                        style={globalStyles.textField}
+                        editable={isEditting}
+                        placeholder="Nombre"
+                    />
+                    <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        style={globalStyles.textField}
+                        editable={isEditting}
+                        placeholder="Email"
+                    />
+                    <TextInput
+                        value={birthdate}
+                        onChangeText={setBirthdate}
+                        style={globalStyles.textField}
+                        editable={isEditting}
+                        placeholder="Fecha de nacimiento"
+                    />
+                </View>
 
                 <Text style={globalStyles.title}>Mis negocios:</Text>
                 {businesses.filter(
@@ -104,7 +106,7 @@ export default function Profile() {
                                 String(business.owner_id) === String(userId)
                         )}
                         renderItem={({ item }) => <Item business={item} />}
-                        keyExtractor={item => item._id}
+                        keyExtractor={item => item._id ?? item.id ?? item.name}
                     />
                 ) : (
                     <Text>No tienes negocios registrados.</Text>
@@ -128,6 +130,13 @@ export default function Profile() {
                     onPress={() => router.push('/change-password')}
                 >
                     <Text style={{ color: '#fff' }}>Cambiar contraseña</Text>
+                </Pressable>
+
+                <Pressable
+                    style={globalStyles.button}
+                    onPress={() => router.push('/wallet')}
+                >
+                    <Text style={{ color: '#fff' }}>Ver wallet</Text>
                 </Pressable>
 
                 <Pressable
