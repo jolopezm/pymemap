@@ -39,7 +39,7 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Linting**: ESLint con configuración Expo y Prettier
 - **Formateo**: Prettier
 - **CORS**: Configurado para desarrollo cross-origin
-- # **SSL**: Certificados SSL con certifi
+- **SSL**: Certificados SSL con certifi
 
 ## 🏗️ Arquitectura del Proyecto
 
@@ -65,6 +65,7 @@ pymemap/
 │   └── test_backend_multiplataforma.py  # Tests del backend
 │
 └── frontend/                  # App móvil con Expo/React Native
+Native
     ├── app/                  # Páginas de la aplicación (Expo Router)
     │   ├── _layout.js        # Layout principal
     │   ├── index.js          # Página de inicio
