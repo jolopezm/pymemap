@@ -22,7 +22,6 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Variables de entorno**: python-dotenv 1.0.1
 - **Servidor**: Uvicorn 0.29.0
 - **Validación**: Pydantic 2.11.9 para validación de datos
-- 
 
 ### Frontend (Mobile & Web)
 
@@ -39,7 +38,7 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Linting**: ESLint con configuración Expo y Prettier
 - **Formateo**: Prettier
 - **CORS**: Configurado para desarrollo cross-origin
-- # **SSL**: Certificados SSL con certifi
+- **SSL**: Certificados SSL con certifi
 
 ## 🏗️ Arquitectura del Proyecto
 
