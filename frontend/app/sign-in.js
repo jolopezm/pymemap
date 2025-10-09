@@ -12,11 +12,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import Screen from '../components/screen'
 import { SafeAreaView, SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 import { Platform } from 'react-native'
+import PasswordInput from '../components/password-input'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [passwordVisibility, setPasswordVisibility] = useState(true)
     const [modalVisible, setModalVisible] = useState(false)
     const [error, setError] = useState('')
     const router = useRouter()
@@ -95,39 +95,28 @@ export default function SignIn() {
                 style={globalStyles.textField}
             />
 
-            {passwordVisibility ? (
-                <View>
-                    <TextInput
-                        placeholder="Contraseña"
-                        value={user.password}
-                        onChangeText={value => updateUser('password', value)}
-                        style={globalStyles.textField}
-                        secureTextEntry
-                    />
-                    <TextInput
-                        placeholder="Repite tu contraseña"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        style={globalStyles.textField}
-                        secureTextEntry
-                    />
-                </View>
-            ) : (
-                <View>
-                    <TextInput
-                        placeholder="Contraseña"
-                        value={user.password}
-                        onChangeText={value => updateUser('password', value)}
-                        style={globalStyles.textField}
-                    />
-                    <TextInput
-                        placeholder="Repite tu contraseña"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        style={globalStyles.textField}
-                    />
-                </View>
-            )}
+            <PasswordInput
+                placeholder="Contraseña"
+                value={user.password}
+                onChangeText={value => updateUser('password', value)}
+                showRequirements={true}
+                onValidationChange={(isValid, requirements) => {
+                    // Puedes usar esto para habilitar/deshabilitar el botón de registro
+                    console.log('Contraseña válida:', isValid, requirements)
+                }}
+            />
+            
+            <PasswordInput
+                placeholder="Confirmar contraseña"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                confirmValue={user.password}
+                isConfirmField={true}
+                showToggle={false}
+                onValidationChange={(matches, data) => {
+                    console.log('Contraseñas coinciden:', matches, data)
+                }}
+            />
 
             <Pressable onPress={openDateModal}>
                 <TextInput
@@ -185,27 +174,7 @@ export default function SignIn() {
                 </SafeAreaProvider>
             </Modal>
 
-            {passwordVisibility ? (
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={() => setPasswordVisibility(!passwordVisibility)}
-                >
-                    <Text style={{ color: '#fff' }}>Ver contraseña</Text>
-                </Pressable>
-            ) : (
-                <Pressable
-                    style={[
-                        globalStyles.button,
-                        globalStyles.button.outlineBlack,
-                        {
-                            color: '#000',
-                        },
-                    ]}
-                    onPress={() => setPasswordVisibility(!passwordVisibility)}
-                >
-                    <Text>Ocultar contraseña</Text>
-                </Pressable>
-            )}
+
 
             <Pressable style={globalStyles.button} onPress={handleSignInPress}>
                 <Text style={{ color: '#fff' }}>Confirmar</Text>
