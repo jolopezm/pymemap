@@ -5,6 +5,7 @@ from ..db import db
 from app.models.users import User, UserResponse, UserUpdate, ResetPasswordRequest
 from app.models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
+from ..utils.password_validator import PasswordValidation
 
 router = APIRouter()
 
@@ -98,6 +99,14 @@ async def reset_password(request: ResetPasswordRequest):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Validar la nueva contraseña
+    validation_result = PasswordValidation.validate_password(request.new_password)
+    if not validation_result['valid']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Contraseña no válida: {'; '.join(validation_result['errors'])}"
+        )
+
     hashed_new_password = get_password_hash(request.new_password)
     await db.users.update_one(
         {"email": request.email},
@@ -134,6 +143,14 @@ async def change_password(user_id: str, passwords: dict, current_user: TokenData
             detail="Contraseña antigua incorrecta"
         )
     
+    # Validar la nueva contraseña
+    validation_result = PasswordValidation.validate_password(new_password)
+    if not validation_result['valid']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Contraseña no válida: {'; '.join(validation_result['errors'])}"
+        )
+    
     hashed_new_password = get_password_hash(new_password)
     await db.users.update_one(
         {"_id": ObjectId(user_id)}, 
@@ -141,3 +158,22 @@ async def change_password(user_id: str, passwords: dict, current_user: TokenData
     )
     
     return {"mensaje": "Contraseña actualizada exitosamente"}
+
+@router.post("/validate-password")
+async def validate_password_endpoint(request: dict):
+    """Endpoint público para validar requisitos de contraseña desde el frontend"""
+    password = request.get("password")
+    
+    if not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere el campo 'password'"
+        )
+    
+    validation_result = PasswordValidation.validate_password(password)
+    
+    return {
+        "valid": validation_result['valid'],
+        "requirements": validation_result['requirements'],
+        "errors": validation_result['errors'] if not validation_result['valid'] else []
+    }
