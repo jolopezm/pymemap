@@ -22,7 +22,6 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Variables de entorno**: python-dotenv 1.0.1
 - **Servidor**: Uvicorn 0.29.0
 - **Validación**: Pydantic 2.11.9 para validación de datos
-- 
 
 ### Frontend (Mobile & Web)
 
@@ -65,7 +64,6 @@ pymemap/
 │   └── test_backend_multiplataforma.py  # Tests del backend
 │
 └── frontend/                  # App móvil con Expo/React Native
-Native
     ├── app/                  # Páginas de la aplicación (Expo Router)
     │   ├── _layout.js        # Layout principal
     │   ├── index.js          # Página de inicio
