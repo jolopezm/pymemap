@@ -1,86 +1,132 @@
-import React, { useState } from 'react';
-import { View, Text, Button, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../context/auth-context';
-import globalStyles from '../styles/global';
+import { useState, useEffect, useRef } from 'react'
+import { View, Text, Pressable, TextInput } from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import { useAuth } from '../context/auth-context'
+import globalStyles from '../styles/global'
+import { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import LoadingSpinner from '../components/loading-spinner'
+import Screen from '../components/screen'
+import PasswordInput from '../components/password-input'
 
-export default function Login({title, onPress}) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const { login } = useAuth();
+export default function Login() {
+    const [user, setUser] = useState({ email: '', password: '' })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
+    const { login } = useAuth()
+    const autoLoginAttempted = useRef(false)
 
-  const handleLogin = async () => {
-    // Validaciones
-    if (!email || !password) {
-      setError('Por favor ingresa email y contraseña');
-      return;
+    useEffect(() => {
+        const autoLogin = async () => {
+            const authData = await AsyncStorage.getItem('authData')
+            const parsedData = authData ? JSON.parse(authData) : {}
+            const { email, password } = parsedData.user || {}
+
+            if (email && password && !autoLoginAttempted.current) {
+                autoLoginAttempted.current = true
+
+                setLoading(true)
+                try {
+                    await login({ email, password })
+                    router.push('/home')
+                    Toast.success('Haz iniciado sesión exitosamente', {
+                        duration: 3000,
+                    })
+                } catch (e) {
+                    Toast.error(
+                        'No se pudo iniciar sesión automáticamente. Por favor, inicia sesión manualmente.',
+                        { duration: 3000 }
+                    )
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+
+        autoLogin()
+    }, [login, router])
+
+    const handleLoginPress = async () => {
+        setError('')
+        setLoading(true)
+
+        try {
+            await login({ email: user.email, password: user.password })
+            const authData = await AsyncStorage.getItem('authData')
+            if (authData) {
+                const parsedData = JSON.parse(authData)
+
+                if (parsedData.user) {
+                    delete parsedData.user.password
+                }
+
+                await AsyncStorage.setItem(
+                    'authData',
+                    JSON.stringify(parsedData)
+                )
+            }
+            router.push('/home')
+        } catch (e) {
+            e =
+                e.response?.data?.detail ||
+                'Credenciales incorrectas o error de servidor.'
+            setError(e)
+            Toast.error(e, { duration: 3000 })
+        } finally {
+            setLoading(false)
+        }
     }
 
-    setError('');
-    setLoading(true);
+    return (
+        <Screen>
+            <Text style={globalStyles.title}>Iniciar Sesión</Text>
 
-    try {
-      const result = await login(email, password);
-      
-      if (result.success) {
-        // Login exitoso - redirigir al inicio
-        Alert.alert('Éxito', 'Inicio de sesión exitoso');
-        router.push('/home');
-      } else {
-        // Mostrar error
-        setError(result.error);
-      }
-    } catch (error) {
-      console.error('Error durante login:', error);
-      setError('Error al iniciar sesión. Por favor intenta de nuevo.');
-    } finally {
-      setLoading(false);
-    }
-  };
+            <TextInput
+                placeholder="Email"
+                style={globalStyles.textField}
+                value={user.email}
+                onChangeText={email => setUser({ ...user, email })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+            />
 
-  return (
-    <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Iniciar Sesión</Text>
+            <PasswordInput
+                placeholder="Contraseña"
+                value={user.password}
+                onChangeText={password => setUser({ ...user, password })}
+                onSubmitEditing={handleLoginPress}
+            />
 
-      <TextInput 
-        placeholder="Email"
-        style={globalStyles.textField}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      
-      <TextInput 
-        placeholder="Password"
-        style={globalStyles.textField}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+            <Text>
+                ¿Olvidaste tu contraseña?
+                <Link href="/forgot-password">
+                    <Text style={{ color: 'blue' }}> Recuperar</Text>
+                </Link>
+            </Text>
 
-      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+            {loading ? (
+                <LoadingSpinner />
+            ) : (
+                <Pressable
+                    style={globalStyles.button}
+                    onPress={handleLoginPress}
+                >
+                    <Text style={{ color: '#fff' }}>Confirmar</Text>
+                </Pressable>
+            )}
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Pressable style={globalStyles.button} onPress={handleLogin}>
-          <Text style={{ color: '#fff' }}>Confirmar</Text>
-        </Pressable>
-      )}
+            <Text style={{ marginTop: 20 }}>¿No tienes cuenta?</Text>
+            <Pressable
+                style={globalStyles.button}
+                onPress={() => router.push('/sign-in')}
+            >
+                <Text style={{ color: '#fff' }}>Registrarse</Text>
+            </Pressable>
 
-      <Text style={{ marginTop: 20 }}>¿No tienes cuenta?</Text> 
-      <Pressable style={globalStyles.button} onPress={() => router.push('/sign-in')}>
-        <Text style={{ color: '#fff' }}>Registrarse</Text>
-      </Pressable>
-
-      <Link href="/home">
-        <Text style={{ color: 'blue'}}>Ir a home</Text>
-      </Link>
-    </View>
-  );
+            <Link href="/home">
+                <Text style={{ color: 'blue' }}>Ir a home</Text>
+            </Link>
+        </Screen>
+    )
 }
-

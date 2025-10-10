@@ -2,6 +2,7 @@ import { View, Text, Button, Pressable, ScrollView } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../context/auth-context';
 import globalStyles from '../styles/global';
+import Screen from '../components/screen'
 
 //configurar preferencias de uso de datos
 //terminos y condiciones, politica de privacidad
@@ -19,7 +20,7 @@ export default function Settings() {
   };
 
   return (
-    <View style={globalStyles.container}>
+    <Screen>
       <Text style={globalStyles.title}>
         Bienvenido, {isAuthenticated ? user?.name : 'Invitado'}
       </Text>
@@ -59,6 +60,6 @@ export default function Settings() {
       <Link href="/about">
         <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
       </Link>
-    </View>
+    </Screen>
   );
 }

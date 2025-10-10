@@ -1,143 +1,196 @@
-import React, { useState } from 'react';
-import { View, Text, Button, Pressable, TextInput } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { createUser } from '../api/user-service';
-import globalStyles from '../styles/global';
+import { useState } from 'react'
+import { View, Text, Pressable, TextInput, Modal } from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import { handleSignIn } from '../utils/handle-sign-in'
+import { User } from '../classes/user'
+import globalStyles from '../styles/global'
+import { Calendar } from '../components/calendar'
+import { Toast } from 'toastify-react-native'
+import { dateFormatter } from '../utils/date-formatter'
+import { rutFormatter } from '../utils/rut-formatter'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import Screen from '../components/screen'
+import { SafeAreaView, SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
+import { Platform } from 'react-native'
+import PasswordInput from '../components/password-input'
 
 export default function SignIn() {
-  const [rut, setRut] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordVisibility, setPasswordVisibility] = useState(true);
-  const [birthdate, setBirthdate] = useState('');
-  const [error, setError] = useState('');
-  const router = useRouter();
+    const [user, setUser] = useState(new User('', '', '', '', ''))
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [modalVisible, setModalVisible] = useState(false)
+    const [error, setError] = useState('')
+    const router = useRouter()
 
-  const handleSignIn = () => {
-    if (
-      !rut ||
-      !name ||
-      !email ||
-      !password ||
-      !confirmPassword ||
-      !birthdate
-    ) {
-      setError('Todos los campos son obligatorios');
-      return;
+    const updateUser = (field, value) => {
+        setUser(prevUser => ({
+            ...prevUser,
+            [field]: value,
+        }))
     }
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
+
+    const handleSignInPress = async () => {
+        setError('')
+
+        try {
+            const result = await handleSignIn({
+                rut: user.rut,
+                name: user.name,
+                email: user.email,
+                password: user.password,
+                confirmPassword,
+                birthdate: user.birthdate,
+            })
+
+            if (result.success) {
+                await AsyncStorage.setItem('authData', JSON.stringify(result))
+                console.log('Usuario guardado en AsyncStorage:', result)
+
+                router.push('/auth-code')
+                Toast.info('Código de verificación enviado al email', {
+                    duration: 3000,
+                })
+            } else {
+                setError(result.error)
+                Toast.error(result.error || 'Error desconocido', {
+                    duration: 3000,
+                })
+            }
+        } catch (error) {
+            console.error(
+                'Error capturado en handleSignInPress:',
+                JSON.stringify(error, null, 2)
+            )
+            const errorMessage =
+                error.response?.data?.detail ||
+                error.message || // Añadimos un fallback al mensaje del error
+                'Error al registrar usuario'
+            setError(errorMessage)
+            Toast.error(errorMessage, { duration: 3000 })
+        }
     }
-    setError('');
-    createUser({ rut, name, email, password, birthdate })
-      .then(response => {
-        router.push('/home');
-        console.log('Usuario creado:', response);
-      })
-      .catch(err => {
-        setError('Error al crear usuario');
-      });
-  };
 
-  return (
-    <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Registro de usuario</Text>
-      <TextInput
-        placeholder="RUT"
-        value={rut}
-        onChangeText={setRut}
-        style={globalStyles.textField}
-      />
+    const openDateModal = () => setModalVisible(true)
 
-      <TextInput
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        style={globalStyles.textField}
-      />
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={globalStyles.textField}
-      />
+    return (
+        <Screen>
+            <Text style={globalStyles.title}>Registro de usuario</Text>
+            <TextInput
+                placeholder="RUT"
+                value={user.rut}
+                maxLength={12}
+                onChangeText={value => updateUser('rut', rutFormatter(value))}
+                style={globalStyles.textField}
+            />
 
-      {passwordVisibility ? (
-        <View>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            style={globalStyles.textField}
-            secureTextEntry
-          />
-          <TextInput
-            placeholder="Enter your password again"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={globalStyles.textField}
-            secureTextEntry
-          />
-        </View>
-      ) : (
-        <View>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            style={globalStyles.textField}
-          />
-          <TextInput
-            placeholder="Enter your password again"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={globalStyles.textField}
-          />
-        </View>
-      )}
+            <TextInput
+                placeholder="Nombre"
+                value={user.name}
+                onChangeText={value => updateUser('name', value)}
+                style={globalStyles.textField}
+            />
+            <TextInput
+                placeholder="Email"
+                value={user.email}
+                onChangeText={value => updateUser('email', value)}
+                style={globalStyles.textField}
+            />
 
-      <TextInput
-        placeholder="Birthdate"
-        value={birthdate}
-        onChangeText={setBirthdate}
-        style={globalStyles.textField}
-      />
+            <PasswordInput
+                placeholder="Contraseña"
+                value={user.password}
+                onChangeText={value => updateUser('password', value)}
+                showRequirements={true}
+                onValidationChange={(isValid, requirements) => {
+                    // Puedes usar esto para habilitar/deshabilitar el botón de registro
+                    console.log('Contraseña válida:', isValid, requirements)
+                }}
+            />
+            
+            <PasswordInput
+                placeholder="Confirmar contraseña"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                confirmValue={user.password}
+                isConfirmField={true}
+                showToggle={false}
+                onValidationChange={(matches, data) => {
+                    console.log('Contraseñas coinciden:', matches, data)
+                }}
+            />
 
-      {passwordVisibility ? (
-        <Pressable
-          style={globalStyles.button}
-          onPress={() => setPasswordVisibility(!passwordVisibility)}
-        >
-          <Text style={{ color: '#fff' }}>Ver contraseña</Text>
-        </Pressable>
-      ) : (
-        <Pressable
-          style={[globalStyles.button, globalStyles.button.outlineBlack]}
-          onPress={() => setPasswordVisibility(!passwordVisibility)}
-        >
-          <Text style={{ color: '#000' }}>Ocultar contraseña</Text>
-        </Pressable>
-      )}
+            <Pressable onPress={openDateModal}>
+                <TextInput
+                    placeholder="Fecha de nacimiento (DD/MM/YYYY)"
+                    value={user.birthdate}
+                    style={globalStyles.textField}
+                    editable={false}
+                    pointerEvents="none"
+                />
+            </Pressable>
 
-      <Pressable style={globalStyles.button} onPress={handleSignIn}>
-        <Text style={{ color: '#fff' }}>Confirmar</Text>
-      </Pressable>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                statusBarTranslucent={true}
+                visible={modalVisible}
+                presentationStyle="overFullScreen"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+                    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top','bottom']}>
+                        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, justifyContent: 'flex-start' }}>
+                            <Text style={globalStyles.title}>
+                                Seleccionar fecha de nacimiento
+                            </Text>
+                            <View style={{ alignSelf: 'stretch' }}>
+                                <Calendar
+                                    selected={user.birthdate || null}
+                                    onDateSelect={date =>
+                                        updateUser(
+                                            'birthdate',
+                                            dateFormatter(date)
+                                        )
+                                    }
+                                    style={{ width: '100%' }}
+                                />
+                            </View>
+                            <Pressable
+                                style={globalStyles.button}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={{ color: '#fff' }}>Seleccionar</Text>
+                            </Pressable>
+                            <Pressable
+                                style={[
+                                    globalStyles.button,
+                                    globalStyles.button.red,
+                                ]}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={{ color: '#fff' }}>Cerrar</Text>
+                            </Pressable>
+                        </View>
+                    </SafeAreaView>
+                </SafeAreaProvider>
+            </Modal>
 
-      {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-      <Text style={{ marginTop: 10 }}>¿Ya estás registrado?</Text>
-      <Pressable
-        style={globalStyles.button}
-        onPress={() => router.push('/login')}
-      >
-        <Text style={{ color: '#fff' }}>Ir a inicio de sesión</Text>
-      </Pressable>
 
-      <Link href="/home">
-        <Text style={{ color: 'blue' }}>Ir a home</Text>
-      </Link>
-    </View>
-  );
+
+            <Pressable style={globalStyles.button} onPress={handleSignInPress}>
+                <Text style={{ color: '#fff' }}>Confirmar</Text>
+            </Pressable>
+
+            <Text style={{ marginTop: 10 }}>¿Ya estás registrado?</Text>
+            <Pressable
+                style={globalStyles.button}
+                onPress={() => router.push('/login')}
+            >
+                <Text style={{ color: '#fff' }}>Ir a inicio de sesión</Text>
+            </Pressable>
+
+            <Link href="/home">
+                <Text style={{ color: 'blue' }}>Ir a home</Text>
+            </Link>
+        </Screen>
+    )
 }

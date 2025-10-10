@@ -2,8 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from bson import ObjectId
 
 from ..db import db
-from ..models import User, UserResponse, UserUpdate
-from ..auth import get_current_user, get_password_hash, TokenData
+from app.models.users import User, UserResponse, UserUpdate, ResetPasswordRequest, UpdateBalanceRequest
+from app.models.token import TokenData
+from ..auth import get_current_user, get_password_hash, verify_password
+from ..utils.password_validator import PasswordValidation
 
 router = APIRouter()
 
@@ -23,14 +25,13 @@ async def create_user(user: User):
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Correo electrónico ya registrado"
         )
         
     user_dict = user.dict()
     user_dict["password"] = get_password_hash(user.password)
     
     await db.users.insert_one(user_dict)
-    # Return the created user by finding it again, as insert_one doesn't return the full document
     created_user = await db.users.find_one({"email": user.email})
     return UserResponse(**created_user)
 
@@ -41,7 +42,7 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="Usuario no encontrado"
         )
     return UserResponse(**user)
 
@@ -49,26 +50,32 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
 async def get_user(user_id: str, current_user: TokenData = Depends(get_current_user)):
     """Obtiene un usuario por su ID - Ruta protegida"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
     if user:
         return UserResponse(**user)
-    raise HTTPException(status_code=404, detail="User not found")
+    raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(user_id: str, user: UserUpdate, current_user: TokenData = Depends(get_current_user)):
     """Actualiza un usuario por su ID - Ruta protegida (sin password)"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     
     user_dict = {k: v for k, v in user.dict(exclude_unset=True).items() if v is not None}
     if not user_dict:
-        raise HTTPException(status_code=400, detail="No data to update")
-    
+        raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+
     result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": user_dict})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
     updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
     return UserResponse(**updated_user)
 
@@ -77,7 +84,120 @@ async def update_user(user_id: str, user: UserUpdate, current_user: TokenData = 
 async def delete_user(user_id: str, current_user: TokenData = Depends(get_current_user)):
     """Elimina un usuario por su ID - Ruta protegida"""
     if not ObjectId.is_valid(user_id):
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
     result = await db.users.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(request: ResetPasswordRequest):
+    """Restablece la contraseña de un usuario usando su email (ruta pública)."""
+    user = await db.users.find_one({"email": request.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Validar la nueva contraseña
+    validation_result = PasswordValidation.validate_password(request.new_password)
+    if not validation_result['valid']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Contraseña no válida: {'; '.join(validation_result['errors'])}"
+        )
+
+    hashed_new_password = get_password_hash(request.new_password)
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {"password": hashed_new_password}}
+    )
+
+    return {"mensaje": "Contraseña restablecida exitosamente"}
+
+@router.post("/{user_id}/change-password", status_code=status.HTTP_200_OK)
+async def change_password(user_id: str, passwords: dict, current_user: TokenData = Depends(get_current_user)):
+    """Cambia la contraseña de un usuario - Ruta protegida"""
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
+    
+    old_password = passwords.get("old_password")
+    new_password = passwords.get("new_password")
+    
+    if not old_password or not new_password:
+        raise HTTPException(
+            status_code=400, 
+            detail="Se requieren la contraseña antigua y la nueva"
+        )
+    
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if not verify_password(old_password, user["password"]):
+        raise HTTPException(
+            status_code=401, 
+            detail="Contraseña antigua incorrecta"
+        )
+    
+    # Validar la nueva contraseña
+    validation_result = PasswordValidation.validate_password(new_password)
+    if not validation_result['valid']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Contraseña no válida: {'; '.join(validation_result['errors'])}"
+        )
+    
+    hashed_new_password = get_password_hash(new_password)
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": {"password": hashed_new_password}}
+    )
+    
+    return {"mensaje": "Contraseña actualizada exitosamente"}
+
+@router.post("/{user_id}/update-balance", response_model=UserResponse)
+async def update_balance(user_id: str, request: UpdateBalanceRequest):
+    """Agrega saldo a la cuenta del usuario"""
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de ID de usuario inválido"
+        )
+    if request.amount <= 0:
+        raise HTTPException(
+            status_code=400, 
+            detail="El monto debe ser mayor que cero"
+        )
+    
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$inc": {"balance": request.amount if request.isPositive else -request.amount}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+    return UserResponse(**updated_user)
+
+@router.post("/validate-password")
+async def validate_password_endpoint(request: dict):
+    """Endpoint público para validar requisitos de contraseña desde el frontend"""
+    password = request.get("password")
+    
+    if not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere el campo 'password'"
+        )
+    
+    validation_result = PasswordValidation.validate_password(password)
+    
+    return {
+        "valid": validation_result['valid'],
+        "requirements": validation_result['requirements'],
+        "errors": validation_result['errors'] if not validation_result['valid'] else []
+    }
