@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Text, TextInput, Pressable, FlatList } from 'react-native'
+import { View, Text, TextInput, FlatList, ScrollView } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import ProtectedRoute from '../components/protected-route'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -7,7 +7,10 @@ import { getBusiness } from '../api/business-service'
 import { updateUser, deleteUser } from '../api/user-service'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
-import Screen from '../components/screen'
+import Button from '../components/button'
+import DismissKeyboard from '../components/dismiss-keyboard'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 import Item from '../plantillas/business-item'
 
 export default function Profile() {
@@ -69,8 +72,25 @@ export default function Profile() {
 
     return (
         <ProtectedRoute>
-            <Screen>
-                <Text style={globalStyles.title}>Perfil de usuario</Text>
+            <DismissKeyboard>
+                <LinearGradient
+                    colors={['#9B59B6', '#F8BBD9']}
+                    style={{ flex: 1 }}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                >
+                    <ScrollView 
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={[globalStyles.gradientContainer, { paddingVertical: 30 }]}>
+                            {/* Icono de perfil */}
+                            <View style={globalStyles.logoContainer}>
+                                <Ionicons name="person-circle" size={64} color="#FFFFFF" />
+                            </View>
+
+                            <Text style={globalStyles.title}>Perfil de usuario</Text>
                 <TextInput
                     value={name}
                     onChangeText={setName}
@@ -93,54 +113,72 @@ export default function Profile() {
                     placeholder="Fecha de nacimiento"
                 />
 
-                <Text style={globalStyles.title}>Mis negocios:</Text>
-                {businesses.filter(
-                    business => String(business.owner_id) === String(userId)
-                ).length > 0 ? (
-                    <FlatList
-                        style={{ width: '100%', maxHeight: 250 }}
-                        data={businesses.filter(
-                            business =>
-                                String(business.owner_id) === String(userId)
-                        )}
-                        renderItem={({ item }) => <Item business={item} />}
-                        keyExtractor={item => item._id}
-                    />
-                ) : (
-                    <Text>No tienes negocios registrados.</Text>
-                )}
+                            <Text style={[globalStyles.subtitle, { marginTop: 20 }]}>Mis negocios:</Text>
+                            {businesses.filter(
+                                business => String(business.owner_id) === String(userId)
+                            ).length > 0 ? (
+                                <View style={{ width: '100%', maxHeight: 250, marginVertical: 10 }}>
+                                    <FlatList
+                                        data={businesses.filter(
+                                            business =>
+                                                String(business.owner_id) === String(userId)
+                                        )}
+                                        renderItem={({ item }) => <Item business={item} />}
+                                        keyExtractor={item => item._id}
+                                        showsVerticalScrollIndicator={false}
+                                    />
+                                </View>
+                            ) : (
+                                <Text style={[globalStyles.linkText, { textDecorationLine: 'none', textAlign: 'center', marginVertical: 10 }]}>
+                                    No tienes negocios registrados.
+                                </Text>
+                            )}
 
-                {isEditting ? (
-                    <Pressable
-                        style={[globalStyles.button, globalStyles.button.green]}
-                        onPress={handleSave}
-                    >
-                        <Text style={{ color: '#000' }}>Guardar cambios</Text>
-                    </Pressable>
-                ) : (
-                    <Pressable style={globalStyles.button} onPress={handleEdit}>
-                        <Text style={{ color: '#fff' }}>Editar datos</Text>
-                    </Pressable>
-                )}
+                            {/* Botones de acción */}
+                            {isEditting ? (
+                                <Button
+                                    title="Guardar cambios"
+                                    variant="primary"
+                                    onPress={handleSave}
+                                    style={{ marginTop: 10 }}
+                                />
+                            ) : (
+                                <Button
+                                    title="Editar datos"
+                                    variant="secondary"
+                                    onPress={handleEdit}
+                                    style={{ marginTop: 10 }}
+                                />
+                            )}
 
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={() => router.push('/change-password')}
-                >
-                    <Text style={{ color: '#fff' }}>Cambiar contraseña</Text>
-                </Pressable>
+                            <Button
+                                title="Cambiar contraseña"
+                                variant="outline"
+                                onPress={() => router.push('/change-password')}
+                                style={{ marginTop: 10 }}
+                            />
 
-                <Pressable
-                    style={[globalStyles.button, globalStyles.button.red]}
-                    onPress={handleDeleteAccount}
-                >
-                    <Text style={{ color: '#fff' }}>Eliminar cuenta</Text>
-                </Pressable>
+                            <Button
+                                title="Eliminar cuenta"
+                                variant="primary"
+                                onPress={handleDeleteAccount}
+                                style={{ marginTop: 10, backgroundColor: '#E74C3C' }}
+                            />
 
-                <Link href="/home">
-                    <Text style={{ color: 'blue' }}>Ir a home</Text>
-                </Link>
-            </Screen>
+                            <Button
+                                title="🏠 Volver al inicio"
+                                variant="outline"
+                                onPress={() => router.push('/home')}
+                                style={{ 
+                                    marginTop: 20,
+                                    borderColor: 'rgba(255, 255, 255, 0.7)',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                }}
+                            />
+                        </View>
+                    </ScrollView>
+                </LinearGradient>
+            </DismissKeyboard>
         </ProtectedRoute>
     )
 }
