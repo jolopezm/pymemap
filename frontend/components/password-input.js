@@ -124,16 +124,18 @@ export default function PasswordInput({
                     globalStyles.textField, 
                     styles.input, 
                     inputStyle,
-                    getBorderStyle()
+                    getBorderStyle(),
+                    { color: '#333' } // Forzar color del texto
                 ]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
+                placeholderTextColor="#999"
                 secureTextEntry={!isPasswordVisible}
                 autoCapitalize="none"
                 autoCorrect={false}
-                autoComplete="password"
-                textContentType="password"
+                autoComplete="off"
+                textContentType="none" 
                 autoFocus={autoFocus}
                 onSubmitEditing={onSubmitEditing}
                 {...props}
@@ -221,11 +223,15 @@ const styles = {
     },
     requirementsContainer: {
         marginTop: 8,
-        padding: 12,
-        backgroundColor: '#f8f9fa',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e9ecef',
+        padding: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 15,
+        borderWidth: 0,
+        shadowColor: '#6A4C93',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
     },
     requirementsTitle: {
         fontSize: 14,

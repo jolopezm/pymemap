@@ -2,9 +2,15 @@ import React from 'react'
 import { View, TextInput, StyleSheet } from 'react-native'
 import globalStyles from '../styles/global'
 
-export default function SearchBar({ searchTerm, setSearchTerm }) {
+export default function SearchBar({
+    searchTerm,
+    setSearchTerm,
+    placeholder = 'Busca un negocio',
+    style = {},
+    showIcon = false,
+}) {
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, style]}>
             <TextInput
                 style={globalStyles.textField}
                 placeholder="Busca un negocio por nombre, categoria, etc."

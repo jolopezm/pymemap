@@ -5,10 +5,12 @@ import {
 } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import ToastManager from 'toastify-react-native' // <-- 1. Importar
+import { StatusBar } from 'expo-status-bar'
 
 export default function Layout() {
     return (
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <StatusBar style="light" backgroundColor="#9B59B6" />
             <AuthProvider>
                 <ToastManager />
                 <Stack screenOptions={{ headerShown: false }}>

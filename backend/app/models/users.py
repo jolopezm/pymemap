@@ -59,10 +59,6 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
     
-class UpdateBalanceRequest(BaseModel):
-    amount: float
-    isPositive: bool = True
-    
     @field_validator('new_password')
     @classmethod
     def validate_new_password(cls, v: str) -> str:
@@ -74,3 +70,7 @@ class UpdateBalanceRequest(BaseModel):
             raise ValueError(f"Contraseña no válida: {error_message}")
         
         return v
+    
+class UpdateBalanceRequest(BaseModel):
+    amount: float
+    isPositive: bool = True
