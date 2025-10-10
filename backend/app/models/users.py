@@ -45,5 +45,6 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
     
-class AddBalanceRequest(BaseModel):
+class UpdateBalanceRequest(BaseModel):
     amount: float
+    isPositive: bool = True

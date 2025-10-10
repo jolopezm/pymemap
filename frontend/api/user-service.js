@@ -56,17 +56,17 @@ export async function deleteUser(userId) {
     return response.data
 }
 
-export const addBalance = async (userId, amount) => {
-    const response = await fetch(`${API_URL}/users/${userId}/add-balance`, {
+export const updateBalance = async (userId, amount, isPositive = true) => {
+    const response = await fetch(`${API_URL}/users/${userId}/update-balance`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, isPositive }),
     })
 
     if (!response.ok) {
-        throw new Error('Error adding balance')
+        throw new Error('Error updating balance')
     }
 
     return await response.json()

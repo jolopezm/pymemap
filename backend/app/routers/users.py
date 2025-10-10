@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from bson import ObjectId
 
 from ..db import db
-from app.models.users import User, UserResponse, UserUpdate, ResetPasswordRequest, AddBalanceRequest
+from app.models.users import User, UserResponse, UserUpdate, ResetPasswordRequest, UpdateBalanceRequest
 from app.models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
 
@@ -142,8 +142,8 @@ async def change_password(user_id: str, passwords: dict, current_user: TokenData
     
     return {"mensaje": "Contraseña actualizada exitosamente"}
 
-@router.post("/{user_id}/add-balance", response_model=UserResponse)
-async def add_balance(user_id: str, request: AddBalanceRequest):
+@router.post("/{user_id}/update-balance", response_model=UserResponse)
+async def update_balance(user_id: str, request: UpdateBalanceRequest):
     """Agrega saldo a la cuenta del usuario"""
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
@@ -158,7 +158,7 @@ async def add_balance(user_id: str, request: AddBalanceRequest):
     
     result = await db.users.update_one(
         {"_id": ObjectId(user_id)}, 
-        {"$inc": {"balance": request.amount}}
+        {"$inc": {"balance": request.amount if request.isPositive else -request.amount}}
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
