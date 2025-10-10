@@ -8,6 +8,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
 import PasswordInput from '../components/password-input'
+import Button from '../components/button'
+import DismissKeyboard from '../components/dismiss-keyboard'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
@@ -79,54 +83,79 @@ export default function Login() {
     }
 
     return (
-        <Screen>
-            <Text style={globalStyles.title}>Iniciar Sesión</Text>
-
-            <TextInput
-                placeholder="Email"
-                style={globalStyles.textField}
-                value={user.email}
-                onChangeText={email => setUser({ ...user, email })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-
-            <PasswordInput
-                placeholder="Contraseña"
-                value={user.password}
-                onChangeText={password => setUser({ ...user, password })}
-                onSubmitEditing={handleLoginPress}
-            />
-
-            <Text>
-                ¿Olvidaste tu contraseña?
-                <Link href="/forgot-password">
-                    <Text style={{ color: 'blue' }}> Recuperar</Text>
-                </Link>
-            </Text>
-
-            {loading ? (
-                <LoadingSpinner />
-            ) : (
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={handleLoginPress}
-                >
-                    <Text style={{ color: '#fff' }}>Confirmar</Text>
-                </Pressable>
-            )}
-
-            <Text style={{ marginTop: 20 }}>¿No tienes cuenta?</Text>
-            <Pressable
-                style={globalStyles.button}
-                onPress={() => router.push('/sign-in')}
+        <DismissKeyboard>
+            <LinearGradient
+                colors={['#9B59B6', '#F8BBD9']}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
             >
-                <Text style={{ color: '#fff' }}>Registrarse</Text>
-            </Pressable>
+                <View style={globalStyles.gradientContainer}>
+                {/* Icono de la app */}
+                <View style={globalStyles.logoContainer}>
+                    <Ionicons name="business" size={64} color="#FFFFFF" />
+                </View>
 
-            <Link href="/home">
-                <Text style={{ color: 'blue' }}>Ir a home</Text>
-            </Link>
-        </Screen>
+                {/* Título */}
+                <Text style={globalStyles.title}>¡Bienvenido!</Text>
+
+                {/* Campo Email */}
+                <TextInput
+                    placeholder="Correo electrónico"
+                    placeholderTextColor="#999"
+                    style={globalStyles.textField}
+                    value={user.email}
+                    onChangeText={email => setUser({ ...user, email })}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+
+                {/* Campo Contraseña */}
+                <PasswordInput
+                    placeholder="Contraseña"
+                    value={user.password}
+                    onChangeText={password => setUser({ ...user, password })}
+                    onSubmitEditing={handleLoginPress}
+                    style={{ marginBottom: 20 }}
+                />
+
+                {/* Link Olvidaste contraseña */}
+                <Link href="/forgot-password" style={{ marginBottom: 30 }}>
+                    <Text style={globalStyles.linkText}>¿Olvidaste tu contraseña?</Text>
+                </Link>
+
+                {/* Botón Principal */}
+                <Button
+                    title="Ingresar"
+                    variant="primary"
+                    onPress={handleLoginPress}
+                    loading={loading}
+                    style={{ marginBottom: 10 }}
+                />
+
+                {/* Botón Secundario */}
+                <Text style={[globalStyles.linkText, { marginTop: 20, marginBottom: 10 }]}>
+                    ¿No tienes cuenta?
+                </Text>
+                <Button
+                    title="Registrarse"
+                    variant="secondary"
+                    onPress={() => router.push('/sign-in')}
+                />
+
+                {/* Botón de navegación al home */}
+                <Button
+                    title="🏠 Explorar sin cuenta"
+                    variant="outline"
+                    onPress={() => router.push('/home')}
+                    style={{ 
+                        marginTop: 30,
+                        borderColor: 'rgba(255, 255, 255, 0.7)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }}
+                />
+            </View>
+        </LinearGradient>
+    </DismissKeyboard>
     )
 }

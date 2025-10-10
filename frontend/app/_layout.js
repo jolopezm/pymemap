@@ -9,6 +9,7 @@ import ToastManager from 'toastify-react-native' // <-- 1. Importar
 export default function Layout() {
     return (
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <StatusBar style="light" backgroundColor="#9B59B6" />
             <AuthProvider>
                 <ToastManager />
                 <Stack screenOptions={{ headerShown: false }}>
