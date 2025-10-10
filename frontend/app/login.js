@@ -7,6 +7,7 @@ import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
+import PasswordInput from '../components/password-input'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
@@ -90,12 +91,11 @@ export default function Login() {
                 autoCapitalize="none"
             />
 
-            <TextInput
+            <PasswordInput
                 placeholder="Contraseña"
-                style={globalStyles.textField}
                 value={user.password}
                 onChangeText={password => setUser({ ...user, password })}
-                secureTextEntry
+                onSubmitEditing={handleLoginPress}
             />
 
             <Text>
