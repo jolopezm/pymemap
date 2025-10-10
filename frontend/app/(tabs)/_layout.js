@@ -10,11 +10,11 @@ export default function TabLayout() {
 
                     if (route.name === 'home') {
                         iconName = focused ? 'home' : 'home-outline'
-                    } else if (route.name === 'lists') {
+                    } else if (route.name === 'search') {
                         iconName = focused ? 'search' : 'search-outline'
-                    } else if (route.name === 'input') {
+                    } else if (route.name === 'wallet') {
                         iconName = focused ? 'wallet' : 'wallet-outline'
-                    } else if (route.name === 'fonts') {
+                    } else if (route.name === 'profile') {
                         iconName = focused ? 'person' : 'person-outline'
                     }
 
@@ -28,15 +28,17 @@ export default function TabLayout() {
                     borderTopWidth: 0,
                     elevation: 0,
                     height: 70,
-                    paddingBottom: 10,
+                    paddingBottom: 8,
+                    paddingTop: 8,
                 },
                 headerShown: false,
+                tabBarLabelStyle: { fontSize: 12 },
             })}
         >
             <Tabs.Screen name="home" options={{ title: 'Home' }} />
-            <Tabs.Screen name="lists" options={{ title: 'Search' }} />
-            <Tabs.Screen name="input" options={{ title: 'Input' }} />
-            <Tabs.Screen name="fonts" options={{ title: 'My profile' }} />
+            <Tabs.Screen name="search" options={{ title: 'Search' }} />
+            <Tabs.Screen name="wallet" options={{ title: 'Wallet' }} />
+            <Tabs.Screen name="profile" options={{ title: 'My profile' }} />
         </Tabs>
     )
 }

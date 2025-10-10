@@ -1,10 +1,14 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, Pressable, Button, StyleSheet } from 'react-native'
+import globalStyles from '../../styles/global'
+import Screen from '../../components/screen'
 
 export default function HomeScreen() {
     return (
-        <View style={styles.container}>
-            <Text>Buttons Screen</Text>
-        </View>
+        <Screen>
+            <View style={styles.container}>
+                <Text>Home Screen</Text>
+            </View>
+        </Screen>
     )
 }
 

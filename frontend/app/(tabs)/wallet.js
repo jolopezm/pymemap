@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet } from 'react-native'
 
-export default function InputScreen() {
+export default function WalletScreen() {
     return (
         <View style={styles.container}>
-            <Text>Input Screen</Text>
+            <Text>Wallet Screen</Text>
         </View>
     )
 }

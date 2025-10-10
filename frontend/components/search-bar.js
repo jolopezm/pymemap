@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, TextInput, StyleSheet } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
 import globalStyles from '../styles/global'
 
 export default function SearchBar({ searchTerm, setSearchTerm }) {
@@ -8,15 +7,9 @@ export default function SearchBar({ searchTerm, setSearchTerm }) {
         <View style={styles.container}>
             <TextInput
                 style={globalStyles.textField}
-                placeholder="Busca un negocio"
+                placeholder="Busca un negocio por nombre, categoria, etc."
                 value={searchTerm}
                 onChangeText={setSearchTerm}
-            />
-            <Ionicons
-                name="search"
-                size={24}
-                color="black"
-                style={styles.icon}
             />
         </View>
     )
@@ -29,12 +22,5 @@ const styles = StyleSheet.create({
         position: 'relative',
         flexDirection: 'row',
         alignItems: 'center',
-    },
-
-    icon: {
-        padding: 10,
-        position: 'absolute',
-        right: 0,
-        transform: [{ translateY: -3 }],
     },
 })
