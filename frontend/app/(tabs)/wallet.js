@@ -1,10 +1,19 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, Button } from 'react-native'
+import Screen from '../../components/screen'
+import globalStyles from '../../styles/global'
+import { useAuth } from '../../context/auth-context'
 
 export default function WalletScreen() {
+    const { user } = useAuth()
     return (
-        <View style={styles.container}>
-            <Text>Wallet Screen</Text>
-        </View>
+        <Screen>
+            <View>
+                <View style={globalStyles.card}>
+                    <Text>${user?.balance}</Text>
+                </View>
+            </View>
+            <Button title="Add Money" onPress={() => {}} />
+        </Screen>
     )
 }
 

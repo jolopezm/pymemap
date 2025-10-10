@@ -11,7 +11,7 @@ export default function Layout() {
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
             <AuthProvider>
                 <ToastManager />
-                <Stack>
+                <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="home" options={{ title: 'Home' }} />
                     <Stack.Screen name="about" options={{ title: 'About' }} />
                     <Stack.Screen
