@@ -9,7 +9,7 @@ import SearchBar from '../components/search-bar'
 import { getBusiness } from '../api/business-service'
 import Item from '../plantillas/business-item'
 
-export default function Home() {
+export default function HomeScreen() {
     const { user, isAuthenticated, logout } = useAuth()
     const router = useRouter()
     const [modalVisible, setModalVisible] = useState(false)
