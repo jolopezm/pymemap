@@ -10,11 +10,13 @@ import {
 } from '../../api/business-service'
 import React from 'react'
 import global from '../../styles/global'
+import { useRouter } from 'expo-router'
 
 export default function HomeScreen() {
     const { user, isAuthenticated } = useAuth()
     const [services, setServices] = React.useState([])
     const [businesses, setBusinesses] = React.useState([])
+    const router = useRouter()
 
     const fetchData = async () => {
         try {
@@ -104,51 +106,61 @@ export default function HomeScreen() {
                     })
                     return (
                         <View key={serviceId} style={styles.serviceContainer}>
-                            <View style={globalStyles.card}>
-                                <Text style={globalStyles.subtitle}>
-                                    {service.name}
-                                </Text>
-                                <Text style={styles.description}>
-                                    {service.description}
-                                </Text>
-                                <Text style={globalStyles.badge}>
-                                    Status: {service.state}
-                                </Text>
-                                <Text style={styles.price}>
-                                    Price: ${service.price}
-                                </Text>
+                            <Pressable
+                                onPress={() =>
+                                    router.push(
+                                        `/service-detail?id=${serviceId}`
+                                    )
+                                }
+                            >
+                                <View style={globalStyles.card}>
+                                    <Text style={globalStyles.subtitle}>
+                                        {service.name}
+                                    </Text>
+                                    <Text style={styles.description}>
+                                        {service.description}
+                                    </Text>
+                                    <Text style={globalStyles.badge}>
+                                        Status: {service.state}
+                                    </Text>
+                                    <Text style={styles.price}>
+                                        Price: ${service.price}
+                                    </Text>
 
-                                {showButtons && (
-                                    <View style={styles.buttonContainer}>
-                                        <Pressable
-                                            style={[
-                                                styles.button,
-                                                styles.acceptButton,
-                                            ]}
-                                            onPress={() =>
-                                                handleAccept(serviceId)
-                                            }
-                                        >
-                                            <Text style={styles.buttonText}>
-                                                ACCEPT
-                                            </Text>
-                                        </Pressable>
-                                        <Pressable
-                                            style={[
-                                                styles.button,
-                                                styles.rejectButton,
-                                            ]}
-                                            onPress={() =>
-                                                handleReject(serviceId)
-                                            }
-                                        >
-                                            <Text style={styles.buttonText}>
-                                                REJECT
-                                            </Text>
-                                        </Pressable>
-                                    </View>
-                                )}
-                            </View>
+                                    {showButtons && (
+                                        <View style={styles.buttonContainer}>
+                                            <Pressable
+                                                style={[
+                                                    styles.button,
+                                                    styles.acceptButton,
+                                                ]}
+                                                onPress={e => {
+                                                    e.stopPropagation()
+                                                    handleAccept(serviceId)
+                                                }}
+                                            >
+                                                <Text style={styles.buttonText}>
+                                                    ACCEPT
+                                                </Text>
+                                            </Pressable>
+                                            <Pressable
+                                                style={[
+                                                    styles.button,
+                                                    styles.rejectButton,
+                                                ]}
+                                                onPress={e => {
+                                                    e.stopPropagation()
+                                                    handleReject(serviceId)
+                                                }}
+                                            >
+                                                <Text style={styles.buttonText}>
+                                                    REJECT
+                                                </Text>
+                                            </Pressable>
+                                        </View>
+                                    )}
+                                </View>
+                            </Pressable>
                         </View>
                     )
                 })}
