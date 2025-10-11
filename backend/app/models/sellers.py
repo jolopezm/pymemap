@@ -12,7 +12,11 @@ class Business(BaseModel):
     #owner_id: PyObjectId = Field(default_factory=PyObjectId)
     owner_id: str = Field(...)
     
-    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        populate_by_name=True, 
+        arbitrary_types_allowed=True,
+        json_schema_extra={"by_alias": True}
+    )
     
     @field_validator('id', mode='before')
     @classmethod
@@ -21,7 +25,7 @@ class Business(BaseModel):
             return None
         return str(v) if isinstance(v, ObjectId) else str(v)
 
-    @field_serializer('id')
+    @field_serializer('id', when_used='always')
     def _serialize_id(self, v: Optional[str]) -> Optional[str]:
         return str(v) if v is not None else None
     
@@ -34,7 +38,11 @@ class Service(BaseModel):
     business_id: str = Field(...)
     client_id: str = Field(...)
     
-    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        populate_by_name=True, 
+        arbitrary_types_allowed=True,
+        json_schema_extra={"by_alias": True}
+    )
     
     @field_validator('id', mode='before')
     @classmethod
@@ -43,6 +51,6 @@ class Service(BaseModel):
             return None
         return str(v) if isinstance(v, ObjectId) else str(v)
 
-    @field_serializer('id')
+    @field_serializer('id', when_used='always')
     def _serialize_id(self, v: Optional[str]) -> Optional[str]:
         return str(v) if v is not None else None

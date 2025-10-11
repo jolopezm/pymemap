@@ -75,6 +75,27 @@ export async function requestService(serviceData) {
 
 export async function getServices() {
     const headers = await getAuthHeaders()
-    const response = await axios.get(`${API_URL}/services`, { headers })
+    const response = await axios.get(`${API_URL}/business/services`, {
+        headers,
+    })
+    return response.data
+}
+
+export async function deleteService(serviceId) {
+    const headers = await getAuthHeaders()
+    const response = await axios.delete(
+        `${API_URL}/business/services/${serviceId}`,
+        { headers }
+    )
+    return response.data
+}
+
+export async function updateServiceStatus(serviceId, newStatus) {
+    const headers = await getAuthHeaders()
+    const response = await axios.patch(
+        `${API_URL}/business/services/${serviceId}/status`,
+        { state: newStatus },
+        { headers }
+    )
     return response.data
 }

@@ -1,3 +1,4 @@
+from bson import ObjectId
 from fastapi import APIRouter, HTTPException, status
 from ..db import db
 from ..models.sellers import Business, Service
@@ -43,3 +44,43 @@ async def get_services():
     async for document in cursor:
         services.append(Service(**document))
     return services
+
+@router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_service(service_id: str):
+    """Elimina un servicio por su ID"""
+    if not ObjectId.is_valid(service_id):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid service ID format"
+        )
+    result = await db.services.delete_one({"_id": ObjectId(service_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return None
+
+@router.patch("/services/{service_id}/status", response_model=Service)
+async def update_service_status(service_id: str, status_data: dict):
+    """Actualiza el estado de un servicio"""
+    if not ObjectId.is_valid(service_id):
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid service ID format"
+        )
+    
+    new_status = status_data.get("state")
+    if not new_status:
+        raise HTTPException(
+            status_code=400,
+            detail="State field is required"
+        )
+    
+    result = await db.services.update_one(
+        {"_id": ObjectId(service_id)},
+        {"$set": {"state": new_status}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    updated_service = await db.services.find_one({"_id": ObjectId(service_id)})
+    return Service(**updated_service)
