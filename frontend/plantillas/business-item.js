@@ -10,7 +10,6 @@ export default function Item({ business }) {
     const openBusiness = () => {
         // Usar _id, id o name como fallback para el parámetro id
         const idValue = business._id ?? business.id ?? business.name ?? ''
-        console.log('[Item] Navigating with id:', idValue)
         // Usar sintaxis de objeto para params en expo-router
         router.push({
             pathname: '/business-profile',

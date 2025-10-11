@@ -2,15 +2,15 @@ import { StyleSheet } from 'react-native'
 
 // Paleta de colores basada en el mockup
 const colors = {
-    primary: '#6A4C93',        // Púrpura principal del botón
-    primaryDark: '#553A7A',    // Púrpura más oscuro para hover/pressed
-    secondary: '#9B59B6',      // Púrpura del degradado superior
-    accent: '#F8BBD9',         // Rosa del degradado inferior
+    primary: '#6A4C93', // Púrpura principal del botón
+    primaryDark: '#553A7A', // Púrpura más oscuro para hover/pressed
+    secondary: '#9B59B6', // Púrpura del degradado superior
+    accent: '#F8BBD9', // Rosa del degradado inferior
     white: '#FFFFFF',
     lightGray: '#F5F5F5',
     gray: '#888888',
-    textPrimary: '#FFFFFF',    // Texto principal en fondo púrpura
-    textSecondary: '#333333',  // Texto secundario
+    textPrimary: '#FFFFFFS', // Texto principal en fondo púrpura
+    textSecondary: '#333333', // Texto secundario
 }
 
 export default StyleSheet.create({
@@ -219,8 +219,6 @@ export default StyleSheet.create({
         shadowRadius: 12,
         elevation: 4,
     },
-
-
 
     card: {
         padding: 12,

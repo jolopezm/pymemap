@@ -1,161 +1,173 @@
 import React from 'react'
-import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native'
+import {
+    View,
+    Text,
+    StyleSheet,
+    Pressable,
+    ScrollView,
+    Button,
+} from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import globalStyles from '../styles/global'
-import Screen from '../components/screen'
-import { getBusiness } from '../api/business-service'
-import { LoadingSpinner } from '../components/loading-spinner'
-
-// Fallbacks en caso de que alguna importación sea undefined
-const ScreenComp =
-    Screen || (({ children }) => <View style={{ flex: 1 }}>{children}</View>)
-const LoadingComp =
-    LoadingSpinner ||
-    (() => (
-        <View style={{ padding: 16 }}>
-            <Text>Cargando...</Text>
-        </View>
-    ))
+import { getBusiness, requestService } from '../api/business-service'
+import LoadingSpinner from '../components/loading-spinner'
+import { useAuth } from '../context/auth-context'
 
 export default function BusinessProfile() {
-    // Obtener el objeto completo de search params y aceptar variantes
     const params = useSearchParams()
     const router = useRouter()
+    const { user } = useAuth()
+    const [error, setError] = React.useState(null)
 
-    console.log('[BusinessProfile] Raw params:', params)
-    console.log('[BusinessProfile] params.get("id"):', params?.get('id'))
-
-    // URLSearchParams requiere usar .get() para acceder a los valores
     const idRaw =
         params?.get('id') ??
         params?.get('businessId') ??
         params?.get('bizId') ??
         null
-
-    // Decodificar el ID para manejar caracteres especiales como espacios o acentos.
     const id = idRaw != null ? decodeURIComponent(String(idRaw)) : null
 
-    console.log('[BusinessProfile] Resolved id:', id)
     const [business, setBusiness] = React.useState(null)
     const [loading, setLoading] = React.useState(true)
-    const [lastResult, setLastResult] = React.useState(null)
-    const [lastError, setLastError] = React.useState(null)
 
     React.useEffect(() => {
         let mounted = true
         const fetch = async () => {
             try {
                 setLoading(true)
-                console.log('[BusinessProfile] params=', params)
-                console.log('[BusinessProfile] resolved id=', id)
-                // El servicio se encarga de toda la lógica de búsqueda
                 const foundBusiness = await getBusiness(id)
-                console.log(
-                    '[BusinessProfile] getBusiness result=',
-                    foundBusiness
-                )
-                setLastResult(foundBusiness) // Guardar para debug
                 if (!mounted) return
 
-                setBusiness(foundBusiness) // Actualizar estado directamente
+                setBusiness(foundBusiness)
             } catch (error) {
-                // logs detallados para errores HTTP
                 if (error && error.response) {
-                    console.log(
-                        '[BusinessProfile] error response status=',
-                        error.response.status
-                    )
-                    console.log(
-                        '[BusinessProfile] error response data=',
-                        error.response.data
-                    )
-                    setLastError({
+                    setError({
                         status: error.response.status,
                         data: error.response.data,
                     })
                 } else {
-                    console.log('[BusinessProfile] error=', error)
-                    setLastError({ message: String(error) })
+                    setError({ message: String(error) })
                 }
                 setBusiness(null)
             } finally {
                 if (mounted) setLoading(false)
             }
         }
-        // Si id es falsy, no hacer nada.
+
         if (id) {
             fetch()
         } else {
-            console.log(
-                '[BusinessProfile] id vacío, no se intentará buscar por id'
-            )
             setLoading(false)
         }
+
         return () => {
             mounted = false
         }
-    }, [id]) // Depender solo del 'id' decodificado
+    }, [id])
+
+    const handleRequestService = async () => {
+        if (!user) {
+            alert('You must be logged in to request a service.')
+            router.push('/login')
+            return
+        }
+
+        const serviceData = {
+            name: 'Service Request',
+            description: 'Requesting a service from ' + (business?.name ?? ''),
+            price: 0.0,
+            state: 'pending',
+            business_id: business?._id,
+            client_id: user?._id,
+        }
+
+        const response = await requestService(serviceData)
+        alert('Service requested successfully!')
+    }
 
     if (loading) {
         return (
-            <ScreenComp>
-                <LoadingComp />
-            </ScreenComp>
+            <LinearGradient
+                colors={['#9B59B6', '#F8BBD9']}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+            >
+                <View style={globalStyles.gradientContainer}>
+                    <LoadingSpinner />
+                </View>
+            </LinearGradient>
         )
     }
 
     if (!business) {
         return (
-            <ScreenComp>
-                <View style={globalStyles.card}>
-                    <Ionicons name="alert-circle" size={64} color="red" />
-                    <Text>No se encontró el negocio</Text>
-                    <View style={{ marginTop: 8 }}>
-                        <Text style={{ fontSize: 12, color: '#333' }}>
-                            Debug id resolved: {String(id ?? '')}
-                        </Text>
-                        <Text style={{ fontSize: 12, color: '#333' }}>
-                            Debug params: {JSON.stringify(params)}
-                        </Text>
-                        <Text style={{ fontSize: 12, color: '#333' }}>
-                            Resultado raw: {JSON.stringify(lastResult)}
-                        </Text>
-                        <Text style={{ fontSize: 12, color: '#c00' }}>
-                            Error: {JSON.stringify(lastError)}
-                        </Text>
-                    </View>
-                    <Pressable onPress={() => router.push('/profile')}>
-                        <Text style={{ color: 'blue' }}>Volver</Text>
+            <LinearGradient
+                colors={['#9B59B6', '#F8BBD9']}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+            >
+                <View style={globalStyles.gradientContainer}>
+                    <Ionicons name="alert-circle" size={64} color="#FFFFFF" />
+                    <Text style={[globalStyles.title, { marginTop: 20 }]}>
+                        No se encontró el negocio
+                    </Text>
+                    <Pressable
+                        onPress={() => router.push('/profile')}
+                        style={{ marginTop: 20 }}
+                    >
+                        <Text style={globalStyles.linkText}>Volver</Text>
                     </Pressable>
                 </View>
-            </ScreenComp>
+            </LinearGradient>
         )
     }
 
     return (
-        <ScreenComp>
-            <View style={globalStyles.container}>
-                <TextInput
-                    style={globalStyles.textField}
-                    placeholder="Nombre del negocio"
-                    defaultValue={business?.name ?? ''}
-                />
-                <TextInput
-                    style={globalStyles.textField}
-                    placeholder="Descripción"
-                    defaultValue={business?.description ?? ''}
-                    multiline
-                    numberOfLines={4}
-                />
-                <TextInput
-                    style={globalStyles.textField}
-                    placeholder="Ubicación"
-                    defaultValue={business?.address ?? ''}
-                />
-                <Ionicons name="business" size={24} color="black" />
-            </View>
-        </ScreenComp>
+        <LinearGradient
+            colors={['#9B59B6', '#F8BBD9']}
+            style={{ flex: 1 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+        >
+            <ScrollView
+                contentContainerStyle={[
+                    globalStyles.gradientContainer,
+                    { alignItems: 'stretch' },
+                ]}
+            >
+                <View style={globalStyles.card}>
+                    <Ionicons
+                        name="business"
+                        size={48}
+                        color="#6A4C93"
+                        style={{ alignSelf: 'center', marginBottom: 16 }}
+                    />
+
+                    <Text style={globalStyles.title}>
+                        {business?.name ?? 'Sin nombre'}
+                    </Text>
+
+                    <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
+                        {business?.category ?? 'Sin categoría'}
+                    </Text>
+
+                    <Text style={globalStyles.subtitle}>Descripción</Text>
+                    <Text style={{ color: '#555', marginBottom: 16 }}>
+                        {business?.description ?? 'Sin descripción'}
+                    </Text>
+
+                    <Text style={globalStyles.subtitle}>Ubicación</Text>
+                    <Text style={{ color: '#555', marginBottom: 16 }}>
+                        {business?.address ?? 'Sin ubicación'}
+                    </Text>
+
+                    <Button title="Contactar" onPress={handleRequestService} />
+                </View>
+            </ScrollView>
+        </LinearGradient>
     )
 }
