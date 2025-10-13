@@ -13,7 +13,12 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import globalStyles from '../styles/global'
 import { useAuth } from '../context/auth-context'
-import { getServices, getBusiness, requestPayment, payService } from '../api/business-service'
+import {
+    getServices,
+    getBusiness,
+    requestPayment,
+    payService,
+} from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
 
 export default function ServiceDetail() {
@@ -97,7 +102,9 @@ export default function ServiceDetail() {
                 getServices(),
                 getBusiness(),
             ])
-            const updated = servicesData.find(s => (s.id || s._id) === serviceId)
+            const updated = servicesData.find(
+                s => (s.id || s._id) === serviceId
+            )
             setService(updated)
             const foundBusiness = businessData.find(
                 b => (b.id || b._id) === updated.business_id
@@ -117,7 +124,9 @@ export default function ServiceDetail() {
                 getServices(),
                 getBusiness(),
             ])
-            const updated = servicesData.find(s => (s.id || s._id) === serviceId)
+            const updated = servicesData.find(
+                s => (s.id || s._id) === serviceId
+            )
             setService(updated)
             alert('Pago realizado con éxito')
         } catch (error) {
@@ -218,7 +227,9 @@ export default function ServiceDetail() {
                             <Text style={globalStyles.subtitle}>
                                 Precio solicitado
                             </Text>
-                            <Text style={styles.priceText}>${service.requested_price}</Text>
+                            <Text style={styles.priceText}>
+                                ${service.requested_price}
+                            </Text>
                         </>
                     )}
 
@@ -252,7 +263,8 @@ export default function ServiceDetail() {
                             {service.state === 'payment_requested' ? (
                                 <View style={styles.clientInfo}>
                                     <Text style={styles.priceText}>
-                                        Precio solicitado: ${service.requested_price}
+                                        Precio solicitado: $
+                                        {service.requested_price}
                                     </Text>
                                     <Pressable
                                         style={styles.submitButton}
@@ -271,8 +283,8 @@ export default function ServiceDetail() {
                                         color="#6A4C93"
                                     />
                                     <Text style={styles.clientInfoText}>
-                                        Solo el vendedor puede establecer el precio del
-                                        servicio
+                                        Solo el vendedor puede establecer el
+                                        precio del servicio
                                     </Text>
                                 </View>
                             )}
