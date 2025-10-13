@@ -84,3 +84,53 @@ async def update_service_status(service_id: str, status_data: dict):
     
     updated_service = await db.services.find_one({"_id": ObjectId(service_id)})
     return Service(**updated_service)
+
+
+@router.patch("/services/{service_id}/request-payment", response_model=Service)
+async def request_payment(service_id: str, payment_data: dict):
+    """Vendedor solicita cobrar un precio al cliente"""
+    if not ObjectId.is_valid(service_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid service ID format"
+        )
+
+    requested_price = payment_data.get("requested_price")
+    if requested_price is None:
+        raise HTTPException(status_code=400, detail="requested_price is required")
+
+    result = await db.services.update_one(
+        {"_id": ObjectId(service_id)},
+        {"$set": {"requested_price": requested_price, "state": "payment_requested"}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    updated_service = await db.services.find_one({"_id": ObjectId(service_id)})
+    return Service(**updated_service)
+
+
+@router.post("/services/{service_id}/pay", response_model=Service)
+async def pay_service(service_id: str):
+    """Cliente paga el servicio solicitado, se marca como completed"""
+    if not ObjectId.is_valid(service_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid service ID format"
+        )
+
+    from datetime import datetime
+
+    paid_at = datetime.utcnow().isoformat()
+
+    result = await db.services.update_one(
+        {"_id": ObjectId(service_id)},
+        {"$set": {"state": "completed", "paid_at": paid_at}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    updated_service = await db.services.find_one({"_id": ObjectId(service_id)})
+    return Service(**updated_service)

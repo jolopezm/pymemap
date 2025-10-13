@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import globalStyles from '../styles/global'
 import { useAuth } from '../context/auth-context'
-import { getServices, getBusiness } from '../api/business-service'
+import { getServices, getBusiness, requestPayment, payService } from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
 
 export default function ServiceDetail() {
@@ -83,11 +83,47 @@ export default function ServiceDetail() {
         }
     }, [serviceId, user])
 
-    const handleSendPaymentRequest = () => {
-        // Por el momento no hace nada
-        alert(
-            `Solicitud de cobro por $${price} enviada (funcionalidad pendiente)`
-        )
+    const handleSendPaymentRequest = async () => {
+        try {
+            const parsed = parseFloat(price)
+            if (isNaN(parsed) || parsed <= 0) {
+                alert('Ingrese un monto válido')
+                return
+            }
+
+            await requestPayment(serviceId, parsed)
+            // Refrescar datos
+            const [servicesData, businessData] = await Promise.all([
+                getServices(),
+                getBusiness(),
+            ])
+            const updated = servicesData.find(s => (s.id || s._id) === serviceId)
+            setService(updated)
+            const foundBusiness = businessData.find(
+                b => (b.id || b._id) === updated.business_id
+            )
+            setBusiness(foundBusiness)
+            alert('Solicitud de cobro enviada')
+        } catch (error) {
+            console.error('Error requesting payment:', error)
+            alert('Error al enviar la solicitud de cobro')
+        }
+    }
+
+    const handlePay = async () => {
+        try {
+            await payService(serviceId)
+            const [servicesData, businessData] = await Promise.all([
+                getServices(),
+                getBusiness(),
+            ])
+            const updated = servicesData.find(s => (s.id || s._id) === serviceId)
+            setService(updated)
+            alert('Pago realizado con éxito')
+        } catch (error) {
+            console.error('Error paying service:', error)
+            alert('Error al realizar el pago')
+        }
     }
 
     if (loading) {
@@ -177,6 +213,15 @@ export default function ServiceDetail() {
                     <Text style={globalStyles.subtitle}>Precio Actual</Text>
                     <Text style={styles.priceText}>${service.price}</Text>
 
+                    {service.requested_price != null && (
+                        <>
+                            <Text style={globalStyles.subtitle}>
+                                Precio solicitado
+                            </Text>
+                            <Text style={styles.priceText}>${service.requested_price}</Text>
+                        </>
+                    )}
+
                     {isOwner && service.state === 'in progress' && (
                         <>
                             <Text style={globalStyles.subtitle}>
@@ -203,17 +248,35 @@ export default function ServiceDetail() {
                     )}
 
                     {!isOwner && (
-                        <View style={styles.clientInfo}>
-                            <Ionicons
-                                name="information-circle"
-                                size={24}
-                                color="#6A4C93"
-                            />
-                            <Text style={styles.clientInfoText}>
-                                Solo el vendedor puede establecer el precio del
-                                servicio
-                            </Text>
-                        </View>
+                        <>
+                            {service.state === 'payment_requested' ? (
+                                <View style={styles.clientInfo}>
+                                    <Text style={styles.priceText}>
+                                        Precio solicitado: ${service.requested_price}
+                                    </Text>
+                                    <Pressable
+                                        style={styles.submitButton}
+                                        onPress={handlePay}
+                                    >
+                                        <Text style={styles.submitButtonText}>
+                                            Pagar
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            ) : (
+                                <View style={styles.clientInfo}>
+                                    <Ionicons
+                                        name="information-circle"
+                                        size={24}
+                                        color="#6A4C93"
+                                    />
+                                    <Text style={styles.clientInfoText}>
+                                        Solo el vendedor puede establecer el precio del
+                                        servicio
+                                    </Text>
+                                </View>
+                            )}
+                        </>
                     )}
                 </View>
             </ScrollView>

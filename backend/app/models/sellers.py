@@ -37,6 +37,8 @@ class Service(BaseModel):
     state: str = Field(default="pending")
     business_id: str = Field(...)
     client_id: str = Field(...)
+    requested_price: Optional[float] = Field(default=None)
+    paid_at: Optional[str] = Field(default=None)
     
     model_config = ConfigDict(
         populate_by_name=True, 

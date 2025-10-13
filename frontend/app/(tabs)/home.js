@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Button, StyleSheet } from 'react-native'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
 import globalStyles from '../../styles/global'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
@@ -9,11 +9,10 @@ import {
     updateServiceStatus,
 } from '../../api/business-service'
 import React from 'react'
-import global from '../../styles/global'
 import { useRouter } from 'expo-router'
 
 export default function HomeScreen() {
-    const { user, isAuthenticated } = useAuth()
+    const { user } = useAuth()
     const [services, setServices] = React.useState([])
     const [businesses, setBusinesses] = React.useState([])
     const router = useRouter()
@@ -49,7 +48,7 @@ export default function HomeScreen() {
     const handleAccept = async serviceId => {
         try {
             await updateServiceStatus(serviceId, 'in progress')
-            await fetchData() // Refrescar datos
+            await fetchData()
             alert('Service accepted')
         } catch (error) {
             console.error('Error accepting service:', error)
@@ -65,7 +64,6 @@ export default function HomeScreen() {
             })
             return false
         }
-        // Usar _id en lugar de id
         const business = businesses.find(b => (b.id || b._id) === businessId)
         const userId = user.id || user._id
         console.log('isOwner check:', {
@@ -92,7 +90,6 @@ export default function HomeScreen() {
                     <Text style={styles.emptyText}>No service requests</Text>
                 )}
                 {services.map(service => {
-                    // Usar _id como fallback
                     const serviceId = service.id || service._id
                     const showButtons =
                         isOwner(service.business_id) &&
@@ -174,7 +171,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        padding: 20,
+        padding: 0,
         width: '100%',
     },
     serviceContainer: {
