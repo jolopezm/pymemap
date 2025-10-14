@@ -91,7 +91,7 @@ class Message(BaseModel):
     chatId: str = Field(...)
     sender_id: str = Field(...)
     content: str = Field(...)
-    readBy: list[str] = Field(default=[])
+    read: bool = Field(default=False)
     timestamp: str = Field(...)
     
     model_config = {
@@ -105,4 +105,25 @@ class Message(BaseModel):
         if v is None:
             return None
         return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_validator('sender_id', mode='before')
+    @classmethod
+    def _sender_id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def _id_field_to_str(cls, v):
+        """Convert MongoDB ObjectId in the incoming `_id` field to a string so
+        Pydantic accepts it as `id: Optional[str]`.
+        """
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_serializer('id', check_fields=False)
+    def _serialize_id(self, v):
+        return str(v) if v is not None else None
     

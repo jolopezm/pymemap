@@ -3,6 +3,7 @@ import { getChats } from '../../api/chat-service'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
 import globalStyles from '../../styles/global'
+import { router } from 'expo-router'
 
 const ChatScreen = () => {
     const { user } = useAuth()
@@ -11,7 +12,7 @@ const ChatScreen = () => {
     const [error, setError] = React.useState(null)
 
     const handleChatPress = chat => {
-        console.log('Chat pressed:', chat)
+        router.push(`/chat-view?chatId=${chat.id || chat._id}`)
     }
 
     React.useEffect(() => {

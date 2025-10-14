@@ -43,3 +43,45 @@ export async function getChats(userId) {
         throw error
     }
 }
+
+export async function sendMessage(messageData) {
+    const token = await AsyncStorage.getItem('token')
+    const headers = token
+        ? {
+              Authorization: `Bearer ${token}`,
+          }
+        : {}
+
+    try {
+        const response = await axios.post(
+            `${API_URL}/chat/message`,
+            messageData,
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error('Error sending message:', error)
+        throw error
+    }
+}
+
+export async function getMessages(chatId) {
+    if (!chatId) throw new Error('chatId is required to fetch messages')
+
+    const token = await AsyncStorage.getItem('token')
+    const headers = token
+        ? {
+              Authorization: `Bearer ${token}`,
+          }
+        : {}
+    try {
+        const response = await axios.get(
+            `${API_URL}/chat/messages?chat_id=${encodeURIComponent(chatId)}`,
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error('Error fetching messages:', error)
+        throw error
+    }
+}
