@@ -45,3 +45,25 @@ export async function getNotifications(userId) {
         throw error
     }
 }
+
+export async function markNotificationAsRead(notificationId) {
+    if (!notificationId)
+        throw new Error('notificationId is required to mark as read')
+    const token = await AsyncStorage.getItem('token')
+    const headers = token
+        ? {
+              Authorization: `Bearer ${token}`,
+          }
+        : {}
+    try {
+        const response = await axios.patch(
+            `${API_URL}/notifications/${notificationId}`,
+            { read: true },
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error('Error marking notification as read:', error)
+        throw error
+    }
+}

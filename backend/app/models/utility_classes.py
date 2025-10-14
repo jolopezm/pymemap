@@ -19,6 +19,7 @@ class PyObjectId(ObjectId):
 
 
 class Notification(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
     targetUserId: str = Field(...)
     type: str = Field(...)
     message: str = Field(...)
@@ -35,6 +36,16 @@ class Notification(BaseModel):
     @field_validator('targetUserId', mode='before')
     @classmethod
     def _id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def _id_field_to_str(cls, v):
+        """Convert MongoDB ObjectId in the incoming `_id` field to a string so
+        Pydantic accepts it as `id: Optional[str]`.
+        """
         if v is None:
             return None
         return str(v) if isinstance(v, ObjectId) else str(v)
