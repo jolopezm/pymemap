@@ -69,16 +69,18 @@ export default function HomeScreen() {
         <Screen>
             {user ? (
                 <View>
-                    <Text style={globalStyles.title}>Service Requests</Text>
+                    <Text style={globalStyles.title}>
+                        Solicitudes de servicio
+                    </Text>
                     <Text style={styles.debugText}>
                         User ID: {user?.id || user?._id || 'No user'}
                     </Text>
                     <Text style={styles.debugText}>
-                        Total businesses: {businesses.length}
+                        Negocios: {businesses.length}
                     </Text>
                     {services.length === 0 && (
                         <Text style={styles.emptyText}>
-                            No service requests
+                            No hay solicitudes de servicio.
                         </Text>
                     )}
                     {services.map(service => {
@@ -131,7 +133,7 @@ export default function HomeScreen() {
                                                             styles.buttonText
                                                         }
                                                     >
-                                                        ACCEPT
+                                                        Aceptar
                                                     </Text>
                                                 </Pressable>
                                                 <Pressable
@@ -149,7 +151,7 @@ export default function HomeScreen() {
                                                             styles.buttonText
                                                         }
                                                     >
-                                                        REJECT
+                                                        Rechazar
                                                     </Text>
                                                 </Pressable>
                                             </View>
@@ -162,14 +164,14 @@ export default function HomeScreen() {
                 </View>
             ) : (
                 <View>
-                    <Text style={globalStyles.title}>Welcome to Pymemap</Text>
+                    <Text style={globalStyles.title}>Bienvenido a Pymap</Text>
                     <Text
                         style={{
                             ...globalStyles.paragraph,
                             textAlign: 'center',
                         }}
                     >
-                        Discover and manage your services effortlessly.
+                        Descubre y gestiona tus servicios sin esfuerzo.
                     </Text>
                 </View>
             )}

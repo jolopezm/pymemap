@@ -44,14 +44,14 @@ export default function TabLayout() {
             })}
         >
             <Tabs.Screen name="home" options={{ title: 'Home' }} />
-            <Tabs.Screen name="search" options={{ title: 'Search' }} />
-            <Tabs.Screen name="wallet" options={{ title: 'Wallet' }} />
+            <Tabs.Screen name="search" options={{ title: 'Buscar' }} />
+            <Tabs.Screen name="wallet" options={{ title: 'Billetera' }} />
             <Tabs.Screen
                 name="notifications"
-                options={{ title: 'Notifications' }}
+                options={{ title: 'Notificaciones' }}
             />
             <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
-            <Tabs.Screen name="profile" options={{ title: 'My profile' }} />
+            <Tabs.Screen name="profile" options={{ title: 'Mi perfil' }} />
         </Tabs>
     )
 }

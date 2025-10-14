@@ -11,6 +11,7 @@ import { getMessages, sendMessage } from '../api/chat-service'
 import React from 'react'
 import globalStyles from '../styles/global'
 import { useSearchParams } from 'expo-router/build/hooks'
+import Ionicons from '@expo/vector-icons/Ionicons'
 
 export default function ChatView() {
     const { user } = useAuth()
@@ -110,23 +111,33 @@ export default function ChatView() {
 
     return (
         <View style={globalStyles.container}>
-            <Text style={globalStyles.title}>Messages</Text>
+            <Text style={globalStyles.title}>Mensajes</Text>
             <ScrollView>
                 {messages.map(msg => {
-                    if (!msg) return null // Guard against null messages
+                    if (!msg) return null
                     return (
                         <View
                             key={msg.id || msg._id}
                             style={[
                                 styles.messageContainer,
                                 msg.sender_id === (user.id || user._id)
-                                    ? { backgroundColor: '#daf8e3ff' }
-                                    : { backgroundColor: '#c5c2c2ff' },
+                                    ? { backgroundColor: '#F8BBD9' }
+                                    : { backgroundColor: '#F5F5F5' },
+                                {
+                                    marginLeft:
+                                        msg.sender_id === (user.id || user._id)
+                                            ? 50
+                                            : 0,
+                                },
+                                {
+                                    marginRight:
+                                        msg.sender_id === (user.id || user._id)
+                                            ? 0
+                                            : 50,
+                                },
+                                {},
                             ]}
                         >
-                            <Text style={styles.messageSender}>
-                                {msg.sender_id}
-                            </Text>
                             <Text style={styles.messageText}>
                                 {msg.content}
                             </Text>
@@ -135,16 +146,20 @@ export default function ChatView() {
                 })}
             </ScrollView>
 
-            <TextInput
-                style={globalStyles.input}
-                placeholder="Type your message..."
-                value={messageText}
-                onChangeText={setMessageText}
-            />
-
-            <Pressable style={globalStyles.button} onPress={newMessage}>
-                <Text style={[{ color: 'white' }]}>New Message</Text>
-            </Pressable>
+            <View style={styles.inputContainer}>
+                <TextInput
+                    style={globalStyles.textField}
+                    placeholder="Mensaje"
+                    value={messageText}
+                    onChangeText={setMessageText}
+                />
+                <Pressable
+                    style={[globalStyles.button, { width: 50 }]}
+                    onPress={newMessage}
+                >
+                    <Ionicons name="send" size={24} color="white" />
+                </Pressable>
+            </View>
         </View>
     )
 }
@@ -153,12 +168,18 @@ const styles = StyleSheet.create({
     messageContainer: {
         padding: 10,
         marginVertical: 5,
-        borderRadius: 8,
+        borderRadius: 25,
     },
     messageSender: {
         fontWeight: 'bold',
     },
     messageText: {
-        color: 'gray',
+        padding: 5,
+    },
+
+    inputContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        gap: 10,
     },
 })

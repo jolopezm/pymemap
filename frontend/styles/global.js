@@ -73,6 +73,7 @@ export default StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 3,
+        placeholderTextColor: '#999999',
     },
 
     button: {

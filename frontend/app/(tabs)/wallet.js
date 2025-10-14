@@ -38,11 +38,11 @@ export default function WalletScreen() {
                         </View>
                     </View>
                     <Button
-                        title="Add Money (+50)"
+                        title="Añadir dinero (+50)"
                         onPress={handleAddBalance}
                     />
                     <Button
-                        title="Deduct Money (-20)"
+                        title="Restar dinero (-20)"
                         onPress={handleDeductBalance}
                     />
                 </View>
