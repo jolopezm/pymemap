@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Button, StyleSheet } from 'react-native'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
 import globalStyles from '../../styles/global'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
@@ -9,11 +9,10 @@ import {
     updateServiceStatus,
 } from '../../api/business-service'
 import React from 'react'
-import global from '../../styles/global'
 import { useRouter } from 'expo-router'
 
 export default function HomeScreen() {
-    const { user, isAuthenticated } = useAuth()
+    const { user } = useAuth()
     const [services, setServices] = React.useState([])
     const [businesses, setBusinesses] = React.useState([])
     const router = useRouter()
@@ -38,7 +37,7 @@ export default function HomeScreen() {
     const handleReject = async serviceId => {
         try {
             await deleteService(serviceId)
-            await fetchData() // Refrescar datos
+            await fetchData()
             alert('Service rejected and deleted')
         } catch (error) {
             console.error('Error rejecting service:', error)
@@ -49,7 +48,7 @@ export default function HomeScreen() {
     const handleAccept = async serviceId => {
         try {
             await updateServiceStatus(serviceId, 'in progress')
-            await fetchData() // Refrescar datos
+            await fetchData()
             alert('Service accepted')
         } catch (error) {
             console.error('Error accepting service:', error)
@@ -59,112 +58,123 @@ export default function HomeScreen() {
 
     const isOwner = businessId => {
         if (!user || !businessId) {
-            console.log('isOwner check failed: user or businessId missing', {
-                user,
-                businessId,
-            })
             return false
         }
-        // Usar _id en lugar de id
         const business = businesses.find(b => (b.id || b._id) === businessId)
         const userId = user.id || user._id
-        console.log('isOwner check:', {
-            userId,
-            businessId,
-            business,
-            businessOwnerId: business?.owner_id,
-            match: business && business.owner_id === userId,
-        })
         return business && business.owner_id === userId
     }
 
     return (
         <Screen>
-            <View style={styles.container}>
-                <Text style={globalStyles.title}>Service Requests</Text>
-                <Text style={styles.debugText}>
-                    User ID: {user?.id || user?._id || 'No user'}
-                </Text>
-                <Text style={styles.debugText}>
-                    Total businesses: {businesses.length}
-                </Text>
-                {services.length === 0 && (
-                    <Text style={styles.emptyText}>No service requests</Text>
-                )}
-                {services.map(service => {
-                    // Usar _id como fallback
-                    const serviceId = service.id || service._id
-                    const showButtons =
-                        isOwner(service.business_id) &&
-                        service.state === 'pending'
-                    console.log('Service render:', {
-                        serviceId,
-                        serviceName: service.name,
-                        businessId: service.business_id,
-                        state: service.state,
-                        showButtons,
-                    })
-                    return (
-                        <View key={serviceId} style={styles.serviceContainer}>
-                            <Pressable
-                                onPress={() =>
-                                    router.push(
-                                        `/service-detail?id=${serviceId}`
-                                    )
-                                }
+            {user ? (
+                <View>
+                    <Text style={globalStyles.title}>
+                        Solicitudes de servicio
+                    </Text>
+                    <Text style={styles.debugText}>
+                        User ID: {user?.id || user?._id || 'No user'}
+                    </Text>
+                    <Text style={styles.debugText}>
+                        Negocios: {businesses.length}
+                    </Text>
+                    {services.length === 0 && (
+                        <Text style={styles.emptyText}>
+                            No hay solicitudes de servicio.
+                        </Text>
+                    )}
+                    {services.map(service => {
+                        const serviceId = service.id || service._id
+                        const showButtons =
+                            isOwner(service.business_id) &&
+                            service.state === 'pending'
+                        return (
+                            <View
+                                key={serviceId}
+                                style={styles.serviceContainer}
                             >
-                                <View style={globalStyles.card}>
-                                    <Text style={globalStyles.subtitle}>
-                                        {service.name}
-                                    </Text>
-                                    <Text style={styles.description}>
-                                        {service.description}
-                                    </Text>
-                                    <Text style={globalStyles.badge}>
-                                        Status: {service.state}
-                                    </Text>
-                                    <Text style={styles.price}>
-                                        Price: ${service.price}
-                                    </Text>
+                                <Pressable
+                                    onPress={() =>
+                                        router.push(
+                                            `/service-detail?id=${serviceId}`
+                                        )
+                                    }
+                                >
+                                    <View style={globalStyles.card}>
+                                        <Text style={globalStyles.subtitle}>
+                                            {service.name}
+                                        </Text>
+                                        <Text style={styles.description}>
+                                            {service.description}
+                                        </Text>
+                                        <Text style={globalStyles.badge}>
+                                            Status: {service.state}
+                                        </Text>
+                                        <Text style={styles.price}>
+                                            Price: ${service.price}
+                                        </Text>
 
-                                    {showButtons && (
-                                        <View style={styles.buttonContainer}>
-                                            <Pressable
-                                                style={[
-                                                    styles.button,
-                                                    styles.acceptButton,
-                                                ]}
-                                                onPress={e => {
-                                                    e.stopPropagation()
-                                                    handleAccept(serviceId)
-                                                }}
+                                        {showButtons && (
+                                            <View
+                                                style={styles.buttonContainer}
                                             >
-                                                <Text style={styles.buttonText}>
-                                                    ACCEPT
-                                                </Text>
-                                            </Pressable>
-                                            <Pressable
-                                                style={[
-                                                    styles.button,
-                                                    styles.rejectButton,
-                                                ]}
-                                                onPress={e => {
-                                                    e.stopPropagation()
-                                                    handleReject(serviceId)
-                                                }}
-                                            >
-                                                <Text style={styles.buttonText}>
-                                                    REJECT
-                                                </Text>
-                                            </Pressable>
-                                        </View>
-                                    )}
-                                </View>
-                            </Pressable>
-                        </View>
-                    )
-                })}
-            </View>
+                                                <Pressable
+                                                    style={[
+                                                        styles.button,
+                                                        styles.acceptButton,
+                                                    ]}
+                                                    onPress={e => {
+                                                        e.stopPropagation()
+                                                        handleAccept(serviceId)
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.buttonText
+                                                        }
+                                                    >
+                                                        Aceptar
+                                                    </Text>
+                                                </Pressable>
+                                                <Pressable
+                                                    style={[
+                                                        styles.button,
+                                                        styles.rejectButton,
+                                                    ]}
+                                                    onPress={e => {
+                                                        e.stopPropagation()
+                                                        handleReject(serviceId)
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.buttonText
+                                                        }
+                                                    >
+                                                        Rechazar
+                                                    </Text>
+                                                </Pressable>
+                                            </View>
+                                        )}
+                                    </View>
+                                </Pressable>
+                            </View>
+                        )
+                    })}
+                </View>
+            ) : (
+                <View>
+                    <Text style={globalStyles.title}>Bienvenido a Pymap</Text>
+                    <Text
+                        style={{
+                            ...globalStyles.paragraph,
+                            textAlign: 'center',
+                        }}
+                    >
+                        Descubre y gestiona tus servicios sin esfuerzo.
+                    </Text>
+                </View>
+            )}
         </Screen>
     )
 }
@@ -174,7 +184,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        padding: 20,
+        padding: 0,
         width: '100%',
     },
     serviceContainer: {

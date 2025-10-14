@@ -1,18 +1,12 @@
 import React from 'react'
-import {
-    View,
-    Text,
-    StyleSheet,
-    Pressable,
-    ScrollView,
-    Button,
-} from 'react-native'
+import { View, Text, Pressable, ScrollView, Button } from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import globalStyles from '../styles/global'
 import { getBusiness, requestService } from '../api/business-service'
+import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
 import { useAuth } from '../context/auth-context'
 
@@ -83,7 +77,18 @@ export default function BusinessProfile() {
             client_id: user?._id,
         }
 
-        const response = await requestService(serviceData)
+        await requestService(serviceData)
+        // Create notification using the fields expected by the backend Notification model
+        await createNotification({
+            targetUserId: business?.owner_id,
+            type: 'service_request',
+            message: `New service request from ${user?.name}`,
+            date: new Date().toISOString(),
+            read: false,
+            reference: {
+                originUserId: user?._id,
+            },
+        })
         alert('Service requested successfully!')
     }
 

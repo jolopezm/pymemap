@@ -99,3 +99,23 @@ export async function updateServiceStatus(serviceId, newStatus) {
     )
     return response.data
 }
+
+export async function requestPayment(serviceId, requestedPrice) {
+    const headers = await getAuthHeaders()
+    const response = await axios.patch(
+        `${API_URL}/business/services/${serviceId}/request-payment`,
+        { requested_price: requestedPrice },
+        { headers }
+    )
+    return response.data
+}
+
+export async function payService(serviceId) {
+    const headers = await getAuthHeaders()
+    const response = await axios.post(
+        `${API_URL}/business/services/${serviceId}/pay`,
+        {},
+        { headers }
+    )
+    return response.data
+}
