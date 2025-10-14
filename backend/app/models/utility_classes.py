@@ -1,4 +1,6 @@
 from bson import ObjectId
+from pydantic import BaseModel, Field, field_validator, field_serializer
+from typing import Optional
 
 
 class PyObjectId(ObjectId):
@@ -14,3 +16,29 @@ class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler=None):
         return {'type': 'string'}
+
+
+class Notification(BaseModel):
+    targetUserId: str = Field(...)
+    type: str = Field(...)
+    message: str = Field(...)
+    date: str = Field(...)
+    read: bool = Field(default=False)
+    reference: Optional[dict] = Field(default=None)
+    
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_schema_extra": {"by_alias": True}
+    }
+
+    @field_validator('targetUserId', mode='before')
+    @classmethod
+    def _id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_serializer('id', check_fields=False)
+    def _serialize_id(self, v):
+        return str(v) if v is not None else None

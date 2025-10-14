@@ -29,22 +29,26 @@ export default function WalletScreen() {
 
     return (
         <Screen>
-            <View>
-                <View style={globalStyles.card}>
-                    <Text>${user?.balance}</Text>
-                    <Text>{user?._id}</Text>
+            {user ? (
+                <View>
+                    <View>
+                        <View style={globalStyles.card}>
+                            <Text>${user?.balance}</Text>
+                            <Text>{user?._id}</Text>
+                        </View>
+                    </View>
+                    <Button
+                        title="Add Money (+50)"
+                        onPress={handleAddBalance}
+                    />
+                    <Button
+                        title="Deduct Money (-20)"
+                        onPress={handleDeductBalance}
+                    />
                 </View>
-            </View>
-            <Button title="Add Money (+50)" onPress={handleAddBalance} />
-            <Button title="Deduct Money (-20)" onPress={handleDeductBalance} />
+            ) : (
+                <Text>Please log in to view your wallet.</Text>
+            )}
         </Screen>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-})

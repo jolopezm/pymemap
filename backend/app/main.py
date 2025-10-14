@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 import traceback
-from .routers import gmaps, users, auth, business
+from .routers import gmaps, users, auth, business, notifications
 
 app = FastAPI(
     title="Pymap API",
@@ -32,6 +32,7 @@ app.include_router(auth.router, tags=["Authentication"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(business.router, prefix="/business", tags=["Business"])
 app.include_router(gmaps.router, tags=["Gmaps"])
+app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 
 
 @app.get("/")
