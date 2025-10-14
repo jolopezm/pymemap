@@ -18,6 +18,10 @@ export default function TabLayout() {
                         iconName = focused
                             ? 'notifications'
                             : 'notifications-outline'
+                    } else if (route.name === 'chat') {
+                        iconName = focused
+                            ? 'chatbubbles'
+                            : 'chatbubbles-outline'
                     } else if (route.name === 'profile') {
                         iconName = focused ? 'person' : 'person-outline'
                     }
@@ -46,6 +50,7 @@ export default function TabLayout() {
                 name="notifications"
                 options={{ title: 'Notifications' }}
             />
+            <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
             <Tabs.Screen name="profile" options={{ title: 'My profile' }} />
         </Tabs>
     )

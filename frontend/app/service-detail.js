@@ -19,6 +19,7 @@ import {
     requestPayment,
     payService,
 } from '../api/business-service'
+import { createChat } from '../api/chat-service'
 import LoadingSpinner from '../components/loading-spinner'
 
 export default function ServiceDetail() {
@@ -132,6 +133,21 @@ export default function ServiceDetail() {
         } catch (error) {
             console.error('Error paying service:', error)
             alert('Error al realizar el pago')
+        }
+    }
+
+    const handleChatPress = async () => {
+        const chatData = {
+            participants: [user.id || user._id, business?.owner_id],
+            messages: [],
+        }
+        try {
+            await createChat(chatData)
+            router.push('/chat')
+        } catch (error) {
+            console.error('Error creating chat:', error)
+            alert('Error al crear el chat')
+            return
         }
     }
 
@@ -290,6 +306,13 @@ export default function ServiceDetail() {
                             )}
                         </>
                     )}
+
+                    <Pressable
+                        onPress={handleChatPress}
+                        style={globalStyles.button}
+                    >
+                        <Text style={[{ color: 'white' }]}>Ir al chat</Text>
+                    </Pressable>
                 </View>
             </ScrollView>
         </LinearGradient>
