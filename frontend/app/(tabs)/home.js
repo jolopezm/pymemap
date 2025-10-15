@@ -107,7 +107,21 @@ export default function HomeScreen() {
                                         <Text style={styles.description}>
                                             {service.description}
                                         </Text>
-                                        <Text style={globalStyles.badge}>
+                                        <Text
+                                            style={[
+                                                globalStyles.badge,
+                                                {
+                                                    backgroundColor:
+                                                        service.state ===
+                                                        'pending'
+                                                            ? '#FFC107'
+                                                            : service.state ===
+                                                                'in progress'
+                                                              ? '#2196F3'
+                                                              : '#4CAF50',
+                                                },
+                                            ]}
+                                        >
                                             Status: {service.state}
                                         </Text>
                                         <Text style={styles.price}>
