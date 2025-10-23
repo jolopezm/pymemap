@@ -2,7 +2,15 @@
 
 Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y medianas empresas (PYMEs) cercanas, facilitando la búsqueda, calificación y contratación de servicios locales con un sistema de pagos integrado.
 
-## 📱 Funcionalidades Principales
+## � Documentación
+
+- 📖 **[Backend Documentation](backend/README.md)** - Guía técnica completa del backend
+- 🚀 **[Deployment Guide](docs/DEPLOYMENT.md)** - Cómo desplegar en Railway
+- 📋 **[Changelog](docs/CHANGELOG.md)** - Historial de cambios
+
+---
+
+## �📱 Funcionalidades Principales
 
 - **Geolocalización**: Encuentra PYMEs cercanas basándose en tu ubicación actual
 - **Motor de búsqueda**: Busca servicios específicos por categorías y filtros
@@ -48,42 +56,78 @@ pymemap/
 │   ├── app/                   # Código fuente de la API
 │   │   ├── main.py           # Punto de entrada de la API
 │   │   ├── db.py             # Configuración de MongoDB
-│   │   ├── models.py         # Modelos de datos con Pydantic
-│   │   ├── auth.py           # Lógica de autenticación
-│   │   ├── schemas.py        # Schemas de validación
+│   │   ├── auth.py           # Lógica de autenticación JWT
+│   │   │
+│   │   ├── models/           # Modelos de datos Pydantic
+│   │   │   ├── users.py      # Modelos de usuarios
+│   │   │   ├── sellers.py    # Modelos de negocios/servicios
+│   │   │   ├── token.py      # Modelos de tokens
+│   │   │   └── utility_classes.py # Notificaciones, Chat
+│   │   │
 │   │   ├── routers/          # Endpoints modulares
 │   │   │   ├── auth.py       # Rutas de autenticación
 │   │   │   ├── users.py      # Gestión de usuarios
-│   │   │   └── business.py   # Gestión de negocios
+│   │   │   ├── business.py   # Gestión de negocios
+│   │   │   ├── gmaps.py      # Google Maps API
+│   │   │   ├── notifications.py # Notificaciones
+│   │   │   └── chat.py       # Sistema de mensajería
+│   │   │
 │   │   ├── services/         # Lógica de negocio
-│   │   └── models/           # Modelos adicionales
+│   │   │   └── auth_code.py  # Códigos de autenticación
+│   │   │
+│   │   └── utils/            # Utilidades
+│   │       └── password_validator.py # Validación
+│   │
+│   ├── tests/                # Tests del backend
+│   │   ├── test_backend_multiplataforma.py
+│   │   ├── test_mongo_connection.py
+│   │   └── test_send_email.py
+│   │
 │   ├── requirements.txt      # Dependencias de Python
-│   ├── run_server.sh         # Script de inicio (Linux/macOS)
-│   ├── run_server.bat        # Script de inicio (Windows)
-│   ├── .env                  # Variables de entorno
-│   └── test_backend_multiplataforma.py  # Tests del backend
+│   ├── .env.example         # Template de variables
+│   ├── .dockerignore        # Optimización de Docker
+│   ├── railway.json         # Configuración de Railway
+│   ├── Procfile             # Despliegue
+│   ├── setup.sh             # Setup automático
+│   ├── start.sh             # Inicio para producción
+│   ├── run_server.sh        # Desarrollo (Linux/macOS)
+│   └── run_server.bat       # Desarrollo (Windows)
 │
-└── frontend/                  # App móvil con Expo/React Native
-    ├── app/                  # Páginas de la aplicación (Expo Router)
-    │   ├── _layout.js        # Layout principal
-    │   ├── index.js          # Página de inicio
-    │   ├── home.js           # Página principal
-    │   ├── login.js          # Autenticación
-    │   ├── profile.js        # Perfil de usuario
-    │   ├── settings.js       # Configuraciones
-    │   └── new-business.js   # Registro de negocios
-    ├── api/                  # Servicios de API
-    │   ├── auth-service.js   # Servicios de autenticación
-    │   ├── user-service.js   # Servicios de usuarios
-    │   └── business-service.js # Servicios de negocios
-    ├── components/           # Componentes reutilizables
-    ├── context/              # Context API para estado global
-    ├── config/               # Configuraciones
-    │   └── api.js           # Configuración inteligente de API
-    ├── styles/               # Estilos globales
-    ├── assets/               # Recursos (imágenes, iconos)
-    ├── utils/                # Utilidades
-    └── package.json          # Dependencias de Node.js
+├── frontend/                 # App móvil con Expo/React Native
+│   ├── app/                 # Páginas (Expo Router)
+│   │   ├── _layout.js       # Layout principal
+│   │   ├── index.js         # Redirección inicial
+│   │   ├── login.js         # Autenticación
+│   │   ├── sign-in.js       # Registro
+│   │   ├── new-business.js  # Registro de negocios
+│   │   └── (tabs)/          # Tabs de navegación
+│   │       ├── home.js      # Página principal
+│   │       ├── search.js    # Búsqueda de negocios
+│   │       ├── profile.js   # Perfil de usuario
+│   │       ├── notifications.js # Notificaciones
+│   │       ├── chat.js      # Mensajería
+│   │       └── wallet.js    # Billetera
+│   │
+│   ├── api/                 # Servicios de API
+│   │   ├── auth-service.js
+│   │   ├── user-service.js
+│   │   ├── business-service.js
+│   │   ├── gmaps-service.js
+│   │   ├── chat-service.js
+│   │   └── notifications-service.js
+│   │
+│   ├── components/          # Componentes reutilizables
+│   ├── context/             # Estado global (Context API)
+│   │   └── auth-context.js
+│   ├── config/              # Configuraciones
+│   │   └── api.js          # URL del backend
+│   ├── styles/              # Estilos globales
+│   ├── utils/               # Utilidades
+│   ├── assets/              # Recursos (imágenes, iconos)
+│   └── package.json         # Dependencias de Node.js
+│
+├── RAILWAY_DEPLOYMENT.md    # Guía de despliegue
+└── README.md                # Este archivo
 ```
 
 ## 🎯 Plataformas Objetivo
@@ -113,11 +157,34 @@ pymemap/
 
 ### 🔧 **Variables de Entorno (IMPORTANTE - Hacer primero)**
 
+### Backend
+
 Crear archivo `.env` en el directorio `backend/`:
 
+```bash
+# Opción 1: Copiar desde el template
+cp backend/.env.example backend/.env
+
+# Opción 2: Crear manualmente
+nano backend/.env
+```
+
+Variables requeridas:
+
 ```env
-MONGO_URI=mongodb+srv://tu-conexion-mongodb
-JWT_SECRET_KEY=tu-clave-secreta
+MONGO_URI=mongodb+srv://tu-usuario:tu-password@cluster.mongodb.net/
+MONGO_DB_NAME=pymemap_db
+JWT_SECRET_KEY=tu-clave-secreta-muy-segura
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ALLOWED_ORIGINS=http://localhost:8081
+ENVIRONMENT=development
+```
+
+**💡 Tip**: Genera una `JWT_SECRET_KEY` segura con:
+
+```bash
+openssl rand -hex 32
 ```
 
 ---
@@ -131,14 +198,22 @@ JWT_SECRET_KEY=tu-clave-secreta
 ```bash
 cd backend
 
-# Crear entorno virtual
+# Opción A: Setup automático (recomendado)
+./setup.sh
+
+# Opción B: Setup manual
+# 1. Crear entorno virtual
 python3 -m venv venv
 
-# Activar entorno virtual
+# 2. Activar entorno virtual
 source venv/bin/activate
 
-# Instalar dependencias
+# 3. Instalar dependencias
 pip install -r requirements.txt
+
+# 4. Configurar .env
+cp .env.example .env
+nano .env  # Editar con tus valores
 
 # Ejecutar servidor (opción 1 - script automatizado)
 ./run_server.sh
@@ -356,19 +431,21 @@ npx expo start --android
 
 ## 🚀 **Despliegue a Producción**
 
-### **Backend (Railway):**
+Este proyecto está listo para desplegarse en **Railway** con configuración automática.
 
-- El archivo `start.sh` maneja el despliegue automáticamente
-- Variables de entorno configuradas en Railway dashboard
+### **Pasos Rápidos:**
 
-### **Frontend:**
+1. Conecta tu repositorio a Railway
+2. Selecciona el directorio `backend/`
+3. Configura las variables de entorno desde `.env.example`
+4. Railway detectará Python y desplegará automáticamente
 
-- Compatible con Vercel, Netlify para web
-- Expo Application Services (EAS) para apps móviles
+📖 **Guía completa de despliegue**: Ver **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**  
+Incluye: configuración de MongoDB Atlas, variables de entorno, troubleshooting y monitoreo.
 
 ---
 
-## �📞 Contacto
+## 📞 Contacto
 
 Para más información sobre el proyecto PymeMap, no dudes en contactarnos.
 
