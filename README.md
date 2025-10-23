@@ -431,9 +431,20 @@ npx expo start --android
 
 ## 🚀 **Despliegue a Producción**
 
-Este proyecto está listo para desplegarse en **Railway** con configuración automática.
+### 🎉 Backend Desplegado
 
-### **Pasos Rápidos:**
+El backend de PymeMap está **actualmente desplegado** en Railway:
+
+**🔗 URL Backend**: https://pymemap-production-306f.up.railway.app/  
+**📚 Documentación API**: https://pymemap-production-306f.up.railway.app/docs
+
+### **Configuración del Frontend**
+
+El frontend ya está configurado para usar el backend de Railway automáticamente cuando se ejecuta en `localhost`. Ver `frontend/config/api.js`.
+
+### **Desplegar tu propia instancia**
+
+Si quieres desplegar tu propia instancia del backend:
 
 1. Conecta tu repositorio a Railway
 2. Selecciona el directorio `backend/`
