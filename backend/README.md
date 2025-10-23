@@ -68,6 +68,7 @@ backend/
 Usa los scripts de setup automático según tu sistema operativo:
 
 #### Linux/macOS:
+
 ```bash
 cd backend
 ./setup.sh          # Configura todo automáticamente
@@ -76,6 +77,7 @@ nano .env           # Edita las variables de entorno
 ```
 
 #### Windows:
+
 ```cmd
 cd backend
 setup.bat           # Configura todo automáticamente
@@ -84,6 +86,7 @@ run_server.bat      # Inicia el servidor
 ```
 
 El script `setup.sh`/`setup.bat` hace automáticamente:
+
 - ✅ Crea `.env` desde `.env.example`
 - ✅ Crea el entorno virtual (`venv/`)
 - ✅ Instala todas las dependencias
@@ -106,25 +109,26 @@ run_server.bat
 
 ### Scripts de Desarrollo (para ti)
 
-| Script | Sistema | Propósito | Cuándo usarlo |
-|--------|---------|-----------|---------------|
-| `setup.sh` | Linux/macOS | Setup inicial | **1 sola vez** (primera vez) |
-| `setup.bat` | Windows | Setup inicial | **1 sola vez** (primera vez) |
-| `run_server.sh` | Linux/macOS | Ejecutar servidor | **Cada día** que desarrolles |
-| `run_server.bat` | Windows | Ejecutar servidor | **Cada día** que desarrolles |
+| Script           | Sistema     | Propósito         | Cuándo usarlo                |
+| ---------------- | ----------- | ----------------- | ---------------------------- |
+| `setup.sh`       | Linux/macOS | Setup inicial     | **1 sola vez** (primera vez) |
+| `setup.bat`      | Windows     | Setup inicial     | **1 sola vez** (primera vez) |
+| `run_server.sh`  | Linux/macOS | Ejecutar servidor | **Cada día** que desarrolles |
+| `run_server.bat` | Windows     | Ejecutar servidor | **Cada día** que desarrolles |
 
 ### Scripts de Producción (Railway)
 
-| Script | Propósito | Quién lo ejecuta |
-|--------|-----------|------------------|
+| Script     | Propósito             | Quién lo ejecuta        |
+| ---------- | --------------------- | ----------------------- |
 | `start.sh` | Iniciar en producción | Railway automáticamente |
-| `Procfile` | Config de Railway | Railway automáticamente |
+| `Procfile` | Config de Railway     | Railway automáticamente |
 
 ### ¿Por qué .dockerignore?
 
 Railway usa Docker internamente para ejecutar tu app. El `.dockerignore` le dice qué archivos **NO copiar** al contenedor:
+
 - ❌ `venv/` - No copiar entorno virtual local
-- ❌ `.env` - No copiar secrets locales  
+- ❌ `.env` - No copiar secrets locales
 - ❌ `tests/` - No copiar tests
 - ✅ `app/` - SÍ copiar código fuente
 
@@ -147,6 +151,7 @@ nano .env
 ```
 
 Variables requeridas:
+
 - `MONGO_URI`: Conexión a MongoDB
 - `JWT_SECRET_KEY`: Clave secreta para JWT
 - `ALLOWED_ORIGINS`: Orígenes permitidos para CORS
@@ -154,6 +159,7 @@ Variables requeridas:
 ### 2. Instalar Dependencias
 
 #### Linux / macOS:
+
 ```bash
 # Crear entorno virtual
 python3 -m venv venv
@@ -166,6 +172,7 @@ pip install -r requirements.txt
 ```
 
 #### Windows:
+
 ```cmd
 # Crear entorno virtual
 python -m venv venv
@@ -182,16 +189,19 @@ pip install -r requirements.txt
 #### Opción 1 - Scripts automatizados:
 
 **Linux/macOS:**
+
 ```bash
 ./run_server.sh
 ```
 
 **Windows:**
+
 ```cmd
 run_server.bat
 ```
 
 #### Opción 2 - Manual:
+
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -207,10 +217,12 @@ Una vez que el servidor esté corriendo:
 ### Principales Rutas:
 
 #### Autenticación
+
 - `POST /login` - Iniciar sesión
 - `POST /register` - Registrar usuario
 
 #### Usuarios
+
 - `GET /users/me` - Obtener usuario actual
 - `GET /users` - Listar usuarios
 - `POST /users` - Crear usuario
@@ -220,19 +232,23 @@ Una vez que el servidor esté corriendo:
 - `POST /users/reset-password` - Restablecer contraseña
 
 #### Negocios
+
 - `GET /business` - Listar negocios
 - `POST /business` - Crear negocio
 - `POST /business/request-service` - Solicitar servicio
 - `GET /business/services` - Listar servicios
 
 #### Google Maps
+
 - `GET /autocomplete/{query}` - Autocompletar direcciones
 
 #### Notificaciones
+
 - `GET /notifications/{user_id}` - Obtener notificaciones
 - `POST /notifications` - Crear notificación
 
 #### Chat
+
 - `GET /chat/{user_id}` - Obtener chats de un usuario
 - `GET /chat/{chat_id}/messages` - Obtener mensajes de un chat
 
@@ -371,6 +387,7 @@ Para una guía completa y detallada de cómo desplegar en Railway, consulta:
 **👉 [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md)**
 
 Incluye:
+
 - Setup de MongoDB Atlas paso a paso
 - Configuración de Railway
 - Variables de entorno requeridas
@@ -431,6 +448,7 @@ railway up
 ### Estructura de Modelos
 
 Todos los modelos están en `app/models/`:
+
 - **users.py**: User, UserResponse, UserUpdate, ResetPasswordRequest, UpdateBalanceRequest
 - **sellers.py**: Business, Service
 - **utility_classes.py**: Notification, Chat, Message
@@ -439,11 +457,13 @@ Todos los modelos están en `app/models/`:
 ### Autenticación
 
 La autenticación usa JWT tokens:
+
 - Los tokens expiran según `ACCESS_TOKEN_EXPIRE_MINUTES`
 - Las rutas protegidas requieren el header: `Authorization: Bearer <token>`
 - Usa `get_current_user` como dependencia en rutas protegidas
 
 Ejemplo de uso:
+
 ```python
 from app.auth import get_current_user
 
@@ -455,6 +475,7 @@ async def protected_route(current_user: UserResponse = Depends(get_current_user)
 ### Base de Datos
 
 MongoDB con Motor (driver asíncrono):
+
 - Conexión configurada en `app/db.py`
 - Usa certificados SSL con `certifi`
 - Las colecciones se crean automáticamente al insertar documentos
@@ -462,6 +483,7 @@ MongoDB con Motor (driver asíncrono):
 ### CORS
 
 Configurado en `app/main.py`:
+
 - **Desarrollo** (`ENVIRONMENT=development`): Permite todos los orígenes (`*`)
 - **Producción** (`ENVIRONMENT=production`): Solo dominios en `ALLOWED_ORIGINS`
 
@@ -474,6 +496,7 @@ Configurado en `app/main.py`:
 **Problema**: Error al ejecutar `./run_server.sh` o `run_server.bat`
 
 **Soluciones**:
+
 1. Verifica que estás en el directorio `backend/`
 2. Verifica que `.env` existe: `ls -la .env`
 3. Activa el entorno virtual manualmente:
@@ -489,6 +512,7 @@ Configurado en `app/main.py`:
 **Problema**: Token JWT inválido o expirado
 
 **Soluciones**:
+
 1. Verifica que `JWT_SECRET_KEY` sea la misma en toda la app
 2. Genera un nuevo token haciendo login
 3. Verifica que el token no haya expirado
@@ -499,6 +523,7 @@ Configurado en `app/main.py`:
 **Problema**: No puede conectar con MongoDB Atlas
 
 **Soluciones**:
+
 1. **Verifica MONGO_URI en .env**:
    ```bash
    cat .env | grep MONGO_URI
@@ -518,6 +543,7 @@ Configurado en `app/main.py`:
 **Problema**: Frontend no puede hacer requests al backend
 
 **Soluciones**:
+
 1. **En desarrollo**: Configura `ENVIRONMENT=development` en `.env`
 2. **En producción**: Agrega tu dominio a `ALLOWED_ORIGINS`:
    ```env
@@ -530,6 +556,7 @@ Configurado en `app/main.py`:
 **Problema**: Error: "Address already in use"
 
 **Soluciones**:
+
 ```bash
 # Linux/macOS - Encontrar proceso
 lsof -i :8000
@@ -549,6 +576,7 @@ taskkill /PID <PID> /F
 **Problema**: Python no encuentra un módulo
 
 **Soluciones**:
+
 1. Verifica que el entorno virtual esté activado
 2. Reinstala dependencias:
    ```bash
@@ -564,6 +592,7 @@ taskkill /PID <PID> /F
 **Problema**: `./setup.sh: Permission denied`
 
 **Solución**:
+
 ```bash
 # Dar permisos de ejecución
 chmod +x setup.sh run_server.sh start.sh
@@ -572,6 +601,7 @@ chmod +x setup.sh run_server.sh start.sh
 **Problema**: Scripts de Windows no funcionan
 
 **Solución**:
+
 1. Ejecuta desde CMD (no PowerShell)
 2. O usa Git Bash en Windows
 3. O ejecuta manualmente los comandos del script
@@ -599,7 +629,3 @@ Si tienes problemas:
 5. 💬 **Consulta Stack Overflow**
 
 ---
-
-## 📄 Licencia
-
-Este proyecto es parte de PymeMap.
