@@ -19,47 +19,18 @@ app = FastAPI(
 
 # Configuración de CORS basada en variables de entorno
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8081").split(",")
 
-# Función para validar orígenes permitidos
-def is_origin_allowed(origin: str) -> bool:
-    """
-    Valida si un origen está permitido basado en patrones.
-    Permite:
-    - Cualquier subdominio de pymap.cl (incluyendo www)
-    - localhost en cualquier puerto
-    - Dominios específicos en ALLOWED_ORIGINS
-    """
-    if not origin:
-        return False
-    
-    # En desarrollo, permitir todo
-    if ENVIRONMENT == "development":
-        return True
-    
-    # Patrones permitidos
-    allowed_patterns = [
-        r'^https?://localhost(:\d+)?$',           # localhost con cualquier puerto
-        r'^https?://127\.0\.0\.1(:\d+)?$',        # 127.0.0.1 con cualquier puerto
-        r'^https?://([\w-]+\.)*pymap\.cl$',       # *.pymap.cl y pymap.cl
-    ]
-    
-    # Verificar contra patrones
-    for pattern in allowed_patterns:
-        if re.match(pattern, origin):
-            return True
-    
-    # Verificar contra orígenes específicos configurados
-    if origin in ALLOWED_ORIGINS:
-        return True
-    
-    return False
+# En desarrollo permitir todos los orígenes
+if ENVIRONMENT == "development":
+    origins = ["*"]
+else:
+    # En producción usar regex para permitir patrones
+    origins = []
 
-# Configurar CORS con validación personalizada
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=origins if ENVIRONMENT == "development" else [],
     allow_origin_regex=r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https?://([\w-]+\.)*pymap\.cl$' if ENVIRONMENT == "production" else None,
-    allow_origins=["*"] if ENVIRONMENT == "development" else ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"], 
     allow_headers=["*"],
