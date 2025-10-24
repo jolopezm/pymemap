@@ -73,6 +73,7 @@ Antes de empezar, asegúrate de tener:
 6. **Guarda** esta URI completa - la necesitarás para Railway
 
 **Ejemplo de URI completa**:
+
 ```
 mongodb+srv://pymemap_user:MiPassword123@cluster0.xxxxx.mongodb.net/
 ```
@@ -84,16 +85,19 @@ mongodb+srv://pymemap_user:MiPassword123@cluster0.xxxxx.mongodb.net/
 Antes de desplegar, necesitas una clave secreta segura para JWT.
 
 ### Linux/macOS:
+
 ```bash
 openssl rand -hex 32
 ```
 
 ### Windows (PowerShell):
+
 ```powershell
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 ```
 
 ### Alternativa (Online):
+
 Visita https://randomkeygen.com/ y copia una **Fort Knox Password**
 
 **Guarda esta clave** - la usarás en Railway.
@@ -144,6 +148,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxxx
 ```
 
 **Cómo agregar variables**:
+
 1. Click en **"+ New Variable"**
 2. Escribe el nombre (ej: `MONGO_URI`)
 3. Pega el valor
@@ -159,6 +164,7 @@ Railway debería detectar automáticamente:
 - **Start Command**: Desde `Procfile`: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 
 Si ves algo diferente:
+
 1. Ve a **"Settings"** → **"Deploy"**
 2. Verifica que el **Start Command** sea correcto
 3. Railway usa el archivo `Procfile` o `railway.json` automáticamente
@@ -171,6 +177,7 @@ Si ves algo diferente:
 4. Observa los logs en tiempo real
 
 **Estados del deployment**:
+
 - 🟡 **Building**: Instalando dependencias
 - 🟢 **Active**: ¡Funcionando correctamente!
 - 🔴 **Failed**: Revisa los logs para ver el error
@@ -190,16 +197,16 @@ Si ves algo diferente:
 
 ### Resumen de Variables
 
-| Variable | Requerida | Ejemplo | Descripción |
-|----------|-----------|---------|-------------|
-| `MONGO_URI` | ✅ Sí | `mongodb+srv://user:pass@...` | Connection string de MongoDB Atlas |
-| `MONGO_DB_NAME` | ✅ Sí | `pymemap_db` | Nombre de la base de datos |
-| `JWT_SECRET_KEY` | ✅ Sí | `abc123...` (32+ chars) | Clave secreta para JWT |
-| `JWT_ALGORITHM` | ✅ Sí | `HS256` | Algoritmo de encriptación JWT |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ Sí | `30` | Tiempo de expiración de tokens |
-| `ENVIRONMENT` | ✅ Sí | `production` | Entorno actual |
-| `ALLOWED_ORIGINS` | ⚠️ Recomendada | `https://frontend.com` | Dominios permitidos (CORS) |
-| `RESEND_API_KEY` | ❌ Opcional | `re_...` | API key para emails |
+| Variable                      | Requerida      | Ejemplo                       | Descripción                        |
+| ----------------------------- | -------------- | ----------------------------- | ---------------------------------- |
+| `MONGO_URI`                   | ✅ Sí          | `mongodb+srv://user:pass@...` | Connection string de MongoDB Atlas |
+| `MONGO_DB_NAME`               | ✅ Sí          | `pymemap_db`                  | Nombre de la base de datos         |
+| `JWT_SECRET_KEY`              | ✅ Sí          | `abc123...` (32+ chars)       | Clave secreta para JWT             |
+| `JWT_ALGORITHM`               | ✅ Sí          | `HS256`                       | Algoritmo de encriptación JWT      |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ Sí          | `30`                          | Tiempo de expiración de tokens     |
+| `ENVIRONMENT`                 | ✅ Sí          | `production`                  | Entorno actual                     |
+| `ALLOWED_ORIGINS`             | ⚠️ Recomendada | `https://frontend.com`        | Dominios permitidos (CORS)         |
+| `RESEND_API_KEY`              | ❌ Opcional    | `re_...`                      | API key para emails                |
 
 ### ⚠️ Importante sobre ALLOWED_ORIGINS
 
@@ -222,17 +229,21 @@ ALLOWED_ORIGINS=https://pymemap.vercel.app,https://www.pymemap.com
 ### Verificar que el deployment funcionó:
 
 #### 1. Verificar Endpoint Principal
+
 ```bash
 curl https://tu-app.up.railway.app/
 ```
 
 **Respuesta esperada**:
+
 ```json
-{"message":"Bienvenido a la API"}
+{ "message": "Bienvenido a la API" }
 ```
 
 #### 2. Verificar Documentación
+
 Visita en tu navegador:
+
 ```
 https://tu-app.up.railway.app/docs
 ```
@@ -242,6 +253,7 @@ Deberías ver la interfaz de **Swagger UI** con todos tus endpoints.
 #### 3. Probar Autenticación
 
 **Crear un usuario** (POST /users):
+
 ```bash
 curl -X POST "https://tu-app.up.railway.app/users" \
   -H "Content-Type: application/json" \
@@ -255,6 +267,7 @@ curl -X POST "https://tu-app.up.railway.app/users" \
 ```
 
 **Login** (POST /login):
+
 ```bash
 curl -X POST "https://tu-app.up.railway.app/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -265,13 +278,14 @@ Deberías recibir un **token JWT**.
 
 ---
 
-## 🐛 Troubleshooting
+## 🧯🔥Troubleshooting
 
 ### Error: "Application failed to respond"
 
 **Causa**: El servidor no responde en el puerto correcto.
 
 **Solución**:
+
 1. Verifica que tu `Procfile` use `$PORT`:
    ```
    web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -284,17 +298,21 @@ Deberías recibir un **token JWT**.
 **Causa**: Problema de conexión con MongoDB Atlas.
 
 **Soluciones**:
+
 1. **Verifica MONGO_URI**:
+
    - Ve a Railway → Variables
    - Asegúrate de que `MONGO_URI` esté correcta
    - Verifica que no haya espacios extra
    - Confirma que reemplazaste `<password>` con tu contraseña real
 
 2. **Verifica Network Access en MongoDB**:
+
    - MongoDB Atlas → Network Access
    - Debe incluir `0.0.0.0/0`
 
 3. **Verifica Database User**:
+
    - MongoDB Atlas → Database Access
    - Usuario debe tener permisos de lectura/escritura
 
@@ -306,6 +324,7 @@ Deberías recibir un **token JWT**.
 **Causa**: Dependencia faltante en `requirements.txt`.
 
 **Solución**:
+
 1. Verifica que `requirements.txt` esté completo:
    ```bash
    cd backend
@@ -324,6 +343,7 @@ Deberías recibir un **token JWT**.
 **Causa**: Problema con JWT_SECRET_KEY.
 
 **Solución**:
+
 1. Verifica que `JWT_SECRET_KEY` esté configurada en Railway
 2. Debe ser la **misma clave** que usas localmente (si migras datos)
 3. Debe tener **mínimo 32 caracteres**
@@ -332,12 +352,14 @@ Deberías recibir un **token JWT**.
 ### Los logs muestran errores
 
 **Ver logs en Railway**:
+
 1. Ve a tu proyecto en Railway
 2. Pestaña **"Deployments"**
 3. Click en el deployment actual
 4. **"View Logs"** para ver en tiempo real
 
 **Comandos útiles**:
+
 ```bash
 # Si instalaste Railway CLI
 railway logs
@@ -349,6 +371,7 @@ railway logs --follow  # Logs en tiempo real
 **Causa**: Error en el código o configuración.
 
 **Solución**:
+
 1. **Revisa los logs de Railway**
 2. Busca el stack trace completo
 3. Verifica que todas las variables de entorno estén configuradas
@@ -359,6 +382,7 @@ railway logs --follow  # Logs en tiempo real
 **Causa**: Frontend no está en `ALLOWED_ORIGINS`.
 
 **Solución**:
+
 1. Ve a Railway → Variables
 2. Actualiza `ALLOWED_ORIGINS`:
    ```env
@@ -381,17 +405,20 @@ Railway proporciona métricas en tiempo real:
 4. **Disk**: Uso de almacenamiento
 
 **Ver métricas**:
+
 - Ve a tu proyecto
 - Pestaña **"Metrics"**
 
 ### Health Checks
 
 Railway hace health checks automáticos:
+
 - **Endpoint**: Tu ruta raíz `/`
 - **Frecuencia**: Cada 30 segundos
 - **Acción si falla**: Reinicia después de 3 fallas consecutivas
 
 Configurado en `railway.json`:
+
 ```json
 {
   "deploy": {
@@ -404,9 +431,11 @@ Configurado en `railway.json`:
 ### Ver Logs en Tiempo Real
 
 **Opción 1: Dashboard Web**
+
 1. Railway → Deployments → View Logs
 
 **Opción 2: CLI**
+
 ```bash
 # Instalar Railway CLI
 npm install -g @railway/cli
@@ -422,11 +451,13 @@ railway logs --follow  # Tiempo real
 ### Alertas y Notificaciones
 
 Railway puede notificarte sobre:
+
 - Deployments exitosos/fallidos
 - Errores en runtime
 - Uso de recursos
 
 **Configurar**:
+
 1. Settings → Notifications
 2. Conecta Slack, Discord, o email
 
@@ -437,15 +468,18 @@ Railway puede notificarte sobre:
 ### Railway Pricing
 
 **Free Tier**:
+
 - **$5 de crédito gratis** por mes
 - ~500 horas de ejecución
 - Suficiente para proyectos pequeños/MVP
 
 **Después del Free Tier**:
+
 - **$0.000231 por GB-hora** de memoria
 - **$0.10 por GB** de transferencia de datos
 
 **Ejemplo**: Una app con 512MB RAM corriendo 24/7:
+
 ```
 512MB * 730 horas * $0.000231 = ~$86/mes
 ```
@@ -453,11 +487,13 @@ Railway puede notificarte sobre:
 ### MongoDB Atlas Pricing
 
 **Free Tier (M0)**:
+
 - **512 MB de almacenamiento** gratis
 - **500 conexiones simultáneas**
 - Suficiente para desarrollo y apps pequeñas
 
 **Después del Free Tier**:
+
 - M10 (Shared): ~$25/mes
 - M20 (Dedicated): ~$50/mes
 
@@ -485,13 +521,14 @@ Antes de lanzar a producción:
 Una vez desplegado el backend, actualiza tu frontend:
 
 **`frontend/config/api.js`**:
+
 ```javascript
 const API_URLS = {
-  local: 'http://localhost:8000',
-  production: 'https://pymemap-production.up.railway.app'  // ← Tu URL de Railway
-}
+  local: "http://localhost:8000",
+  production: "https://pymemap-production.up.railway.app", // ← Tu URL de Railway
+};
 
-export const API_URL = isLocalhost ? API_URLS.local : API_URLS.production
+export const API_URL = isLocalhost ? API_URLS.local : API_URLS.production;
 ```
 
 ---
@@ -501,6 +538,7 @@ export const API_URL = isLocalhost ? API_URLS.local : API_URLS.production
 Railway se conecta a tu repositorio de GitHub:
 
 **Flujo automático**:
+
 ```
 1. Haces cambios en tu código
 2. git add, commit, push
@@ -511,6 +549,7 @@ Railway se conecta a tu repositorio de GitHub:
 ```
 
 **Configurar branch de deploy**:
+
 1. Railway → Settings → Deploy
 2. **Watch Paths**: `backend/**` (solo re-deploya si cambió backend)
 3. **Branch**: `main` o `production`
@@ -539,6 +578,7 @@ Railway se conecta a tu repositorio de GitHub:
 6. 🐛 **Busca el error específico en Google**
 
 **Recursos adicionales**:
+
 - [Railway Discord](https://discord.gg/railway)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/railway)
 - Backend README: `backend/README.md`
@@ -549,6 +589,7 @@ Railway se conecta a tu repositorio de GitHub:
 ¡Listo! Tu API debería estar funcionando en Railway 🎉
 
 **Próximos pasos**:
+
 1. ✅ Probar todos los endpoints desde `/docs`
 2. ✅ Configurar el frontend con la nueva URL
 3. ✅ Monitorear logs y métricas

@@ -19,18 +19,29 @@ app = FastAPI(
 
 # Configuración de CORS basada en variables de entorno
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "")
 
-# En desarrollo permitir todos los orígenes
+# Configurar orígenes permitidos
 if ENVIRONMENT == "development":
+    # En desarrollo permitir todos los orígenes
     origins = ["*"]
+    allow_origin_regex = None
 else:
-    # En producción usar regex para permitir patrones
-    origins = []
+    # En producción usar los orígenes especificados
+    if ALLOWED_ORIGINS:
+        # Dividir por comas y limpiar espacios
+        origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",")]
+    else:
+        # Si no hay orígenes configurados, usar regex por defecto
+        origins = []
+    
+    # Regex para permitir localhost, Railway, y dominios personalizados
+    allow_origin_regex = r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https?://[\w-]+\.up\.railway\.app$|^https?://([\w-]+\.)*pymap\.cl$'
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if ENVIRONMENT == "development" else [],
-    allow_origin_regex=r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https?://([\w-]+\.)*pymap\.cl$' if ENVIRONMENT == "production" else None,
+    allow_origins=origins,
+    allow_origin_regex=allow_origin_regex if ENVIRONMENT == "production" else None,
     allow_credentials=True,
     allow_methods=["*"], 
     allow_headers=["*"],

@@ -63,6 +63,28 @@ backend/
 
 ## 🚀 Inicio Rápido
 
+### ⚡ Desarrollo sin Backend Local (Recomendado)
+
+**¿Sabías que puedes trabajar sin levantar el backend localmente?**
+
+El backend ya está desplegado en Railway, por lo que el frontend puede conectarse directamente a él. Esto es ideal para:
+
+- ✅ Desarrollo rápido del frontend
+- ✅ No preocuparte por configurar MongoDB local
+- ✅ Probar en dispositivos móviles reales
+- ✅ Compartir con otros desarrolladores/evaluadores
+
+**Solo necesitas:**
+```bash
+cd frontend
+npm run web:dev
+# ¡Listo! El frontend se conecta automáticamente a Railway
+```
+
+### 🔧 Desarrollo con Backend Local (Opcional)
+
+Si necesitas hacer cambios en el backend o trabajar offline, sigue estos pasos:
+
 ### Primera Vez (Setup)
 
 Usa los scripts de setup automático según tu sistema operativo:
@@ -380,21 +402,57 @@ python tests/test_backend_multiplataforma.py
 
 ## 🌐 Despliegue
 
+### 🎉 Backend Actualmente Desplegado
+
+El backend de PymeMap ya está desplegado y funcionando en Railway:
+
+**🔗 URL**: https://pymemap-production-306f.up.railway.app  
+**📚 Documentación**: https://pymemap-production-306f.up.railway.app/docs  
+**✅ Estado**: Activo y funcionando
+
+### 🔄 Flujo de Trabajo con Deployment
+
+Cuando trabajas con el backend desplegado:
+
+**1. Hacer cambios localmente:**
+```bash
+cd backend
+# Editar código...
+```
+
+**2. Commitear y pushear:**
+```bash
+git add .
+git commit -m "feat: nuevo endpoint de X"
+git push origin issue-despliegue
+```
+
+**3. Railway auto-deploya:**
+- Detecta el push automáticamente
+- Construye la nueva versión (~2-3 minutos)
+- Despliega si no hay errores
+- Puedes ver el progreso en el dashboard de Railway
+
+**4. Probar los cambios:**
+```bash
+curl https://pymemap-production-306f.up.railway.app/
+```
+
 ### 📚 Guía Completa de Despliegue
 
-Para una guía completa y detallada de cómo desplegar en Railway, consulta:
+Para desplegar tu propia instancia o entender la configuración completa:
 
 **👉 [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md)**
 
 Incluye:
 
 - Setup de MongoDB Atlas paso a paso
-- Configuración de Railway
+- Configuración de Railway desde cero
 - Variables de entorno requeridas
 - Troubleshooting completo
 - Monitoreo y mantenimiento
 
-### Resumen Rápido
+### Resumen Rápido (Para Nueva Instancia)
 
 1. **Crear cuenta en Railway** → [railway.app](https://railway.app)
 2. **Configurar MongoDB Atlas** → [cloud.mongodb.com](https://cloud.mongodb.com)
