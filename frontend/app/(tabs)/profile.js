@@ -8,6 +8,10 @@ import { useRouter } from 'expo-router'
 import React from 'react'
 import Item from '../../plantillas/business-item'
 import globalStyles from '../../styles/global'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
+import Button from '../../components/button'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProfileScreen() {
     const { isAuthenticated, logout } = useAuth()
@@ -71,10 +75,9 @@ export default function ProfileScreen() {
         }
     }
 
-    return (
+    return isAuthenticated ? (
         <Screen scroll={false}>
-            {isAuthenticated ? (
-                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
                     <View style={globalStyles.card}>
                         <TextInput
                             value={name}
@@ -169,14 +172,148 @@ export default function ProfileScreen() {
                         <Text style={{ color: '#fff' }}>Cerrar Sesión</Text>
                     </Pressable>
                 </ScrollView>
-            ) : (
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={() => router.push('/login')}
-                >
-                    <Text style={{ color: '#fff' }}>Iniciar Sesión</Text>
-                </Pressable>
-            )}
         </Screen>
+    ) : (
+        <LinearGradient
+            colors={['#9B59B6', '#F8BBD9']}
+            style={{ flex: 1 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+        >
+            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 30,
+                        paddingBottom: 0,
+                    }}
+                >
+                                {/* Icono principal */}
+                                <View
+                                    style={[
+                                        globalStyles.logoContainer,
+                                        { marginBottom: 20 },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="person-circle"
+                                        size={90}
+                                        color="#FFFFFF"
+                                    />
+                                </View>
+
+                                {/* Título */}
+                                <Text style={[globalStyles.title, { textAlign: 'center', marginBottom: 15 }]}>
+                                    ¡Únete a PymeMap!
+                                </Text>
+
+                                {/* Subtítulo */}
+                                <Text
+                                    style={[
+                                        globalStyles.subtitle,
+                                        { marginBottom: 25, textAlign: 'center' },
+                                    ]}
+                                >
+                                    Crea tu cuenta y accede a todas las funciones
+                                </Text>
+
+                                {/* Lista de beneficios */}
+                                <View style={{ width: '100%', marginBottom: 25 }}>
+                                    <BenefitItem
+                                        icon="business"
+                                        text="Gestiona tus negocios"
+                                    />
+                                    <BenefitItem
+                                        icon="wallet"
+                                        text="Pagos seguros"
+                                    />
+                                    <BenefitItem
+                                        icon="time"
+                                        text="Historial de servicios"
+                                    />
+                                    <BenefitItem
+                                        icon="star"
+                                        text="Y mucho más"
+                                    />
+                                </View>
+
+                                {/* Botones */}
+                                <View style={{ width: '100%' }}>
+                                    <Button
+                                        title="Crear cuenta"
+                                        variant="primary"
+                                        onPress={() => router.push('/sign-in')}
+                                        style={{ marginBottom: 12 }}
+                                    />
+
+                                    <Button
+                                        title="Iniciar sesión"
+                                        variant="secondary"
+                                        onPress={() => router.push('/login')}
+                                        style={{ marginBottom: 20 }}
+                                    />
+
+                                    {/* Link mejorado para continuar sin cuenta */}
+                                    <Pressable 
+                                        onPress={() => router.push('/(tabs)/home')} 
+                                        style={{ 
+                                            alignSelf: 'center',
+                                            paddingVertical: 8,
+                                            paddingHorizontal: 16,
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'rgba(255, 255, 255, 0.85)',
+                                                fontSize: 14,
+                                                fontWeight: '400',
+                                                textDecorationLine: 'none',
+                                            }}
+                                        >
+                                            Explorar sin cuenta
+                                        </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </SafeAreaView>
+            </LinearGradient>
+    )
+}// Componente auxiliar para los items de beneficios
+function BenefitItem({ icon, text }) {
+    return (
+        <View
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 12,
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                padding: 12,
+                borderRadius: 10,
+            }}
+        >
+            <View
+                style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    padding: 8,
+                    borderRadius: 8,
+                    marginRight: 12,
+                }}
+            >
+                <Ionicons name={icon} size={22} color="#FFFFFF" />
+            </View>
+            <Text
+                style={{
+                    color: '#FFFFFF',
+                    fontSize: 15,
+                    fontWeight: '500',
+                    flex: 1,
+                }}
+                numberOfLines={1}
+            >
+                {text}
+            </Text>
+        </View>
     )
 }

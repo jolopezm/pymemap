@@ -9,7 +9,7 @@ const colors = {
     white: '#FFFFFF',
     lightGray: '#F5F5F5',
     gray: '#888888',
-    textPrimary: '#FFFFFFS', // Texto principal en fondo púrpura
+    textPrimary: '#FFFFFF', // Texto principal en fondo púrpura
     textSecondary: '#333333', // Texto secundario
 }
 

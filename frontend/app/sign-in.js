@@ -172,7 +172,7 @@ export default function SignIn() {
                             onChangeText={setConfirmPassword}
                             confirmValue={user.password}
                             isConfirmField={true}
-                            showToggle={false}
+                            showToggle={true}
                             onValidationChange={(matches, data) => {
                                 console.log(
                                     'Contraseñas coinciden:',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { View, Text, Pressable, TextInput } from 'react-native'
+import { View, Text, Pressable, TextInput, ScrollView } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import globalStyles from '../styles/global'
@@ -90,72 +90,125 @@ export default function Login() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
             >
-                <View style={globalStyles.gradientContainer}>
-                {/* Icono de la app */}
-                <View style={globalStyles.logoContainer}>
-                    <Ionicons name="business" size={64} color="#FFFFFF" />
-                </View>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View
+                        style={[
+                            globalStyles.gradientContainer,
+                            { paddingVertical: 50 },
+                        ]}
+                    >
+                        {/* Icono de la app */}
+                        <View style={globalStyles.logoContainer}>
+                            <Ionicons
+                                name="business"
+                                size={64}
+                                color="#FFFFFF"
+                            />
+                        </View>
 
-                {/* Título */}
-                <Text style={globalStyles.title}>¡Bienvenido!</Text>
+                        {/* Título */}
+                        <Text style={globalStyles.title}>¡Bienvenido de nuevo!</Text>
+                        
+                        {/* Subtítulo */}
+                        <Text style={globalStyles.subtitle}>
+                            Inicia sesión para continuar
+                        </Text>
 
-                {/* Campo Email */}
-                <TextInput
-                    placeholder="Correo electrónico"
-                    placeholderTextColor="#999"
-                    style={globalStyles.textField}
-                    value={user.email}
-                    onChangeText={email => setUser({ ...user, email })}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                />
+                        {/* Campo Email */}
+                        <TextInput
+                            placeholder="Correo electrónico"
+                            placeholderTextColor="#999"
+                            style={globalStyles.textField}
+                            value={user.email}
+                            onChangeText={email => setUser({ ...user, email })}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
 
-                {/* Campo Contraseña */}
-                <PasswordInput
-                    placeholder="Contraseña"
-                    value={user.password}
-                    onChangeText={password => setUser({ ...user, password })}
-                    onSubmitEditing={handleLoginPress}
-                    style={{ marginBottom: 20 }}
-                />
+                        {/* Campo Contraseña */}
+                        <PasswordInput
+                            placeholder="Contraseña"
+                            value={user.password}
+                            onChangeText={password => setUser({ ...user, password })}
+                            onSubmitEditing={handleLoginPress}
+                        />
 
-                {/* Link Olvidaste contraseña */}
-                <Link href="/forgot-password" style={{ marginBottom: 30 }}>
-                    <Text style={globalStyles.linkText}>¿Olvidaste tu contraseña?</Text>
-                </Link>
+                        {/* Link Olvidaste contraseña */}
+                        <Link href="/forgot-password" style={{ alignSelf: 'flex-end', marginTop: 10, marginBottom: 30 }}>
+                            <Text style={globalStyles.linkText}>¿Olvidaste tu contraseña?</Text>
+                        </Link>
 
-                {/* Botón Principal */}
-                <Button
-                    title="Ingresar"
-                    variant="primary"
-                    onPress={handleLoginPress}
-                    loading={loading}
-                    style={{ marginBottom: 10 }}
-                />
+                        {/* Botón Principal */}
+                        <Button
+                            title="Ingresar"
+                            variant="primary"
+                            onPress={handleLoginPress}
+                            loading={loading}
+                            style={{ marginBottom: 20 }}
+                        />
 
-                {/* Botón Secundario */}
-                <Text style={[globalStyles.linkText, { marginTop: 20, marginBottom: 10 }]}>
-                    ¿No tienes cuenta?
-                </Text>
-                <Button
-                    title="Registrarse"
-                    variant="secondary"
-                    onPress={() => router.push('/sign-in')}
-                />
+                        {/* Divider */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginVertical: 30,
+                                width: '100%',
+                            }}
+                        >
+                            <View
+                                style={{
+                                    flex: 1,
+                                    height: 1,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                }}
+                            />
+                            <Text
+                                style={{
+                                    marginHorizontal: 15,
+                                    color: '#FFFFFF',
+                                    fontSize: 14,
+                                    fontWeight: '600',
+                                    opacity: 0.9,
+                                }}
+                            >
+                                ¿Primera vez aquí?
+                            </Text>
+                            <View
+                                style={{
+                                    flex: 1,
+                                    height: 1,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                }}
+                            />
+                        </View>
 
-                {/* Botón de navegación al home */}
-                <Button
-                    title="🏠 Explorar sin cuenta"
-                    variant="outline"
-                    onPress={() => router.push('/home')}
-                    style={{ 
-                        marginTop: 30,
-                        borderColor: 'rgba(255, 255, 255, 0.7)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    }}
-                />
-            </View>
-        </LinearGradient>
-    </DismissKeyboard>
+                        {/* Botón Secundario */}
+                        <Button
+                            title="Crear cuenta nueva"
+                            variant="secondary"
+                            onPress={() => router.push('/sign-in')}
+                            style={{ marginBottom: 15 }}
+                        />
+
+                        {/* Botón de navegación al home */}
+                        <Button
+                            title="🏠 Explorar sin cuenta"
+                            variant="outline"
+                            onPress={() => router.push('/(tabs)/home')}
+                            style={{
+                                marginTop: 20,
+                                borderColor: 'rgba(255, 255, 255, 0.7)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            }}
+                        />
+                    </View>
+                </ScrollView>
+            </LinearGradient>
+        </DismissKeyboard>
     )
 }
