@@ -3,25 +3,45 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 import traceback
+import os
+import re
+from dotenv import load_dotenv
 from .routers import gmaps, users, auth, business, notifications, chat
 
+# Cargar variables de entorno
+load_dotenv()
+
 app = FastAPI(
-    title="Pymap API",
-    description="Esta es una API de ejemplo con rutas modulares de la aplicacion Pymap.",
-    version="beta",
+    title="PymeMap API",
+    description="API REST para la plataforma PymeMap - Conectando usuarios con PYMEs locales.",
+    version="1.0.0",
 )
 
-# Configuración de CORS
-# En un entorno de producción, deberías restringir los orígenes permitidos.
-# origins = ["
-#     "http://localhost:3000",
-#     "https://tu-dominio-de-frontend.com",
-# ]
-origins = ["http://localhost:8081"]
+# Configuración de CORS basada en variables de entorno
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "")
+
+# Configurar orígenes permitidos
+if ENVIRONMENT == "development":
+    # En desarrollo permitir todos los orígenes
+    origins = ["*"]
+    allow_origin_regex = None
+else:
+    # En producción usar los orígenes especificados
+    if ALLOWED_ORIGINS:
+        # Dividir por comas y limpiar espacios
+        origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",")]
+    else:
+        # Si no hay orígenes configurados, usar regex por defecto
+        origins = []
+    
+    # Regex para permitir localhost, Railway, y dominios personalizados
+    allow_origin_regex = r'^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https?://[\w-]+\.up\.railway\.app$|^https?://([\w-]+\.)*pymap\.cl$'
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes
+    allow_origins=origins,
+    allow_origin_regex=allow_origin_regex if ENVIRONMENT == "production" else None,
     allow_credentials=True,
     allow_methods=["*"], 
     allow_headers=["*"],
@@ -48,3 +68,4 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal Server Error"}
     )
+
