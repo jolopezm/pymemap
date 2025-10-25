@@ -1,4 +1,4 @@
-import { Text, TextInput, Pressable, FlatList, View } from 'react-native'
+import { Text, TextInput, Pressable, FlatList, View, ScrollView } from 'react-native'
 import Screen from '../../components/screen'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getBusiness } from '../../api/business-service'
@@ -72,9 +72,9 @@ export default function ProfileScreen() {
     }
 
     return (
-        <Screen>
+        <Screen scroll={false}>
             {isAuthenticated ? (
-                <View>
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
                     <View style={globalStyles.card}>
                         <TextInput
                             value={name}
@@ -103,17 +103,17 @@ export default function ProfileScreen() {
                     {businesses.filter(
                         business => String(business.owner_id) === String(userId)
                     ).length > 0 ? (
-                        <FlatList
-                            style={{ width: '100%', maxHeight: 250 }}
-                            data={businesses.filter(
-                                business =>
-                                    String(business.owner_id) === String(userId)
-                            )}
-                            renderItem={({ item }) => <Item business={item} />}
-                            keyExtractor={item =>
-                                item._id ?? item.id ?? item.name
+                        <View style={{ width: '100%' }}>
+                            {businesses
+                                .filter(business => String(business.owner_id) === String(userId))
+                                .map((item) => (
+                                    <Item 
+                                        key={item._id ?? item.id ?? item.name} 
+                                        business={item} 
+                                    />
+                                ))
                             }
-                        />
+                        </View>
                     ) : (
                         <Text>No tienes negocios registrados.</Text>
                     )}
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
                     >
                         <Text style={{ color: '#fff' }}>Cerrar Sesión</Text>
                     </Pressable>
-                </View>
+                </ScrollView>
             ) : (
                 <Pressable
                     style={globalStyles.button}
