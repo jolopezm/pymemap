@@ -11,6 +11,7 @@ async def create_notification(notification: Notification):
     """Crea una nueva notificación"""
     notification_dict = notification.dict()
     result = await db.notifications.insert_one(notification_dict)
+    db.notifications.create_index("expires_at", expireAfterSeconds=0)
     created_notification = await db.notifications.find_one({"_id": result.inserted_id})
     return Notification(**created_notification)
 

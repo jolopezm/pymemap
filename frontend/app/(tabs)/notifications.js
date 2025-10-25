@@ -67,6 +67,17 @@ export default function NotificationsScreen() {
         setSelectedNotification(null)
     }
 
+    const sortNotifications = list =>
+        [...(list || [])].sort((a, b) => {
+            if ((a.read ? 1 : 0) !== (b.read ? 1 : 0)) {
+                return a.read ? 1 : -1
+            }
+
+            const ta = new Date(a.date).getTime() || 0
+            const tb = new Date(b.date).getTime() || 0
+            return tb - ta
+        })
+
     React.useEffect(() => {
         const fetchNotifications = async () => {
             if (!user) return
@@ -74,8 +85,9 @@ export default function NotificationsScreen() {
             setError(null)
             try {
                 const data = await getNotifications(user._id)
-                setNotifications(data)
-                const unread = data.filter(n => !n.read).length
+                const sorted = sortNotifications(data)
+                setNotifications(sorted)
+                const unread = sorted.filter(n => !n.read).length
                 setAmountUnread(unread)
             } catch (err) {
                 console.error('getNotifications error', err)
