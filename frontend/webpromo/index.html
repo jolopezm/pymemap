@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Plantilla Morada</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --purple-50: #f5f0ff;
+            --purple-200: #d6c9ff;
+            --purple-500: #7b5cff;
+            --purple-700: #5a2bd8;
+            --bg: linear-gradient(135deg, var(--purple-50), #efe8ff 40%);
+            --glass: rgba(255,255,255,0.06);
+            --radius: 12px;
+            color-scheme: light dark;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: var(--bg);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:32px;
+            color:#221;
+        }
+
+        .container{
+            width:100%;
+            max-width:980px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.80));
+            border-radius: var(--radius);
+            box-shadow: 0 8px 30px rgba(84,63,183,0.12);
+            overflow:hidden;
+            display:grid;
+            grid-template-columns: 1fr 360px;
+            gap:0;
+        }
+
+        header{
+            grid-column:1/-1;
+            padding:20px 28px;
+            background:linear-gradient(90deg, rgba(123,92,255,0.10), rgba(90,43,216,0.06));
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom:1px solid rgba(124,92,255,0.08);
+        }
+        .brand{
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+        .logo{
+            width:44px;height:44px;border-radius:10px;
+            background:linear-gradient(135deg,var(--purple-500),var(--purple-700));
+            box-shadow: 0 4px 12px rgba(90,43,216,0.18);
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-weight:700;font-size:18px;
+        }
+        h1{margin:0;font-size:1.05rem;color:var(--purple-700)}
+        nav a{margin-left:14px;text-decoration:none;color:var(--purple-700);font-weight:600}
+
+        main{
+            padding:36px;
+        }
+        .hero{
+            display:flex;
+            gap:20px;
+            align-items:center;
+        }
+        .hero-text h2{margin:0 0 8px 0;font-size:1.6rem;color:var(--purple-700)}
+        .hero-text p{margin:0;color:#333;opacity:0.9}
+        .cta{
+            margin-top:18px;
+        }
+        .btn{
+            display:inline-block;padding:10px 16px;border-radius:10px;border:0;background:var(--purple-500);
+            color:white;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(123,92,255,0.18);
+        }
+        aside{
+            padding:28px;
+            background:linear-gradient(180deg,rgba(123,92,255,0.04),rgba(90,43,216,0.03));
+            border-left:1px solid rgba(124,92,255,0.04);
+        }
+        .card{
+            background:linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.88));
+            border-radius:12px;padding:16px;margin-bottom:14px;
+            box-shadow: 0 6px 20px rgba(55,30,120,0.04);
+        }
+        footer{
+            grid-column:1/-1;
+            padding:14px 28px;
+            font-size:0.9rem;
+            color:#555;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        /* Responsive */
+        @media (max-width:880px){
+            .container{grid-template-columns:1fr; padding:0}
+            aside{order:2;border-left:0;border-top:1px solid rgba(124,92,255,0.04)}
+        }
+    </style>
+</head>
+<body>
+    <div class="container" role="main">
+        <header>
+            <div class="brand">
+                <div class="logo">PM</div>
+                <div>
+                    <h1>Proyecto Morado</h1>
+                    <div style="font-size:0.85rem;color:var(--purple-700);opacity:0.9">Plantilla sencilla</div>
+                </div>
+            </div>
+            <nav aria-label="Menú">
+                <a href="#">Inicio</a>
+                <a href="#">Características</a>
+                <a href="#">Contacto</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero" aria-labelledby="hero-title">
+                <div class="hero-text">
+                    <h2 id="hero-title">Pymap</h2>
+                    <p>Conecta con emprendedores locales, agenda servicios y paga sin fricción. PymeMap impulsa la economía del barrio y te da más seguridad.</p>
+                    <div class="cta">
+                        <a class="btn" href="#">Empezar</a>
+                        <a style="margin-left:10px;color:var(--purple-700);text-decoration:none;font-weight:600" href="#">Ver demo</a>
+                    </div>
+                </div>
+            </section>
+
+            <section style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+                <div class="card">
+                    <strong>Flexible</strong>
+                    <p style="margin:8px 0 0 0;font-size:0.95rem;color:#444">Se adapta a móviles y pantallas grandes.</p>
+                </div>
+                <div class="card">
+                    <strong>Moderna</strong>
+                    <p style="margin:8px 0 0 0;font-size:0.95rem;color:#444">Tipografía legible y estilo minimalista.</p>
+                </div>
+                <div class="card">
+                    <strong>Fácil</strong>
+                    <p style="margin:8px 0 0 0;font-size:0.95rem;color:#444">Personaliza colores y contenido rápidamente.</p>
+                </div>
+            </section>
+        </main>
+
+        <aside>
+            <div class="card">
+                <h3 style="margin:0 0 8px 0;color:var(--purple-700)">Acerca</h3>
+                <p style="margin:0;font-size:0.95rem;color:#444">Pequeña descripción o enlaces rápidos.</p>
+            </div>
+            <div class="card">
+                <h4 style="margin:0 0 6px 0">Enlaces</h4>
+                <ul style="margin:0;padding-left:18px;color:#444">
+                    <li><a href="#" style="color:var(--purple-700);text-decoration:none">Documentación</a></li>
+                    <li><a href="#" style="color:var(--purple-700);text-decoration:none">Soporte</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <footer>
+            <div>© <span id="year"></span> Proyecto Morado</div>
+            <div><small style="color:#666">Hecho con ♥ en morado</small></div>
+        </footer>
+    </div>
+
+    <script>
+        // Ajuste simple para año
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
