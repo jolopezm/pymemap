@@ -10,8 +10,8 @@ export default function TabLayout() {
 
                     if (route.name === 'home') {
                         iconName = focused ? 'home' : 'home-outline'
-                    } else if (route.name === 'search') {
-                        iconName = focused ? 'search' : 'search-outline'
+                    } else if (route.name === 'stores') {
+                        iconName = focused ? 'storefront' : 'storefront-outline'
                     } else if (route.name === 'wallet') {
                         iconName = focused ? 'wallet' : 'wallet-outline'
                     } else if (route.name === 'notifications') {
@@ -44,7 +44,7 @@ export default function TabLayout() {
             })}
         >
             <Tabs.Screen name="home" options={{ title: 'Home' }} />
-            <Tabs.Screen name="search" options={{ title: 'Buscar' }} />
+            <Tabs.Screen name="stores" options={{ title: 'Tiendas' }} />
             <Tabs.Screen name="wallet" options={{ title: 'Billetera' }} />
             <Tabs.Screen
                 name="notifications"
