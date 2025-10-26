@@ -1,6 +1,7 @@
 from bson import ObjectId
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional
+from datetime import datetime, timedelta
 
 
 class PyObjectId(ObjectId):
@@ -26,6 +27,8 @@ class Notification(BaseModel):
     date: str = Field(...)
     read: bool = Field(default=False)
     reference: Optional[dict] = Field(default=None)
+    expires_at: Optional[datetime] = Field(default=datetime.utcnow() + timedelta(seconds=15))
+
     
     model_config = {
         "populate_by_name": True,

@@ -37,7 +37,6 @@ export default function SearchScreen() {
                 <View
                     style={{
                         flex: 1,
-                        padding: 16,
                     }}
                 >
                     {results.map(business => (

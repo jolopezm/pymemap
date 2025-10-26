@@ -35,23 +35,23 @@ export default function TabLayout() {
                 tabBarStyle: {
                     borderTopWidth: 0,
                     elevation: 0,
-                    height: 70,
-                    paddingBottom: 8,
+                    height: 50,
+                    paddingBottom: 0,
                     paddingTop: 8,
                 },
                 headerShown: false,
                 tabBarLabelStyle: { fontSize: 12 },
             })}
         >
-            <Tabs.Screen name="home" options={{ title: 'Home' }} />
-            <Tabs.Screen name="search" options={{ title: 'Buscar' }} />
-            <Tabs.Screen name="wallet" options={{ title: 'Billetera' }} />
+            <Tabs.Screen name="home" options={{ title: '' }} />
+            <Tabs.Screen name="search" options={{ title: '' }} />
+            <Tabs.Screen name="wallet" options={{ title: '' }} />
             <Tabs.Screen
                 name="notifications"
-                options={{ title: 'Notificaciones' }}
+                options={{ title: '' }}
             />
-            <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
-            <Tabs.Screen name="profile" options={{ title: 'Mi perfil' }} />
+            <Tabs.Screen name="chat" options={{ title: '' }} />
+            <Tabs.Screen name="profile" options={{ title: '' }} />
         </Tabs>
     )
 }

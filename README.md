@@ -14,7 +14,7 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ## 📖 Documentación
 
-- ** [Inicio Rápido](docs/QUICKSTART.md)** - Comienza en 5 minutos
+- **⚡[Inicio Rápido](docs/QUICKSTART.md)** - Comienza en 5 minutos
 - **🛠️ [Guía de Desarrollo](docs/DEVELOPMENT.md)** - Para desarrolladores y contribuidores
 - **📡 [API Backend](backend/README.md)** - Documentación técnica de la API
 - **🚂 [Guía de Despliegue](docs/DEPLOYMENT.md)** - Desplegar en Railway
@@ -98,7 +98,7 @@ Para más detalles, ver [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ---
 
-## ⚡ Instalación
+## 📣 Instalación
 
 ### Opción 1: Solo ver el proyecto (Recomendado)
 
