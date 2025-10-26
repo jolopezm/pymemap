@@ -83,3 +83,8 @@ export async function verifyAuthCode(authData) {
     )
     return response.data
 }
+
+export async function getUserById(userId) {
+    const response = await axios.get(`${API_URL}/users/${userId}`)
+    return response.data
+}

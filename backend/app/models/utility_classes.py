@@ -27,7 +27,7 @@ class Notification(BaseModel):
     date: str = Field(...)
     read: bool = Field(default=False)
     reference: Optional[dict] = Field(default=None)
-    expires_at: Optional[datetime] = Field(default=datetime.utcnow() + timedelta(seconds=15))
+    expires_at: Optional[datetime] = Field(default=datetime.utcnow() + timedelta(days=7))
 
     
     model_config = {
