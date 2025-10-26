@@ -189,8 +189,6 @@ export default StyleSheet.create({
         opacity: 0.7,
     },
 
-<<<<<<< HEAD
-=======
     buttonText: {
         color: colors.textPrimary,
         fontSize: 18,
@@ -210,7 +208,6 @@ export default StyleSheet.create({
         marginBottom: 16,
     },
 
->>>>>>> 0b8a5664 (feat: extend notification expiration to 7 days, add owner fetching in business profile, and style back button)
     linkText: {
         color: colors.textPrimary,
         fontSize: 16,
