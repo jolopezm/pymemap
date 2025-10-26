@@ -76,7 +76,7 @@ export default function ProfileScreen() {
     }
 
     return isAuthenticated ? (
-        <Screen scroll={false}>
+        <Screen>
             <ScrollView style={{ flex: 1 }}>
                     <View style={globalStyles.card}>
                         <TextInput

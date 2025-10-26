@@ -3,14 +3,38 @@ import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
 import globalStyles from '../../styles/global'
-import {
-    getNotifications,
-    markNotificationAsRead,
-} from '../../api/notifications-service'
+import * as notificationsService from '../../api/notifications-service'
 import DefaultModal from '../../components/default-modal'
+import { useNotif } from '../../context/notif-context'
+
+console.log('notificationsService module:', notificationsService)
+
+// safe extraction that works con exports: named, default, CommonJS, o cuando el módulo es la función misma
+const getNotifications =
+    notificationsService?.getNotifications ??
+    // default export may be the function itself
+    notificationsService?.default ??
+    (typeof notificationsService === 'function' ? notificationsService : undefined)
+
+const markNotificationAsRead =
+    notificationsService?.markNotificationAsRead ??
+    // in case the module was imported as a namespace and default is an object with methods
+    notificationsService?.default?.markNotificationAsRead
+
+// fallback errors to fail fast with a clear message
+if (!getNotifications) {
+    console.error('getNotifications no disponible en notifications-service. Revisa sus exports.')
+}
+
+if (!markNotificationAsRead) {
+    console.error('markNotificationAsRead no disponible en notifications-service. Revisa sus exports y la importación.')
+}
+
+const { getNotifications: _unused1, markNotificationAsRead: _unused2 } = {}
 
 export default function NotificationsScreen() {
     const { user } = useAuth()
+    const { refreshNotifications, markNotificationReadLocally } = useNotif()
     const [notifications, setNotifications] = React.useState([])
     const [amountUnread, setAmountUnread] = React.useState(0)
     const [loading, setLoading] = React.useState(false)
@@ -44,6 +68,28 @@ export default function NotificationsScreen() {
                 setSelectedNotification(s => (s ? { ...s, read: true } : s))
 
                 await markNotificationAsRead(notificationId)
+                // refresh global notifications state so the unread dot in the tab bar updates
+                // Update context locally first so the UI (tab dot) reacts immediately
+                try {
+                    const updated = await markNotificationReadLocally(notificationId)
+                    if (!updated) {
+                        console.warn('markNotificationReadLocally returned falsy')
+                    }
+                } catch (e) {
+                    console.warn('markNotificationReadLocally failed', e)
+                }
+
+                // Still attempt a refresh to reconcile with server state (non-blocking)
+                try {
+                    const refreshed = await refreshNotifications()
+                    console.debug('notifications: refreshNotifications result', {
+                        refreshedCount: Array.isArray(refreshed) ? refreshed.length : null,
+                        refreshedUnread: Array.isArray(refreshed) ? refreshed.filter(n => !n.read).length : null,
+                    })
+                } catch (e) {
+                    // non-fatal: log and continue
+                    console.warn('refreshNotifications failed after mark as read', e)
+                }
             } catch (err) {
                 console.error('Error marking notification as read:', err)
                 // On error, revert optimistic change (simple approach: refetch)
