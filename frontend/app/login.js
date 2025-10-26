@@ -12,10 +12,12 @@ import Button from '../components/button'
 import DismissKeyboard from '../components/dismiss-keyboard'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Login() {
     const [user, setUser] = useState({ email: '', password: '' })
     const [error, setError] = useState('')
+    const [emailError, setEmailError] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     const { login } = useAuth()
@@ -53,6 +55,20 @@ export default function Login() {
 
     const handleLoginPress = async () => {
         setError('')
+        setEmailError('')
+        
+        // Validación básica de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(user.email)) {
+            setEmailError('Por favor ingresa un correo electrónico válido')
+            return
+        }
+
+        if (user.password.length < 6) {
+            setError('La contraseña debe tener al menos 6 caracteres')
+            return
+        }
+
         setLoading(true)
 
         try {
@@ -72,11 +88,10 @@ export default function Login() {
             }
             router.push('/home')
         } catch (e) {
-            e =
+            const errorMessage =
                 e.response?.data?.detail ||
                 'Credenciales incorrectas o error de servidor.'
-            setError(e)
-            Toast.error(e, { duration: 3000 })
+            setError(errorMessage)
         } finally {
             setLoading(false)
         }
@@ -90,44 +105,96 @@ export default function Login() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
             >
-                <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View
-                        style={[
-                            globalStyles.gradientContainer,
-                            { paddingVertical: 50 },
-                        ]}
+                <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+                    <ScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ 
+                            flexGrow: 1,
+                            justifyContent: 'center',
+                            paddingHorizontal: 30,
+                            paddingVertical: 20,
+                        }}
+                        showsVerticalScrollIndicator={false}
                     >
+                        <View style={{ width: '100%', alignItems: 'center' }}>
                         {/* Icono de la app */}
-                        <View style={globalStyles.logoContainer}>
+                        <View style={[globalStyles.logoContainer, { marginBottom: 20 }]}>
                             <Ionicons
                                 name="business"
-                                size={64}
+                                size={56}
                                 color="#FFFFFF"
                             />
                         </View>
 
                         {/* Título */}
-                        <Text style={globalStyles.title}>¡Bienvenido de nuevo!</Text>
+                        <Text style={[globalStyles.title, { fontSize: 28, marginBottom: 8 }]}>
+                            ¡Bienvenido de nuevo!
+                        </Text>
                         
                         {/* Subtítulo */}
-                        <Text style={globalStyles.subtitle}>
+                        <Text style={[globalStyles.subtitle, { marginBottom: 24 }]}>
                             Inicia sesión para continuar
                         </Text>
+
+                        {/* Mensaje de error general */}
+                        {error ? (
+                            <View
+                                style={{
+                                    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+                                    borderLeftWidth: 4,
+                                    borderLeftColor: '#FF3B30',
+                                    paddingVertical: 12,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 12,
+                                    marginBottom: 20,
+                                    width: '100%',
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#FFFFFF',
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                    }}
+                                >
+                                    ⚠️ {error}
+                                </Text>
+                            </View>
+                        ) : null}
 
                         {/* Campo Email */}
                         <TextInput
                             placeholder="Correo electrónico"
                             placeholderTextColor="#999"
-                            style={globalStyles.textField}
+                            style={[
+                                globalStyles.textField,
+                                emailError && {
+                                    borderWidth: 2,
+                                    borderColor: '#FF3B30',
+                                }
+                            ]}
                             value={user.email}
-                            onChangeText={email => setUser({ ...user, email })}
+                            onChangeText={email => {
+                                setUser({ ...user, email })
+                                setEmailError('')
+                            }}
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
+                        {emailError ? (
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 13,
+                                    marginTop: -10,
+                                    marginBottom: 10,
+                                    marginLeft: 4,
+                                    fontWeight: '500',
+                                }}
+                            >
+                                {emailError}
+                            </Text>
+                        ) : null}
 
                         {/* Campo Contraseña */}
                         <PasswordInput
@@ -135,11 +202,21 @@ export default function Login() {
                             value={user.password}
                             onChangeText={password => setUser({ ...user, password })}
                             onSubmitEditing={handleLoginPress}
+                            style={{ marginBottom: 8 }}
                         />
 
                         {/* Link Olvidaste contraseña */}
-                        <Link href="/forgot-password" style={{ alignSelf: 'flex-end', marginTop: 10, marginBottom: 30 }}>
-                            <Text style={globalStyles.linkText}>¿Olvidaste tu contraseña?</Text>
+                        <Link href="/forgot-password" style={{ alignSelf: 'flex-end', marginBottom: 20 }}>
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 13,
+                                    fontWeight: '500',
+                                    opacity: 0.85,
+                                }}
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </Text>
                         </Link>
 
                         {/* Botón Principal */}
@@ -148,6 +225,7 @@ export default function Login() {
                             variant="primary"
                             onPress={handleLoginPress}
                             loading={loading}
+                            disabled={!user.email || !user.password}
                             style={{ marginBottom: 20 }}
                         />
 
@@ -156,7 +234,7 @@ export default function Login() {
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                marginVertical: 30,
+                                marginBottom: 20,
                                 width: '100%',
                             }}
                         >
@@ -192,23 +270,42 @@ export default function Login() {
                             title="Crear cuenta nueva"
                             variant="secondary"
                             onPress={() => router.push('/sign-in')}
-                            style={{ marginBottom: 15 }}
+                            style={{ marginBottom: 12 }}
                         />
 
                         {/* Botón de navegación al home */}
-                        <Button
-                            title="🏠 Explorar sin cuenta"
-                            variant="outline"
+                        <Pressable
                             onPress={() => router.push('/(tabs)/home')}
-                            style={{
-                                marginTop: 20,
-                                borderColor: 'rgba(255, 255, 255, 0.7)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            }}
-                        />
+                            style={({ pressed }) => ({
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 14,
+                                marginTop: 12,
+                                opacity: pressed ? 0.7 : 1,
+                            })}
+                        >
+                            <Ionicons
+                                name="compass-outline"
+                                size={20}
+                                color="#FFFFFF"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 15,
+                                    fontWeight: '600',
+                                    opacity: 0.9,
+                                }}
+                            >
+                                Explorar sin cuenta
+                            </Text>
+                        </Pressable>
                     </View>
                 </ScrollView>
-            </LinearGradient>
-        </DismissKeyboard>
+            </SafeAreaView>
+        </LinearGradient>
+    </DismissKeyboard>
     )
 }

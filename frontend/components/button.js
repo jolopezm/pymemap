@@ -61,20 +61,26 @@ export default function Button({
             switch (variant) {
                 case 'secondary':
                     baseStyle.push({
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                        transform: [{ scale: 0.98 }]
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        transform: [{ scale: 0.97 }],
+                        opacity: 0.95,
                     })
                     break
                 case 'outline':
                     baseStyle.push({
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                        transform: [{ scale: 0.98 }]
+                        backgroundColor: 'rgba(240, 240, 240, 1)',
+                        borderColor: 'rgba(51, 51, 51, 0.3)',
+                        transform: [{ scale: 0.97 }],
+                        opacity: 0.95,
                     })
                     break
                 default:
                     baseStyle.push({
-                        backgroundColor: '#553A7A',
-                        transform: [{ scale: 0.98 }]
+                        backgroundColor: '#7B5BA1',
+                        transform: [{ scale: 0.97 }],
+                        shadowOpacity: 0.5,
+                        elevation: 8,
                     })
                     break
             }
