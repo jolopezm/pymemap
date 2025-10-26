@@ -34,6 +34,8 @@ export default function SignIn() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [modalVisible, setModalVisible] = useState(false)
     const [error, setError] = useState('')
+    const [emailError, setEmailError] = useState('')
+    const [rutError, setRutError] = useState('')
     const router = useRouter()
 
     const updateUser = (field, value) => {
@@ -45,6 +47,43 @@ export default function SignIn() {
 
     const handleSignInPress = async () => {
         setError('')
+        setEmailError('')
+        setRutError('')
+
+        // Validación de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(user.email)) {
+            setEmailError('Por favor ingresa un correo electrónico válido')
+            return
+        }
+
+        // Validación básica de RUT (formato)
+        const rutRegex = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/
+        if (!rutRegex.test(user.rut)) {
+            setRutError('RUT inválido. Formato: 12.345.678-9')
+            return
+        }
+
+        // Validación de campos obligatorios
+        if (!user.name.trim()) {
+            setError('El nombre es obligatorio')
+            return
+        }
+
+        if (user.password.length < 8) {
+            setError('La contraseña debe tener al menos 8 caracteres')
+            return
+        }
+
+        if (user.password !== confirmPassword) {
+            setError('Las contraseñas no coinciden')
+            return
+        }
+
+        if (!user.birthdate) {
+            setError('La fecha de nacimiento es obligatoria')
+            return
+        }
 
         try {
             const result = await handleSignIn({
@@ -59,14 +98,11 @@ export default function SignIn() {
             if (result.success) {
                 await AsyncStorage.setItem('authData', JSON.stringify(result))
                 router.push('/auth-code')
-                Toast.info('Código de verificación enviado al email', {
+                Toast.success('Código de verificación enviado al email', {
                     duration: 3000,
                 })
             } else {
                 setError(result.error)
-                Toast.error(result.error || 'Error desconocido', {
-                    duration: 3000,
-                })
             }
         } catch (error) {
             console.error(
@@ -75,10 +111,9 @@ export default function SignIn() {
             )
             const errorMessage =
                 error.response?.data?.detail ||
-                error.message || // Añadimos un fallback al mensaje del error
+                error.message ||
                 'Error al registrar usuario'
             setError(errorMessage)
-            Toast.error(errorMessage, { duration: 3000 })
         }
     }
 
@@ -92,17 +127,18 @@ export default function SignIn() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
             >
-                <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View
-                        style={[
-                            globalStyles.gradientContainer,
-                            { paddingVertical: 30 },
-                        ]}
+                <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+                    <ScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        showsVerticalScrollIndicator={false}
                     >
+                        <View
+                            style={[
+                                globalStyles.gradientContainer,
+                                { paddingVertical: 20 },
+                            ]}
+                        >
                         {/* Icono de la app */}
                         <View style={globalStyles.logoContainer}>
                             <Ionicons
@@ -115,17 +151,93 @@ export default function SignIn() {
                         {/* Título */}
                         <Text style={globalStyles.title}>¡Regístrate!</Text>
 
+                        {/* Subtítulo */}
+                        <Text style={globalStyles.subtitle}>
+                            Crea tu cuenta y empieza a descubrir
+                        </Text>
+
+                        {/* Mensaje de error general */}
+                        {error ? (
+                            <View
+                                style={{
+                                    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+                                    borderLeftWidth: 4,
+                                    borderLeftColor: '#FF3B30',
+                                    paddingVertical: 12,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 12,
+                                    marginBottom: 16,
+                                    width: '100%',
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        color: '#FFFFFF',
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                    }}
+                                >
+                                    ⚠️ {error}
+                                </Text>
+                            </View>
+                        ) : null}
+
                         {/* Campo RUT */}
                         <TextInput
                             placeholder="RUT (ej: 12.345.678-9)"
                             placeholderTextColor="#999"
                             value={user.rut}
                             maxLength={12}
-                            onChangeText={value =>
-                                updateUser('rut', rutFormatter(value))
-                            }
-                            style={globalStyles.textField}
+                            onChangeText={value => {
+                                // Limpiar todo excepto números y K
+                                const cleaned = value.replace(/[^0-9kK]/g, '').toUpperCase()
+                                
+                                // Validar que K solo esté al final
+                                let valid = cleaned
+                                
+                                // Si hay una K, verificar que esté solo al final
+                                const kIndex = cleaned.indexOf('K')
+                                if (kIndex !== -1) {
+                                    // Si K no está en la última posición, o hay más de una K
+                                    if (kIndex !== cleaned.length - 1 || cleaned.split('K').length > 2) {
+                                        setRutError('La letra K solo puede ir al final del RUT')
+                                        return // No actualizar el valor
+                                    }
+                                    // Si K está al principio o hay menos de 2 caracteres
+                                    if (cleaned.length < 2) {
+                                        setRutError('Ingresa primero los números del RUT')
+                                        return
+                                    }
+                                }
+                                
+                                // Si todo es válido, formatear y actualizar
+                                setRutError('')
+                                updateUser('rut', rutFormatter(valid))
+                            }}
+                            style={[
+                                globalStyles.textField,
+                                rutError && {
+                                    borderWidth: 2,
+                                    borderColor: '#FF3B30',
+                                }
+                            ]}
+                            keyboardType="default"
+                            autoCapitalize="characters"
                         />
+                        {rutError ? (
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 13,
+                                    marginTop: -10,
+                                    marginBottom: 10,
+                                    marginLeft: 4,
+                                    fontWeight: '500',
+                                }}
+                            >
+                                {rutError}
+                            </Text>
+                        ) : null}
 
                         {/* Campo Nombre */}
                         <TextInput
@@ -142,11 +254,34 @@ export default function SignIn() {
                             placeholder="Correo electrónico"
                             placeholderTextColor="#999"
                             value={user.email}
-                            onChangeText={value => updateUser('email', value)}
-                            style={globalStyles.textField}
+                            onChangeText={value => {
+                                updateUser('email', value)
+                                setEmailError('')
+                            }}
+                            style={[
+                                globalStyles.textField,
+                                emailError && {
+                                    borderWidth: 2,
+                                    borderColor: '#FF3B30',
+                                }
+                            ]}
                             keyboardType="email-address"
                             autoCapitalize="none"
                         />
+                        {emailError ? (
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 13,
+                                    marginTop: -10,
+                                    marginBottom: 10,
+                                    marginLeft: 4,
+                                    fontWeight: '500',
+                                }}
+                            >
+                                {emailError}
+                            </Text>
+                        ) : null}
 
                         {/* Campo Contraseña */}
                         <PasswordInput
@@ -172,7 +307,7 @@ export default function SignIn() {
                             onChangeText={setConfirmPassword}
                             confirmValue={user.password}
                             isConfirmField={true}
-                            showToggle={false}
+                            showToggle={true}
                             onValidationChange={(matches, data) => {
                                 console.log(
                                     'Contraseñas coinciden:',
@@ -216,37 +351,93 @@ export default function SignIn() {
                             title="Crear cuenta"
                             variant="primary"
                             onPress={handleSignInPress}
-                            style={{ marginTop: 20, marginBottom: 10 }}
+                            disabled={
+                                !user.rut ||
+                                !user.name ||
+                                !user.email ||
+                                !user.password ||
+                                !confirmPassword ||
+                                !user.birthdate
+                            }
+                            style={{ marginTop: 16, marginBottom: 24 }}
                         />
 
-                        {/* Botón Secundario */}
-                        <Text
-                            style={[
-                                globalStyles.linkText,
-                                { marginTop: 10, marginBottom: 10 },
-                            ]}
+                        {/* Divider */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 20,
+                                width: '100%',
+                            }}
                         >
-                            ¿Ya tienes cuenta?
-                        </Text>
+                            <View
+                                style={{
+                                    flex: 1,
+                                    height: 1,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                }}
+                            />
+                            <Text
+                                style={{
+                                    marginHorizontal: 15,
+                                    color: '#FFFFFF',
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                    opacity: 0.85,
+                                }}
+                            >
+                                ¿Ya tienes cuenta?
+                            </Text>
+                            <View
+                                style={{
+                                    flex: 1,
+                                    height: 1,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                }}
+                            />
+                        </View>
+
+                        {/* Botón Secundario */}
                         <Button
                             title="Iniciar sesión"
                             variant="secondary"
                             onPress={() => router.push('/login')}
+                            style={{ marginBottom: 12 }}
                         />
 
                         {/* Botón de navegación al home */}
-                        <Button
-                            title="🏠 Explorar sin cuenta"
-                            variant="outline"
-                            onPress={() => router.push('/home')}
-                            style={{
-                                marginTop: 30,
-                                borderColor: 'rgba(255, 255, 255, 0.7)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            }}
-                        />
+                        <Pressable
+                            onPress={() => router.push('/(tabs)/home')}
+                            style={({ pressed }) => ({
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 14,
+                                marginTop: 12,
+                                opacity: pressed ? 0.7 : 1,
+                            })}
+                        >
+                            <Ionicons
+                                name="compass-outline"
+                                size={20}
+                                color="#FFFFFF"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text
+                                style={{
+                                    color: '#FFFFFF',
+                                    fontSize: 15,
+                                    fontWeight: '600',
+                                    opacity: 0.9,
+                                }}
+                            >
+                                Explorar sin cuenta
+                            </Text>
+                        </Pressable>
                     </View>
                 </ScrollView>
+            </SafeAreaView>
 
                 {/* Modal del calendario */}
                 <Modal

@@ -9,7 +9,7 @@ const colors = {
     white: '#FFFFFF',
     lightGray: '#F5F5F5',
     gray: '#888888',
-    textPrimary: '#FFFFFFS', // Texto principal en fondo púrpura
+    textPrimary: '#FFFFFF', // Texto principal en fondo púrpura
     textSecondary: '#333333', // Texto secundario
 }
 
@@ -87,33 +87,37 @@ export default StyleSheet.create({
         marginVertical: 8,
         width: '100%',
         minHeight: 54,
+        overflow: 'hidden', // Evita líneas extrañas en los bordes
         shadowColor: colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 6,
 
         // Variantes de botón
         secondary: {
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderColor: colors.white,
-            shadowColor: colors.white,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 3,
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            borderWidth: 2.5,
+            borderColor: 'rgba(255, 255, 255, 0.9)',
+            overflow: 'hidden',
+            shadowColor: 'rgba(255, 255, 255, 0.3)',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.5,
+            shadowRadius: 8,
+            elevation: 4,
+            backdropFilter: 'blur(10px)', // Efecto de cristal
         },
 
         outlineBlack: {
-            backgroundColor: colors.white,
-            borderColor: colors.textSecondary,
-            borderWidth: 2,
-            shadowColor: colors.textSecondary,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderColor: 'rgba(51, 51, 51, 0.2)',
+            borderWidth: 1.5,
+            overflow: 'hidden',
+            shadowColor: 'rgba(0, 0, 0, 0.15)',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 3,
         },
 
         // Tamaños
@@ -151,20 +155,23 @@ export default StyleSheet.create({
     buttonText: {
         color: colors.textPrimary,
         fontSize: 18,
-        fontWeight: '600',
-        letterSpacing: 0.5,
+        fontWeight: '700',
+        letterSpacing: 0.8,
+        textAlign: 'center',
     },
 
     buttonTextSecondary: {
         color: colors.textPrimary,
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 17,
+        fontWeight: '700',
+        letterSpacing: 0.6,
     },
 
     buttonTextOutline: {
         color: colors.textSecondary,
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 17,
+        fontWeight: '600',
+        letterSpacing: 0.5,
     },
 
     buttonTextSmall: {
@@ -180,19 +187,6 @@ export default StyleSheet.create({
     buttonTextDisabled: {
         color: colors.lightGray,
         opacity: 0.7,
-    },
-
-    buttonText: {
-        color: colors.textPrimary,
-        fontSize: 18,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-    },
-
-    buttonTextSecondary: {
-        color: colors.textPrimary,
-        fontSize: 16,
-        fontWeight: '500',
     },
 
     linkText: {

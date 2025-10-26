@@ -8,6 +8,10 @@ import { useRouter } from 'expo-router'
 import React from 'react'
 import Item from '../../plantillas/business-item'
 import globalStyles from '../../styles/global'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
+import Button from '../../components/button'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function ProfileScreen() {
     const { isAuthenticated, logout } = useAuth()
@@ -71,10 +75,9 @@ export default function ProfileScreen() {
         }
     }
 
-    return (
-        <Screen scroll={true}>
-            {isAuthenticated ? (
-                <ScrollView style={{ flex: 1 }}>
+    return isAuthenticated ? (
+        <Screen scroll={false}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
                     <View style={globalStyles.card}>
                         <TextInput
                             value={name}
@@ -169,14 +172,162 @@ export default function ProfileScreen() {
                         <Text style={{ color: '#fff' }}>Cerrar Sesión</Text>
                     </Pressable>
                 </ScrollView>
-            ) : (
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={() => router.push('/login')}
-                >
-                    <Text style={{ color: '#fff' }}>Iniciar Sesión</Text>
-                </Pressable>
-            )}
         </Screen>
+    ) : (
+        <LinearGradient
+            colors={['#9B59B6', '#F8BBD9']}
+            style={{ flex: 1 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+        >
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 30,
+                        paddingTop: 10,
+                        paddingBottom: 20,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Icono principal */}
+                    <View
+                        style={[
+                            globalStyles.logoContainer,
+                            { marginBottom: 14, marginTop: 5 },
+                        ]}
+                    >
+                        <Ionicons
+                            name="person-circle"
+                            size={64}
+                            color="#FFFFFF"
+                        />
+                    </View>
+
+                    {/* Título */}
+                    <Text style={[globalStyles.title, { textAlign: 'center', marginBottom: 10, fontSize: 26 }]}>
+                        ¡Únete a PymeMap!
+                    </Text>
+
+                    {/* Subtítulo */}
+                    <Text
+                        style={[
+                            globalStyles.subtitle,
+                            { marginBottom: 18, textAlign: 'center', fontSize: 14 },
+                        ]}
+                    >
+                        Crea tu cuenta y accede a todas las funciones
+                    </Text>
+
+                                {/* Lista de beneficios */}
+                                <View style={{ width: '100%', marginBottom: 18 }}>
+                                    <BenefitItem
+                                        icon="business"
+                                        text="Gestiona tus negocios"
+                                    />
+                                    <BenefitItem
+                                        icon="wallet"
+                                        text="Pagos seguros"
+                                    />
+                                    <BenefitItem
+                                        icon="time"
+                                        text="Historial de servicios"
+                                    />
+                                    <BenefitItem
+                                        icon="star"
+                                        text="Y mucho más"
+                                    />
+                                </View>
+
+                                {/* Botones */}
+                                <View style={{ width: '100%' }}>
+                                    <Button
+                                        title="Crear cuenta"
+                                        variant="primary"
+                                        onPress={() => router.push('/sign-in')}
+                                        size="medium"
+                                        style={{ marginBottom: 10, minHeight: 48 }}
+                                    />
+
+                                    <Button
+                                        title="Iniciar sesión"
+                                        variant="secondary"
+                                        onPress={() => router.push('/login')}
+                                        size="medium"
+                                        style={{ marginBottom: 14, minHeight: 48, borderWidth: 2 }}
+                                    />
+
+                                    {/* Link mejorado para continuar sin cuenta */}
+                                    <Pressable
+                                        onPress={() => router.push('/(tabs)/home')}
+                                        style={({ pressed }) => ({
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            paddingVertical: 14,
+                                            marginTop: 8,
+                                            opacity: pressed ? 0.7 : 1,
+                                        })}
+                                    >
+                                        <Ionicons
+                                            name="compass-outline"
+                                            size={20}
+                                            color="#FFFFFF"
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <Text
+                                            style={{
+                                                color: '#FFFFFF',
+                                                fontSize: 15,
+                                                fontWeight: '600',
+                                                opacity: 0.9,
+                                            }}
+                                        >
+                                            Explorar sin cuenta
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                </ScrollView>
+            </SafeAreaView>
+        </LinearGradient>
+    )
+}// Componente auxiliar para los items de beneficios
+function BenefitItem({ icon, text }) {
+    return (
+        <View
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                padding: 10,
+                borderRadius: 10,
+            }}
+        >
+            <View
+                style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    padding: 7,
+                    borderRadius: 8,
+                    marginRight: 10,
+                }}
+            >
+                <Ionicons name={icon} size={18} color="#FFFFFF" />
+            </View>
+            <Text
+                style={{
+                    color: '#FFFFFF',
+                    fontSize: 14,
+                    fontWeight: '500',
+                    flex: 1,
+                }}
+                numberOfLines={1}
+            >
+                {text}
+            </Text>
+        </View>
     )
 }

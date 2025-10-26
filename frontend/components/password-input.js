@@ -185,16 +185,16 @@ export default function PasswordInput({
             
             {/* Mensaje de confirmación de contraseña */}
             {isConfirmField && value && (
-                <View style={styles.matchIndicator}>
+                <View style={[
+                    styles.matchIndicator,
+                    passwordMatch ? styles.matchSuccess : styles.matchError
+                ]}>
                     <Ionicons
                         name={passwordMatch ? "checkmark-circle" : "close-circle"}
-                        size={16}
-                        color={passwordMatch ? "#4CAF50" : "#f44336"}
+                        size={18}
+                        color={passwordMatch ? "#FFFFFF" : "#FFFFFF"}
                     />
-                    <Text style={[
-                        styles.matchText,
-                        { color: passwordMatch ? "#4CAF50" : "#f44336" }
-                    ]}>
+                    <Text style={styles.matchText}>
                         {passwordMatch ? "Las contraseñas coinciden" : "Las contraseñas no coinciden"}
                     </Text>
                 </View>
@@ -216,37 +216,36 @@ const styles = {
     toggleButton: {
         position: 'absolute',
         right: 15,
-        top: '50%',
-        transform: [{ translateY: -12 }], // Centrar verticalmente
+        top: 13, // Posición fija desde arriba (ajustada para minHeight: 50)
         zIndex: 1,
         padding: 5, // Área táctil más grande
     },
     requirementsContainer: {
-        marginTop: 8,
-        padding: 16,
+        marginTop: 6,
+        padding: 12,
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderRadius: 15,
+        borderRadius: 12,
         borderWidth: 0,
         shadowColor: '#6A4C93',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 3,
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     requirementsTitle: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         color: '#333',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     requirementItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 3,
     },
     requirementText: {
-        fontSize: 13,
-        marginLeft: 8,
+        fontSize: 11,
+        marginLeft: 6,
         flex: 1,
     },
     inputValid: {
@@ -261,11 +260,20 @@ const styles = {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 6,
-        paddingHorizontal: 4,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+    },
+    matchSuccess: {
+        backgroundColor: '#4CAF50',
+    },
+    matchError: {
+        backgroundColor: '#f44336',
     },
     matchText: {
         fontSize: 13,
-        marginLeft: 6,
-        fontWeight: '500',
+        marginLeft: 8,
+        fontWeight: '600',
+        color: '#FFFFFF',
     }
 }
