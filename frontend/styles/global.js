@@ -189,6 +189,25 @@ export default StyleSheet.create({
         opacity: 0.7,
     },
 
+    buttonText: {
+        color: colors.textPrimary,
+        fontSize: 18,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+    },
+
+    buttonTextSecondary: {
+        color: colors.textPrimary,
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+
     linkText: {
         color: colors.textPrimary,
         fontSize: 16,

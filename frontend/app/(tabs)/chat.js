@@ -4,6 +4,7 @@ import { useAuth } from '../../context/auth-context'
 import React from 'react'
 import globalStyles from '../../styles/global'
 import { router } from 'expo-router'
+import Screen from '../../components/screen'
 
 const ChatScreen = () => {
     const { user } = useAuth()
@@ -48,7 +49,8 @@ const ChatScreen = () => {
     }
 
     return (
-        <View style={globalStyles.container}>
+        <Screen>
+            <View>
             <Text style={globalStyles.title}>Chats</Text>
             {chats.length === 0 ? (
                 <Text>No hay chats disponibles.</Text>
@@ -75,6 +77,7 @@ const ChatScreen = () => {
                 ))
             )}
         </View>
+        </Screen>
     )
 }
 
