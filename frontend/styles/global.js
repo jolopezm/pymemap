@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native'
 
 // Paleta de colores basada en el mockup
-const colors = {
+export const colors = {
     primary: '#6A4C93', // Púrpura principal del botón
     primaryDark: '#553A7A', // Púrpura más oscuro para hover/pressed
     secondary: '#9B59B6', // Púrpura del degradado superior
@@ -13,7 +13,7 @@ const colors = {
     textSecondary: '#333333', // Texto secundario
 }
 
-export default StyleSheet.create({
+export const globalStyles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.white,

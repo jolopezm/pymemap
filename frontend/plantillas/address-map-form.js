@@ -8,7 +8,7 @@ import {
     Pressable,
     Platform,
 } from 'react-native'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 import GmapsView from '../components/gmaps-view'
 
 export default function AddressMapForm({

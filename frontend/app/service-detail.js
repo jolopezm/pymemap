@@ -11,7 +11,7 @@ import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 import { useAuth } from '../context/auth-context'
 import {
     getServices,

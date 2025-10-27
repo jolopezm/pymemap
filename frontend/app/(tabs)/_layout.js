@@ -1,7 +1,11 @@
+import React from 'react'
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { View, StyleSheet } from 'react-native'
+import { useNotif } from '../../context/notif-context'
 
 export default function TabLayout() {
+    const { unreadCount } = useNotif()
     return (
         <Tabs
             screenOptions={({ route }) => ({
@@ -26,9 +30,18 @@ export default function TabLayout() {
                         iconName = focused ? 'person' : 'person-outline'
                     }
 
-                    return (
-                        <Ionicons name={iconName} size={size} color={color} />
-                    )
+                    if (route.name === 'notifications') {
+                        return (
+                            <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+                                <Ionicons name={iconName} size={size} color={color} />
+                                {unreadCount > 0 ? (
+                                    <View style={styles.dot} />
+                                ) : null}
+                            </View>
+                        )
+                    }
+
+                    return <Ionicons name={iconName} size={size} color={color} />
                 },
                 tabBarActiveTintColor: '#ff4dc4',
                 tabBarInactiveTintColor: 'gray',
@@ -41,6 +54,7 @@ export default function TabLayout() {
                 },
                 headerShown: false,
                 tabBarLabelStyle: { fontSize: 12 },
+                
             })}
         >
             <Tabs.Screen name="home" options={{ title: '' }} />
@@ -55,3 +69,15 @@ export default function TabLayout() {
         </Tabs>
     )
 }
+
+const styles = StyleSheet.create({
+    dot: {
+        position: 'absolute',
+        right: 1,
+        top: 1,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: '#ff8c00'
+    },
+})

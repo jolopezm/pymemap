@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
-import globalStyles from '../../styles/global'
+import { globalStyles } from '../../styles/global'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import {

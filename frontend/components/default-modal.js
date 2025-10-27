@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         margin: 20,
-        padding: 20,
+        padding: 30,
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         position: 'absolute',
-        top: 10,
-        right: 10,
+        top: 5,
+        right: 5,
         zIndex: 1,
     },
 })

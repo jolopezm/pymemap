@@ -22,7 +22,7 @@ export async function createNotification(notificationData) {
         throw error
     }
 }
-export async function getNotifications(userId) {
+export default async function getNotifications(userId) {
     if (!userId) throw new Error('userId is required to fetch notifications')
 
     const token = await AsyncStorage.getItem('token')

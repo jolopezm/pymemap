@@ -4,7 +4,7 @@ import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import globalStyles from '../styles/global'
+import {globalStyles} from '../styles/global'
 import { getBusiness, requestService } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
@@ -106,7 +106,7 @@ export default function BusinessProfile() {
         await createNotification({
             targetUserId: business?.owner_id,
             type: 'service_request',
-            message: `New service request from ${user?.name}`,
+            message: `Nueva solicitud de servicio de ${user?.name}`,
             date: new Date().toISOString(),
             read: false,
             reference: {

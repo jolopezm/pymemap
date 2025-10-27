@@ -1,7 +1,7 @@
 import React from 'react'
 import { Text, TextInput, Pressable } from 'react-native'
 import DropDownPicker from 'react-native-dropdown-picker'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 
 export default function BusinessDataForm({
     name,

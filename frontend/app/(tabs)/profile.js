@@ -7,7 +7,7 @@ import { useAuth } from '../../context/auth-context'
 import { useRouter } from 'expo-router'
 import React from 'react'
 import Item from '../../plantillas/business-item'
-import globalStyles from '../../styles/global'
+import { globalStyles } from '../../styles/global'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Button from '../../components/button'
@@ -76,7 +76,7 @@ export default function ProfileScreen() {
     }
 
     return isAuthenticated ? (
-        <Screen scroll={false}>
+        <Screen>
             <ScrollView style={{ flex: 1 }}>
                     <View style={globalStyles.card}>
                         <TextInput

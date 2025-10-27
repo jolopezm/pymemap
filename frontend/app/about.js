@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import globalStyles from '../styles/global';
+import {globalStyles} from '../styles/global';
 import Button from '../components/button';
 import DismissKeyboard from '../components/dismiss-keyboard';
 import { LinearGradient } from 'expo-linear-gradient';

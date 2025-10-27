@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native'
 import { getChats } from '../../api/chat-service'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
-import globalStyles from '../../styles/global'
+import { globalStyles } from '../../styles/global'
 import { router } from 'expo-router'
 import Screen from '../../components/screen'
 

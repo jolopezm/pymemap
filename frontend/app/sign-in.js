@@ -10,7 +10,7 @@ import {
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sign-in'
 import { User } from '../classes/user'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 import { Calendar } from '../components/calendar'
 import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
