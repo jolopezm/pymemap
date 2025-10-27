@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from ..db import db
 from app.models.utility_classes import Chat, Message
 from bson import ObjectId
-from services.chat import update_last_message
+from app.services.chat import update_last_message
 
 router = APIRouter()
 
