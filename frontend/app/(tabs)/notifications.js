@@ -6,22 +6,19 @@ import globalStyles from '../../styles/global'
 import * as notificationsService from '../../api/notifications-service'
 import DefaultModal from '../../components/default-modal'
 import { useNotif } from '../../context/notif-context'
+import NotificationFilter from '../../components/notif-filter'
+import LoadingSpinner from '../../components/loading-spinner'
 
-console.log('notificationsService module:', notificationsService)
 
-// safe extraction that works con exports: named, default, CommonJS, o cuando el módulo es la función misma
 const getNotifications =
     notificationsService?.getNotifications ??
-    // default export may be the function itself
     notificationsService?.default ??
     (typeof notificationsService === 'function' ? notificationsService : undefined)
 
 const markNotificationAsRead =
     notificationsService?.markNotificationAsRead ??
-    // in case the module was imported as a namespace and default is an object with methods
     notificationsService?.default?.markNotificationAsRead
 
-// fallback errors to fail fast with a clear message
 if (!getNotifications) {
     console.error('getNotifications no disponible en notifications-service. Revisa sus exports.')
 }
@@ -35,8 +32,8 @@ const { getNotifications: _unused1, markNotificationAsRead: _unused2 } = {}
 export default function NotificationsScreen() {
     const { user } = useAuth()
     const { refreshNotifications, markNotificationReadLocally } = useNotif()
+    const [allNotifications, setAllNotifications] = React.useState([])
     const [notifications, setNotifications] = React.useState([])
-    const [amountUnread, setAmountUnread] = React.useState(0)
     const [loading, setLoading] = React.useState(false)
     const [error, setError] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
@@ -50,13 +47,17 @@ export default function NotificationsScreen() {
             notification?._id || notification?.id
         )
 
-        // If the notification is unread, mark it as read on the server and
-        // update the local state optimistically so the UI reflects the change
         if (!notification?.read) {
             const notificationId = notification?._id || notification?.id
             if (!notificationId) return
             try {
-                // Optimistic update
+                setAllNotifications(prev =>
+                    prev.map(n =>
+                        n?._id === notificationId || n?.id === notificationId
+                            ? { ...n, read: true }
+                            : n
+                    )
+                )
                 setNotifications(prev =>
                     prev.map(n =>
                         n?._id === notificationId || n?.id === notificationId
@@ -64,12 +65,9 @@ export default function NotificationsScreen() {
                             : n
                     )
                 )
-                setAmountUnread(a => Math.max(0, a - 1))
                 setSelectedNotification(s => (s ? { ...s, read: true } : s))
 
                 await markNotificationAsRead(notificationId)
-                // refresh global notifications state so the unread dot in the tab bar updates
-                // Update context locally first so the UI (tab dot) reacts immediately
                 try {
                     const updated = await markNotificationReadLocally(notificationId)
                     if (!updated) {
@@ -79,7 +77,6 @@ export default function NotificationsScreen() {
                     console.warn('markNotificationReadLocally failed', e)
                 }
 
-                // Still attempt a refresh to reconcile with server state (non-blocking)
                 try {
                     const refreshed = await refreshNotifications()
                     console.debug('notifications: refreshNotifications result', {
@@ -87,17 +84,15 @@ export default function NotificationsScreen() {
                         refreshedUnread: Array.isArray(refreshed) ? refreshed.filter(n => !n.read).length : null,
                     })
                 } catch (e) {
-                    // non-fatal: log and continue
                     console.warn('refreshNotifications failed after mark as read', e)
                 }
             } catch (err) {
                 console.error('Error marking notification as read:', err)
-                // On error, revert optimistic change (simple approach: refetch)
                 try {
                     const fresh = await getNotifications(user._id)
+                    setAllNotifications(fresh)
                     setNotifications(fresh)
                     const unread = fresh.filter(n => !n.read).length
-                    setAmountUnread(unread)
                 } catch (e) {
                     console.error(
                         'Error refetching notifications after mark failure',
@@ -132,9 +127,9 @@ export default function NotificationsScreen() {
             try {
                 const data = await getNotifications(user._id)
                 const sorted = sortNotifications(data)
+                setAllNotifications(sorted)
                 setNotifications(sorted)
                 const unread = sorted.filter(n => !n.read).length
-                setAmountUnread(unread)
             } catch (err) {
                 console.error('getNotifications error', err)
                 if (err?.response?.data) {
@@ -143,6 +138,7 @@ export default function NotificationsScreen() {
                 } else {
                     setError({ message: err.message || 'Unknown error' })
                 }
+                setAllNotifications([])
                 setNotifications([])
             } finally {
                 setLoading(false)
@@ -152,14 +148,29 @@ export default function NotificationsScreen() {
         fetchNotifications()
     }, [user])
 
+    const handleFilterChange = newFilter => {
+        if (newFilter === 'all') {
+            setNotifications(sortNotifications(allNotifications))
+        } else if (newFilter === 'unread') {
+            const filtered = allNotifications.filter(n => !n.read)
+            setNotifications(sortNotifications(filtered))
+        } else if (newFilter === 'read') {
+            const filtered = allNotifications.filter(n => n.read)
+            setNotifications(sortNotifications(filtered))
+        }
+    }
+
     return (
         <Screen>
             {user ? (
                 <>
+                <NotificationFilter
+                    notifications={notifications}
+                    onFilterChange={handleFilterChange}
+                />
                     <View>
                         {notifications.length > 0 ? (
                             <>
-                                <Text>{amountUnread} unread notifications</Text>
                                 {notifications.map((notification, index) => (
                                     <Pressable
                                         key={index}
@@ -177,8 +188,8 @@ export default function NotificationsScreen() {
                                                 },
                                             ]}
                                         >
-                                            <Text>{notification.type}</Text>
-                                            <Text>{notification.date}</Text>
+                                            <Text>{notification.message}</Text>
+                                            <Text>{new Date(notification.date).toLocaleString()}</Text>
                                         </View>
                                     </Pressable>
                                 ))}
@@ -198,7 +209,7 @@ export default function NotificationsScreen() {
                                 <Text
                                     style={{ fontWeight: '700', fontSize: 18 }}
                                 >
-                                    {selectedNotification.type}
+                                    {selectedNotification.type == 'service_request' ? 'Solicitud de Servicio' : 'General'}
                                 </Text>
                                 <Text style={{ marginTop: 8 }}>
                                     {selectedNotification.message}
@@ -218,6 +229,18 @@ export default function NotificationsScreen() {
             ) : (
                 <Text style={globalStyles.subtitle}>
                     Please log in to view notifications.
+                </Text>
+            )}
+
+            {loading && (
+                <View style={{ marginTop: 16 }}>
+                    <LoadingSpinner />
+                </View>
+            )}
+
+            {error && (
+                <Text style={[globalStyles.subtitle, { color: 'red' }]}>
+                    Error: {error.message || 'An error occurred'}
                 </Text>
             )}
         </Screen>

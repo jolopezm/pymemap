@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import notificationsService from '../api/notifications-service'
 import { useAuth } from './auth-context'
 
-// safe extraction that handles named/default/CommonJS
 const safeGetNotifications =
     notificationsService?.getNotifications ??
     notificationsService?.default?.getNotifications ??
@@ -20,7 +19,6 @@ export const NotifProvider = ({ children }) => {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            // Always try to fetch from remote first to avoid stale storage data
             if (safeGetNotifications && user) {
                 const fresh = await safeGetNotifications(user?.id || user?._id)
                 setNotifications(fresh)
@@ -34,7 +32,6 @@ export const NotifProvider = ({ children }) => {
                 return fresh
             }
 
-            // Fallback to storage only if remote fetch is unavailable
             const stored = await AsyncStorage.getItem('notifications')
             if (stored) {
                 const parsed = JSON.parse(stored)
@@ -48,7 +45,6 @@ export const NotifProvider = ({ children }) => {
                 return parsed
             }
 
-            // fallback: empty list
             setNotifications([])
             setUnreadCount(0)
             return []
@@ -61,12 +57,10 @@ export const NotifProvider = ({ children }) => {
     }, [user])
 
     useEffect(() => {
-        // refresh when user changes
         fetchNotifications()
     }, [fetchNotifications])
 
     const refreshNotifications = async () => {
-        // force refetch from remote if possible
         try {
             if (safeGetNotifications && user) {
                 const fresh = await safeGetNotifications(user?.id || user?._id)
@@ -80,7 +74,6 @@ export const NotifProvider = ({ children }) => {
                 await AsyncStorage.setItem('notifications', JSON.stringify(fresh))
                 return fresh
             }
-            // otherwise, read from storage
             const stored = await AsyncStorage.getItem('notifications')
             const parsed = stored ? JSON.parse(stored) : []
             setNotifications(parsed)
@@ -92,7 +85,6 @@ export const NotifProvider = ({ children }) => {
         }
     }
 
-    // Mark a single notification as read in the context state (optimistic/local update)
     const markNotificationReadLocally = async notificationId => {
         try {
             setNotifications(prev => {
@@ -103,7 +95,6 @@ export const NotifProvider = ({ children }) => {
                 )
                 const unread = computeUnread(next)
                 setUnreadCount(unread)
-                // persist to storage (fire-and-forget)
                 AsyncStorage.setItem('notifications', JSON.stringify(next)).catch(e =>
                     console.warn('AsyncStorage setItem failed in markNotificationReadLocally', e)
                 )

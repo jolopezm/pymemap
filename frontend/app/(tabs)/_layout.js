@@ -30,7 +30,6 @@ export default function TabLayout() {
                         iconName = focused ? 'person' : 'person-outline'
                     }
 
-                    // For notifications, render a wrapper so we can show a small dot when unreadCount > 0
                     if (route.name === 'notifications') {
                         return (
                             <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -55,16 +54,6 @@ export default function TabLayout() {
                 },
                 headerShown: false,
                 tabBarLabelStyle: { fontSize: 12 },
-                topRightDot: {
-                    display: route.name === 'notifications' ? 'true' : 'false',
-                    backgroundColor: '#ff4dc4',
-                    width: 10,
-                    height: 10,
-                    borderRadius: 5,
-                    position: 'absolute',
-                    top: 5,
-                    right: 20,
-                },
                 
             })}
         >
@@ -84,13 +73,11 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
     dot: {
         position: 'absolute',
-        right: -2,
-        top: 2,
+        right: 1,
+        top: 1,
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: '#ff8c00', // naranja
-        borderWidth: 1,
-        borderColor: 'white',
+        backgroundColor: '#ff8c00'
     },
 })

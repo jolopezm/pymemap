@@ -106,7 +106,7 @@ export default function BusinessProfile() {
         await createNotification({
             targetUserId: business?.owner_id,
             type: 'service_request',
-            message: `New service request from ${user?.name}`,
+            message: `Nueva solicitud de servicio de ${user?.name}`,
             date: new Date().toISOString(),
             read: false,
             reference: {
