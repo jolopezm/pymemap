@@ -13,7 +13,7 @@ export const colors = {
     textSecondary: '#333333', // Texto secundario
 }
 
-export default StyleSheet.create({
+export const globalStyles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.white,

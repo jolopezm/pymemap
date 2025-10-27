@@ -2,7 +2,7 @@ import React from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { View, Text, Pressable } from 'react-native'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 
 export default function Item({ business }) {
     const router = useRouter()

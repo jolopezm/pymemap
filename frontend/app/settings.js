@@ -1,7 +1,7 @@
 import { View, Text, ScrollView } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../context/auth-context';
-import globalStyles from '../styles/global';
+import { globalStyles } from '../styles/global';
 import Button from '../components/button';
 import DismissKeyboard from '../components/dismiss-keyboard';
 import { LinearGradient } from 'expo-linear-gradient';

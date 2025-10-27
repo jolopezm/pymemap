@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable, Text, ActivityIndicator } from 'react-native'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 
 /**
  * Componente de botón profesional con efectos interactivos

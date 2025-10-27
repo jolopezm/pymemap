@@ -2,12 +2,13 @@ import { Text, View, Pressable } from 'react-native'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
-import globalStyles from '../../styles/global'
+import { globalStyles, colors} from '../../styles/global'
 import * as notificationsService from '../../api/notifications-service'
 import DefaultModal from '../../components/default-modal'
 import { useNotif } from '../../context/notif-context'
 import NotificationFilter from '../../components/notif-filter'
 import LoadingSpinner from '../../components/loading-spinner'
+import { Ionicons } from '@expo/vector-icons';
 
 
 const getNotifications =
@@ -185,11 +186,35 @@ export default function NotificationsScreen() {
                                                     opacity: notification.read
                                                         ? 0.5
                                                         : 1,
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    gap: 8,
+                                                    alignItems: 'flex-start',
+                                                    padding: 12,
                                                 },
                                             ]}
                                         >
-                                            <Text>{notification.message}</Text>
-                                            <Text>{new Date(notification.date).toLocaleString()}</Text>
+                                            <Ionicons 
+                                                name="information-circle" 
+                                                size={32} color={colors.primary} 
+                                            />
+                                            <View>
+                                                <Text 
+                                                    style={{ fontWeight: '600', fontSize: 16 }}
+                                                    numberOfLines={1} 
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    {notification.message.length > 30
+                                                        ? `${notification.message.substring(0, 30)}...`
+                                                        : notification.message
+                                                    }
+                                                </Text>
+                                                <Text 
+                                                    style={{ fontSize: 12, color: colors.gray }}
+                                                >
+                                                    {new Date(notification.date).toLocaleString()}
+                                                </Text>
+                                            </View>
                                         </View>
                                     </Pressable>
                                 ))}

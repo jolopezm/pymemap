@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, TextInput, StyleSheet } from 'react-native'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 
 export default function SearchBar({
     searchTerm,

@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../context/auth-context'
 import { getMessages, sendMessage } from '../api/chat-service'
 import React from 'react'
-import globalStyles from '../styles/global'
+import { globalStyles } from '../styles/global'
 import { useSearchParams } from 'expo-router/build/hooks'
 import Ionicons from '@expo/vector-icons/Ionicons'
 

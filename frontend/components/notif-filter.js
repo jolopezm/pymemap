@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, Button, StyleSheet, Pressable } from 'react-native'
 import { useNotif } from '../context/notif-context'
-import { globalStyles, colors } from '../styles/global'
+import { colors } from '../styles/global'
 
 function NotificationFilter({ onFilterChange }) {
     const [filter, setFilter] = React.useState('all')
