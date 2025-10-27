@@ -9,6 +9,7 @@ import { useNotif } from '../../context/notif-context'
 import NotificationFilter from '../../components/notif-filter'
 import LoadingSpinner from '../../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'
 
 
 const getNotifications =
@@ -39,6 +40,7 @@ export default function NotificationsScreen() {
     const [error, setError] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
     const [selectedNotification, setSelectedNotification] = React.useState(null)
+    const router = useRouter()
 
     const openNotification = async notification => {
         setSelectedNotification(notification)
@@ -239,11 +241,22 @@ export default function NotificationsScreen() {
                                 <Text style={{ marginTop: 8 }}>
                                     {selectedNotification.message}
                                 </Text>
+
+                                <Pressable
+                                    onPress={() =>
+                                        router.push(
+                                            `/service-detail?id=${serviceId}`
+                                        )
+                                    }
+                                    style={globalStyles.button}
+                                >
+                                    <Text style={{ color: colors.white }}>Ver solicitud</Text>
+                                </Pressable>
                                 <Pressable
                                     onPress={closeModal}
                                     style={{ marginTop: 16 }}
                                 >
-                                    <Text style={{ color: '#6A4C93' }}>
+                                    <Text style={{ color: 'red' }}>
                                         Cerrar
                                     </Text>
                                 </Pressable>

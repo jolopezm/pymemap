@@ -17,7 +17,7 @@ export default function TabLayout() {
                     } else if (route.name === 'search') {
                         iconName = focused ? 'search' : 'search-outline'
                     } else if (route.name === 'wallet') {
-                        iconName = focused ? 'wallet' : 'wallet-outline'
+                        iconName = focused ? 'storefront' : 'storefront-outline'
                     } else if (route.name === 'notifications') {
                         iconName = focused
                             ? 'notifications'

@@ -5,47 +5,19 @@ import { useAuth } from '../../context/auth-context'
 import { updateBalance } from '../../api/user-service'
 import React from 'react'
 import { useRouter } from 'expo-router'
+import ServiceFilter from '../../components/service-filter'
 
 export default function WalletScreen() {
     const { user, refreshUser } = useAuth()
 
-    const handleAddBalance = async () => {
-        try {
-            await updateBalance(user?._id, 50)
-            await refreshUser()
-        } catch (error) {
-            console.error('Error adding balance:', error)
-        }
-    }
-
-    const handleDeductBalance = async () => {
-        try {
-            await updateBalance(user?._id, 20, false)
-            await refreshUser()
-        } catch (error) {
-            console.error('Error deducting balance:', error)
-        }
-    }
+    cons
 
     return (
         <Screen>
             {user ? (
-                <View>
-                    <View>
-                        <View style={globalStyles.card}>
-                            <Text>${user?.balance}</Text>
-                            <Text>{user?._id}</Text>
-                        </View>
-                    </View>
-                    <Button
-                        title="Añadir dinero (+50)"
-                        onPress={handleAddBalance}
-                    />
-                    <Button
-                        title="Restar dinero (-20)"
-                        onPress={handleDeductBalance}
-                    />
-                </View>
+                <>
+                    <ServiceFilter />
+                </>
             ) : (
                 <Text>Please log in to view your wallet.</Text>
             )}
