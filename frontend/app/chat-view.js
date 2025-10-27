@@ -9,9 +9,11 @@ import {
 import { useAuth } from '../context/auth-context'
 import { getMessages, sendMessage } from '../api/chat-service'
 import React from 'react'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/global'
 import { useSearchParams } from 'expo-router/build/hooks'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import Screen from '../components/screen'
+import LoadingSpinner from '../components/loading-spinner'
 
 export default function ChatView() {
     const { user } = useAuth()
@@ -95,9 +97,7 @@ export default function ChatView() {
 
     if (loading) {
         return (
-            <View style={globalStyles.container}>
-                <Text>Loading messages...</Text>
-            </View>
+            <LoadingSpinner />
         )
     }
 
@@ -110,9 +110,9 @@ export default function ChatView() {
     }
 
     return (
-        <View style={globalStyles.container}>
-            <Text style={globalStyles.title}>Mensajes</Text>
-            <ScrollView>
+        <Screen>
+        <View style={{ flex: 1 }}>
+            <ScrollView style={{ flex: 1 }} >
                 {messages.map(msg => {
                     if (!msg) return null
                     return (
@@ -121,8 +121,14 @@ export default function ChatView() {
                             style={[
                                 styles.messageContainer,
                                 msg.sender_id === (user.id || user._id)
-                                    ? { backgroundColor: '#F8BBD9' }
-                                    : { backgroundColor: '#F5F5F5' },
+                                    ? { backgroundColor: colors.secondary, 
+                                        alignSelf: 'flex-end',
+                                        borderTopRightRadius: 5,
+                                    }
+                                    : { backgroundColor: colors.white,
+                                        alignSelf: 'flex-start',
+                                        borderTopLeftRadius: 5
+                                     },
                                 {
                                     marginLeft:
                                         msg.sender_id === (user.id || user._id)
@@ -135,10 +141,20 @@ export default function ChatView() {
                                             ? 0
                                             : 50,
                                 },
-                                {},
+                                messages[messages.indexOf(msg) - 1] &&
+                                messages[messages.indexOf(msg) - 1]
+                                    .sender_id === msg.sender_id
+                                    ? { marginTop: 1,
+                                        borderTopRightRadius: 25
+                                     }
+                                    : { marginTop: 15 }
                             ]}
                         >
-                            <Text style={styles.messageText}>
+                            <Text style={[
+                                msg.sender_id === (user.id || user._id)
+                                    ? { color: colors.textPrimary }
+                                    : { color: colors.textSecondary },
+                            ]}>
                                 {msg.content}
                             </Text>
                         </View>
@@ -148,38 +164,42 @@ export default function ChatView() {
 
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={globalStyles.textField}
+                    style={[globalStyles.textField, { fontSize: 14 }]}
                     placeholder="Mensaje"
                     value={messageText}
                     onChangeText={setMessageText}
                 />
                 <Pressable
-                    style={[globalStyles.button, { width: 50 }]}
                     onPress={newMessage}
+                    disabled={!messageText.trim()}
+                    style={[styles.button, { opacity: messageText.trim() ? 1 : 0.5 }]}
                 >
-                    <Ionicons name="send" size={24} color="white" />
+                    <Ionicons name="send" size={24} color={colors.primary} style={{ transform: [{ translateY: -8 }, { translateX: -35 }] }}/>
                 </Pressable>
             </View>
         </View>
+        </Screen>
     )
 }
 
 const styles = StyleSheet.create({
     messageContainer: {
-        padding: 10,
-        marginVertical: 5,
+        padding: 8,
+        marginVertical: 1,
         borderRadius: 25,
     },
     messageSender: {
         fontWeight: 'bold',
     },
-    messageText: {
-        padding: 5,
-    },
 
     inputContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        gap: 10,
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        borderTopWidth: 1,
+        borderTopColor: colors.lightGray,
     },
 })

@@ -5,6 +5,7 @@ import React from 'react'
 import { globalStyles } from '../../styles/global'
 import { router } from 'expo-router'
 import Screen from '../../components/screen'
+import LoadingSpinner from '../../components/loading-spinner'
 
 const ChatScreen = () => {
     const { user } = useAuth()
@@ -19,6 +20,11 @@ const ChatScreen = () => {
     React.useEffect(() => {
         const fetchChats = async () => {
             try {
+                if (!user) {
+                    setError('User not authenticated')
+                    setLoading(false)
+                    return
+                }
                 const chatData = await getChats(user.id || user._id)
                 setChats(chatData)
             } catch (error) {
@@ -34,9 +40,7 @@ const ChatScreen = () => {
 
     if (loading) {
         return (
-            <View>
-                <Text>Cargando...</Text>
-            </View>
+            <LoadingSpinner />
         )
     }
 
@@ -51,7 +55,6 @@ const ChatScreen = () => {
     return (
         <Screen>
             <View>
-            <Text style={globalStyles.title}>Chats</Text>
             {chats.length === 0 ? (
                 <Text>No hay chats disponibles.</Text>
             ) : (

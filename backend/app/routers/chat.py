@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from ..db import db
 from app.models.utility_classes import Chat, Message
 from bson import ObjectId
+from services.chat import update_last_message
 
 router = APIRouter()
 
@@ -28,6 +29,7 @@ async def send_message(message: Message):
     message_dict = message.dict()
     result = await db.messages.insert_one(message_dict)
     created_message = await db.messages.find_one({"_id": result.inserted_id})
+    await update_last_message(message.chatId, created_message)
     return Message(**created_message)
 
 @router.get("/messages", response_model=list[Message])

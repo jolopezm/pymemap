@@ -60,7 +60,8 @@ class Notification(BaseModel):
 class Chat(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     participants: list[str] = Field(...)
-    messages: list[dict] = Field(default=[])
+    last_message: Optional[dict] = Field(default=None) 
+    last_message_at: Optional[datetime] = Field(default=None)
     
     model_config = {
         "populate_by_name": True,
