@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-import { View, Text, Pressable, StyleSheet } from 'react-native'
-import { globalStyles } from '../../styles/global'
-import Screen from '../../components/screen'
-=======
 import { View, Text, Pressable, StyleSheet, ScrollView, Image } from 'react-native'
->>>>>>> origin/issue-home
 import { useAuth } from '../../context/auth-context'
 import {
     getServices,
