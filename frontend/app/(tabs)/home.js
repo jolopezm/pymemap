@@ -306,7 +306,15 @@ export default function HomeScreen() {
                                         colors={['#F5F5F5', '#EBEBEB']}
                                         style={styles.hotImagePlaceholder}
                                     >
-                                        <Ionicons name="storefront-outline" size={36} color="#9B59B6" />
+                                        {business.profile_pic ? (
+                                            <Image
+                                                source={{ uri: business.profile_pic }}
+                                                style={{ width: '100%', height: '100%' }}
+                                                resizeMode="cover"
+                                            />
+                                        ) : (
+                                            <Ionicons name="storefront" size={40} color="#9B59B6" />
+                                        )}
                                     </LinearGradient>
                                 </View>
                                 
