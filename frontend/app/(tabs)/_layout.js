@@ -14,8 +14,8 @@ export default function TabLayout() {
 
                     if (route.name === 'home') {
                         iconName = focused ? 'home' : 'home-outline'
-                    } else if (route.name === 'search') {
-                        iconName = focused ? 'search' : 'search-outline'
+                    } else if (route.name === 'stores') {
+                        iconName = focused ? 'storefront' : 'storefront-outline'
                     } else if (route.name === 'wallet') {
                         iconName = focused ? 'storefront' : 'storefront-outline'
                     } else if (route.name === 'notifications') {
@@ -57,15 +57,15 @@ export default function TabLayout() {
                 
             })}
         >
-            <Tabs.Screen name="home" options={{ title: '' }} />
-            <Tabs.Screen name="search" options={{ title: '' }} />
-            <Tabs.Screen name="wallet" options={{ title: '' }} />
+            <Tabs.Screen name="home" options={{ title: 'Home' }} />
+            <Tabs.Screen name="stores" options={{ title: 'Tiendas' }} />
+            <Tabs.Screen name="wallet" options={{ title: 'Billetera' }} />
             <Tabs.Screen
                 name="notifications"
-                options={{ title: '' }}
+                options={{ title: 'Notificaciones' }}
             />
-            <Tabs.Screen name="chat" options={{ title: '' }} />
-            <Tabs.Screen name="profile" options={{ title: '' }} />
+            <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
+            <Tabs.Screen name="profile" options={{ title: 'Mi perfil' }} />
         </Tabs>
     )
 }

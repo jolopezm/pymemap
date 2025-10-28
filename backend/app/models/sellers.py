@@ -11,6 +11,7 @@ class Business(BaseModel):
     description: str = Field(...)
     #owner_id: PyObjectId = Field(default_factory=PyObjectId)
     owner_id: str = Field(...)
+    profile_pic: Optional[str] = Field(default=None)
     
     model_config = ConfigDict(
         populate_by_name=True, 
