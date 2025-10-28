@@ -4,7 +4,7 @@ import {
     getServices,
     getBusiness,
 } from '../../api/business-service'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -30,6 +30,8 @@ export default function HomeScreen() {
     const [selectedCategory, setSelectedCategory] = useState(null)
     const [userLocation, setUserLocation] = useState('Antonio Varas 666')
     const router = useRouter()
+    const scrollViewRef = useRef(null)
+    const nearbyStoresRef = useRef(null)
 
     const fetchData = async () => {
         try {
@@ -68,6 +70,19 @@ export default function HomeScreen() {
         
         return matchesCategory
     })
+
+    const scrollToNearbyStores = () => {
+        // Desplazar la vista a la sección de "Cerca de ti" (React Native)
+        if (nearbyStoresRef.current && scrollViewRef.current) {
+            nearbyStoresRef.current.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                    scrollViewRef.current.scrollTo({ y: y - 20, animated: true })
+                },
+                () => console.log('Error al medir la posición')
+            )
+        }
+    }
 
     // Renderizar Header con ubicación y búsqueda
     const renderHeader = () => (
@@ -116,9 +131,12 @@ export default function HomeScreen() {
                             styles.categoryItem,
                             selectedCategory === category.name && styles.categoryItemActive
                         ]}
-                        onPress={() => setSelectedCategory(
-                            selectedCategory === category.name ? null : category.name
-                        )}
+                        onPress={() => {
+                            const newCategory = selectedCategory === category.name ? null : category.name
+                            setSelectedCategory(newCategory)
+                            // Hacer scroll después de un pequeño delay para que el estado se actualice
+                            setTimeout(() => scrollToNearbyStores(), 100)
+                        }}
                     >
                         <View style={[
                             styles.categoryIconCircle,
@@ -290,7 +308,7 @@ export default function HomeScreen() {
         const displayBusinesses = selectedCategory ? filteredBusinesses : businesses
 
         return (
-            <View style={styles.hotSection}>
+            <View ref={nearbyStoresRef} style={styles.hotSection}>
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Cerca de ti</Text>
                 </View>
@@ -360,6 +378,7 @@ export default function HomeScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             <StatusBar style="dark" backgroundColor="#9B59B6" />
             <ScrollView
+                ref={scrollViewRef}
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 stickyHeaderIndices={[0]}
