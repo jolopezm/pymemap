@@ -294,12 +294,15 @@ export default function StoresScreen() {
 
                                 {/* Imagen del negocio */}
                                 <View style={styles.businessImage}>
-                                    <LinearGradient
-                                        colors={['#F5F5F5', '#EBEBEB']}
-                                        style={styles.imagePlaceholder}
-                                    >
-                                        <Ionicons name="storefront-outline" size={48} color="#9B59B6" />
-                                    </LinearGradient>
+                                    {business.profile_pic ? (
+                                        <Image
+                                            source={{ uri: business.profile_pic }}
+                                            style={{ width: '100%', height: '100%' }}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <Ionicons name="storefront" size={50} color="#9B59B6" />
+                                    )}
                                 </View>
 
                                 {/* Info del negocio */}
