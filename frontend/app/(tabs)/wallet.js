@@ -5,7 +5,7 @@ import { useAuth } from '../../context/auth-context'
 import { updateBalance } from '../../api/user-service'
 import React from 'react'
 import { useRouter } from 'expo-router'
-import ServiceFilter from '../../components/service-filter'
+//import ServiceFilter from '../../components/service-filter'
 
 export default function WalletScreen() {
     const { user, refreshUser } = useAuth()
@@ -16,7 +16,7 @@ export default function WalletScreen() {
         <Screen>
             {user ? (
                 <>
-                    <ServiceFilter />
+                    <Text style={globalStyles.title}>Wallet</Text>
                 </>
             ) : (
                 <Text>Please log in to view your wallet.</Text>
