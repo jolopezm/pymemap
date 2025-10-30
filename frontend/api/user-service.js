@@ -71,3 +71,37 @@ export const updateBalance = async (userId, amount, isPositive = true) => {
 
     return await response.json()
 }
+
+export const uploadProfilePicture = async (userId, imageData, filename) => {
+    const formData = new FormData()
+    
+    // Para React Native, usa este formato:
+    formData.append('file', {
+        uri: imageData,
+        name: filename || 'profile.jpg',
+        type: 'image/jpeg',
+    })
+
+    const headers = await getAuthHeaders()
+    
+    try {
+        const response = await axios.post(
+            `${API_URL}/users/upload-profile-picture/${userId}`, 
+            formData, 
+            {
+                headers: {
+                    ...headers,
+                    'Content-Type': 'multipart/form-data',
+                },
+                // Importante para React Native:
+                transformRequest: (data, headers) => {
+                    return data
+                },
+            }
+        )
+        return response.data
+    } catch (error) {
+        console.error('Error uploading profile picture:', error.response?.data || error.message)
+        throw error
+    }
+}

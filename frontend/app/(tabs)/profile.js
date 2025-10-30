@@ -159,6 +159,13 @@ export default function ProfileScreen() {
                     </Pressable>
 
                     <Pressable
+                        style={[globalStyles.button]}
+                        onPress={() => router.push('/upload-profile-pic')}
+                    >
+                        <Text style={{ color: '#fff' }}>Subir foto de perfil</Text>
+                    </Pressable>
+
+                    <Pressable
                         style={[globalStyles.button, globalStyles.button.red]}
                         onPress={handleDeleteAccount}
                     >
