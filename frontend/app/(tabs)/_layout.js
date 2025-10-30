@@ -57,15 +57,15 @@ export default function TabLayout() {
                 
             })}
         >
-            <Tabs.Screen name="home" options={{ title: 'Home' }} />
-            <Tabs.Screen name="stores" options={{ title: 'Tiendas' }} />
-            <Tabs.Screen name="wallet" options={{ title: 'Billetera' }} />
+            <Tabs.Screen name="home" options={{ title: '' }} />
+            <Tabs.Screen name="stores" options={{ title: '' }} />
+            <Tabs.Screen name="wallet" options={{ title: '' }} />
             <Tabs.Screen
                 name="notifications"
-                options={{ title: 'Notificaciones' }}
+                options={{ title: '' }}
             />
-            <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
-            <Tabs.Screen name="profile" options={{ title: 'Mi perfil' }} />
+            <Tabs.Screen name="chat" options={{ title: '' }} />
+            <Tabs.Screen name="profile" options={{ title: '' }} />
         </Tabs>
     )
 }

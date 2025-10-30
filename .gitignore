@@ -135,6 +135,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Google Cloud Platform credentials
+gcp-credentials.json
+**/gcp-credentials.json
+
 # Spyder project settings
 .spyderproject
 .spyproject
