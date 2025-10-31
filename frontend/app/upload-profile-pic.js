@@ -1,13 +1,25 @@
-import React from 'react';
-import { View, Button, Image, ActivityIndicator, StyleSheet, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { uploadProfilePicture } from '../api/user-service';
-import { useAuth } from '../context/auth-context';
+import React from 'react'
+import {
+    View,
+    Button,
+    Image,
+    ActivityIndicator,
+    StyleSheet,
+    Alert,
+    Pressable,
+    Text,
+} from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
+import { uploadProfilePicture } from '../api/user-service'
+import { useAuth } from '../context/auth-context'
+import Screen from '../components/screen'
+import { globalStyles } from '../styles/global'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function UploadProfilePic() {
-    const { user, setUser } = useAuth();
-    const [image, setImage] = React.useState(null);
-    const [uploading, setUploading] = React.useState(false);
+    const { user, setUser } = useAuth()
+    const [image, setImage] = React.useState(null)
+    const [uploading, setUploading] = React.useState(false)
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -15,64 +27,83 @@ export default function UploadProfilePic() {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.7,
-        });
+        })
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
+            setImage(result.assets[0].uri)
         }
     }
 
     const handleUpload = async () => {
-        if (!image) return;
+        if (!image) return
 
-        setUploading(true);
+        setUploading(true)
         try {
-            const filename = image.split('/').pop();
+            const filename = image.split('/').pop()
 
-            console.log('📤 Subiendo imagen:', { 
-                userId: user._id || user.id, 
+            console.log('📤 Subiendo imagen:', {
+                userId: user._id || user.id,
                 filename,
-                userIdLength: (user._id || user.id)?.length
-            });
+                userIdLength: (user._id || user.id)?.length,
+            })
 
-            // Usar user._id (como viene de MongoDB) o user.id
-            const userId = user._id || user.id;
-            
+            const userId = user._id || user.id
+
             if (!userId || userId.length !== 24) {
-                throw new Error(`ID de usuario inválido: ${userId}`);
+                throw new Error(`ID de usuario inválido: ${userId}`)
             }
 
-            const updatedUser = await uploadProfilePicture(userId, image, filename);
-            
-            console.log('✅ Usuario actualizado:', updatedUser);
-
-            // Actualizar el contexto con el usuario completo actualizado
-            setUser({ ...user, profile_pic: updatedUser.profile_pic });
-            
-            Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
+            const updatedUser = await uploadProfilePicture(
+                userId,
+                image,
+                filename
+            )
+            console.log('✅ Usuario actualizado:', updatedUser)
+            setUser({ ...user, profile_pic: updatedUser.profile_pic })
+            Alert.alert('Éxito', 'Foto de perfil actualizada correctamente')
         } catch (error) {
-            console.error('❌ Error al subir imagen:', error);
+            console.error('❌ Error al subir imagen:', error)
             Alert.alert(
-                'Error', 
-                error.response?.data?.detail || error.message || 'No se pudo subir la foto de perfil'
-            );
+                'Error',
+                error.response?.data?.detail ||
+                    error.message ||
+                    'No se pudo subir la foto de perfil'
+            )
         } finally {
-            setUploading(false);
+            setUploading(false)
         }
     }
 
     return (
-        <View style={styles.container}>
-            {image && <Image source={{ uri: image }} style={styles.image} />}
-            <Button title="Seleccionar imagen" onPress={pickImage} />
-            <Button 
-                title={uploading ? "Subiendo..." : "Subir foto de perfil"} 
-                onPress={handleUpload} 
-                disabled={!image || uploading} 
-            />
-            {uploading && <ActivityIndicator size="large" color="#0000ff" />}
-        </View>
-    );
+        <Screen>
+            <View style={styles.container}>
+                {image ? (
+                    <Image source={{ uri: image }} style={styles.image} />
+                ) : (
+                    <Ionicons
+                        name="person-circle"
+                        size={200}
+                        color="#ccc"
+                        style={styles.profile_pic}
+                    />
+                )}
+
+                <Pressable onPress={pickImage} style={globalStyles.button}>
+                    <Text>Seleccionar imagen</Text>
+                </Pressable>
+                <Pressable
+                    onPress={handleUpload}
+                    disabled={!image || uploading}
+                    style={globalStyles.button}
+                >
+                    <Text>{uploading ? 'Subiendo...' : 'Confirmar'}</Text>
+                </Pressable>
+                {uploading && (
+                    <ActivityIndicator size="large" color="#0000ff" />
+                )}
+            </View>
+        </Screen>
+    )
 }
 
 const styles = StyleSheet.create({
@@ -88,4 +119,4 @@ const styles = StyleSheet.create({
         borderRadius: 100,
         marginBottom: 20,
     },
-});
+})
