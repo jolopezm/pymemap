@@ -12,6 +12,7 @@ class User(BaseModel):
     birthdate: str = Field()
     isAuthenticated: bool = Field(default=False)
     balance: float = Field(default=0.0)
+    profile_pic: Optional[str] = Field(default=None)
     
     @field_validator('password')
     @classmethod
@@ -37,6 +38,7 @@ class UserResponse(BaseModel):
     email: str = Field(...)
     birthdate: str = Field(...)
     balance: float = Field(...)
+    profile_pic: Optional[str] = Field(default=None)
     
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
 

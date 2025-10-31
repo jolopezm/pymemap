@@ -6,7 +6,7 @@ from app.models.users import User, UserResponse, UserUpdate, ResetPasswordReques
 from app.models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
 from ..utils.password_validator import PasswordValidation
-from ..services.upload_images_to_gcp import upload_profile_picture
+from ..services.upload_images_to_gcp import upload_profile_picture as upload_to_gcp
 
 router = APIRouter()
 
@@ -204,25 +204,49 @@ async def validate_password_endpoint(request: dict):
     }
 
 @router.post("/upload-profile-picture/{user_id}", response_model=UserResponse)
-async def upload_profile_picture(user_id: str, file: UploadFile = File(...)):
+async def upload_profile_picture_endpoint(user_id: str, file: UploadFile = File(...)):
     """Sube una nueva foto de perfil para el usuario"""
+    
+    # Limpiar el user_id
+    user_id = user_id.strip()
+    
+    # Log para debugging
+    print(f"🔍 Recibiendo upload para user_id: '{user_id}' (longitud: {len(user_id)})")
+    print(f"📎 Archivo: {file.filename}, Content-Type: {file.content_type}")
+    
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
             status_code=400,
-            detail="Formato de ID de usuario inválido"
+            detail=f"Formato de ID de usuario inválido: {user_id}"
         )
 
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Usuario no encontrado con ID: {user_id}"
+        )
 
-    # Aquí iría la lógica para subir la imagen a GCP y obtener la URL
-    image_url = await upload_profile_picture(file)
+    try:
+        # Subir imagen a GCP (NO es async, no uses await)
+        image_url = upload_to_gcp(file, bucket_name="pymap_profile_pics")
+        
+        print(f"✅ Imagen subida exitosamente: {image_url}")
 
-    await db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": {"profile_pic": image_url}}
-    )
+        # Actualizar el perfil del usuario con la nueva URL
+        await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"profile_pic": image_url}}
+        )
 
-    updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
-    return UserResponse(**updated_user)
+        updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+        return UserResponse(**updated_user)
+        
+    except Exception as e:
+        print(f"❌ Error al subir imagen: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al subir la imagen: {str(e)}"
+        )
