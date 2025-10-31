@@ -5,6 +5,7 @@ import {
     ScrollView,
     StyleSheet,
     Link,
+    Image,
 } from 'react-native'
 import Screen from '../../components/screen'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -17,6 +18,7 @@ import ProfileNoUser from '../../plantillas/profile-no-user'
 
 export default function ProfileScreen() {
     const { isAuthenticated, logout } = useAuth()
+    const { user } = useAuth()
     const [name, setName] = React.useState('')
     const [email, setEmail] = React.useState('')
     const router = useRouter()
@@ -65,12 +67,19 @@ export default function ProfileScreen() {
                 >
                     <View style={styles.profilePictureContainer}>
                         <View style={styles.profilePicWrapper}>
-                            <Ionicons
-                                name="person-circle"
-                                size={120}
-                                color="#ccc"
-                                style={styles.profile_pic}
-                            />
+                            {user.profile_pic ? (
+                                <Image
+                                    source={{ uri: user.profile_pic }}
+                                    style={styles.profile_pic}
+                                />
+                            ) : (
+                                <Ionicons
+                                    name="person-circle"
+                                    size={120}
+                                    color="#ccc"
+                                    style={styles.profile_pic}
+                                />
+                            )}
                         </View>
                         <Pressable
                             style={styles.btn_update_pp}
@@ -182,6 +191,18 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
+
+        backgroundColor: '#f0f0f0',
+        borderWidth: 3,
+        borderColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
 
     btn_update_pp: {

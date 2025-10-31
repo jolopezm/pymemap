@@ -17,8 +17,8 @@ import { globalStyles } from '../styles/global'
 import { Ionicons } from '@expo/vector-icons'
 
 export default function UploadProfilePic() {
-    const { user, setUser } = useAuth()
-    const [image, setImage] = React.useState(null)
+    const { user, refreshUser } = useAuth()
+    const [image, setImage] = React.useState(user.profile_pic || null)
     const [uploading, setUploading] = React.useState(false)
 
     const pickImage = async () => {
@@ -58,8 +58,10 @@ export default function UploadProfilePic() {
                 image,
                 filename
             )
+
             console.log('✅ Usuario actualizado:', updatedUser)
-            setUser({ ...user, profile_pic: updatedUser.profile_pic })
+
+            await refreshUser()
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente')
         } catch (error) {
             console.error('❌ Error al subir imagen:', error)
@@ -118,5 +120,18 @@ const styles = StyleSheet.create({
         height: 200,
         borderRadius: 100,
         marginBottom: 20,
+        backgroundColor: '#fff',
+        borderWidth: 3,
+        borderColor: '#f0f0f0',
+
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+
+        elevation: 8,
     },
 })
