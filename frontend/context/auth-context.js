@@ -61,6 +61,8 @@ export const AuthProvider = ({ children }) => {
             await logoutService()
             setUser(null)
             setIsAuthenticated(false)
+            AsyncStorage.removeItem('token')
+            AsyncStorage.removeItem('user')
         } catch (error) {
             return {
                 success: false,

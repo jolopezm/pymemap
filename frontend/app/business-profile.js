@@ -168,13 +168,6 @@ export default function BusinessProfile() {
                     { alignItems: 'stretch' },
                 ]}
             >
-                <Pressable
-                    onPress={() => router.back()}
-                    style={globalStyles.backButton}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-                    <Text>Volver</Text>
-                </Pressable>
                 <View style={globalStyles.card}>
                     <Ionicons
                         name="business"

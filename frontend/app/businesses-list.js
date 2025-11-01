@@ -26,33 +26,37 @@ export default function BusinessesList() {
     }, [])
 
     return (
-        <Screen>
-            <Text style={globalStyles.title}>Mis negocios:</Text>
-            <Pressable
-                style={[globalStyles.button]}
-                onPress={() => router.push('/new-business')}
-            >
-                <Text style={{ color: '#fff' }}>Registrar nuevo negocio</Text>
-            </Pressable>
-            {businesses.filter(
-                business => String(business.owner_id) === String(user._id)
-            ).length > 0 ? (
-                <View style={{ width: '100%' }}>
-                    {businesses
-                        .filter(
-                            business =>
-                                String(business.owner_id) === String(user._id)
-                        )
-                        .map(item => (
-                            <Item
-                                key={item._id ?? item.id ?? item.name}
-                                business={item}
-                            />
-                        ))}
-                </View>
-            ) : (
-                <Text>No tienes negocios registrados.</Text>
-            )}
-        </Screen>
+        <>
+            <Screen>
+                <Pressable
+                    style={[globalStyles.button]}
+                    onPress={() => router.push('/new-business')}
+                >
+                    <Text style={{ color: '#fff' }}>
+                        Registrar nuevo negocio
+                    </Text>
+                </Pressable>
+                {businesses.filter(
+                    business => String(business.owner_id) === String(user._id)
+                ).length > 0 ? (
+                    <View style={{ width: '100%' }}>
+                        {businesses
+                            .filter(
+                                business =>
+                                    String(business.owner_id) ===
+                                    String(user._id)
+                            )
+                            .map(item => (
+                                <Item
+                                    key={item._id ?? item.id ?? item.name}
+                                    business={item}
+                                />
+                            ))}
+                    </View>
+                ) : (
+                    <Text>No tienes negocios registrados.</Text>
+                )}
+            </Screen>
+        </>
     )
 }

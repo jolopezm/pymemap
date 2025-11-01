@@ -1,9 +1,13 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, Image } from 'react-native'
-import { useAuth } from '../../context/auth-context'
 import {
-    getServices,
-    getBusiness,
-} from '../../api/business-service'
+    View,
+    Text,
+    Pressable,
+    StyleSheet,
+    ScrollView,
+    Image,
+} from 'react-native'
+import { useAuth } from '../../context/auth-context'
+import { getServices, getBusiness } from '../../api/business-service'
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -50,7 +54,7 @@ export default function HomeScreen() {
         fetchData()
     }, [])
 
-    const handleQuickClick = (category) => {
+    const handleQuickClick = category => {
         setSelectedCategory(category)
     }
 
@@ -60,14 +64,15 @@ export default function HomeScreen() {
         if (!selectedCategory || selectedCategory === 'Todos') {
             return true
         }
-        
+
         // Comparar categoría del negocio con la seleccionada (case insensitive y flexible)
         const businessCategory = business.category?.toLowerCase() || ''
         const selected = selectedCategory.toLowerCase()
-        
+
         // Match exacto o contenido (ej: "Comida" match con "comida rápida")
-        const matchesCategory = businessCategory === selected || businessCategory.includes(selected)
-        
+        const matchesCategory =
+            businessCategory === selected || businessCategory.includes(selected)
+
         return matchesCategory
     })
 
@@ -77,7 +82,10 @@ export default function HomeScreen() {
             nearbyStoresRef.current.measureLayout(
                 scrollViewRef.current,
                 (x, y) => {
-                    scrollViewRef.current.scrollTo({ y: y - 20, animated: true })
+                    scrollViewRef.current.scrollTo({
+                        y: y - 20,
+                        animated: true,
+                    })
                 },
                 () => console.log('Error al medir la posición')
             )
@@ -88,7 +96,12 @@ export default function HomeScreen() {
     const renderHeader = () => (
         <View style={styles.header}>
             {/* Ubicación actual */}
-            <Pressable style={styles.locationContainer} onPress={() => {/* TODO: Abrir selector de ubicación */}}>
+            <Pressable
+                style={styles.locationContainer}
+                onPress={() => {
+                    /* TODO: Abrir selector de ubicación */
+                }}
+            >
                 <View style={styles.locationIcon}>
                     <Ionicons name="location" size={20} color="#9B59B6" />
                 </View>
@@ -104,7 +117,7 @@ export default function HomeScreen() {
             </Pressable>
 
             {/* Barra de búsqueda compacta */}
-            <Pressable 
+            <Pressable
                 style={styles.searchBar}
                 onPress={() => router.push('/search')}
             >
@@ -119,8 +132,8 @@ export default function HomeScreen() {
     // Renderizar Categorías (profesional para PyMEs)
     const renderCategories = () => (
         <View style={styles.categoriesSection}>
-            <ScrollView 
-                horizontal 
+            <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.categoriesScroll}
             >
@@ -129,30 +142,40 @@ export default function HomeScreen() {
                         key={category.id}
                         style={[
                             styles.categoryItem,
-                            selectedCategory === category.name && styles.categoryItemActive
+                            selectedCategory === category.name &&
+                                styles.categoryItemActive,
                         ]}
                         onPress={() => {
-                            const newCategory = selectedCategory === category.name ? null : category.name
+                            const newCategory =
+                                selectedCategory === category.name
+                                    ? null
+                                    : category.name
                             setSelectedCategory(newCategory)
                             // Hacer scroll después de un pequeño delay para que el estado se actualice
                             setTimeout(() => scrollToNearbyStores(), 100)
                         }}
                     >
-                        <View style={[
-                            styles.categoryIconCircle,
-                            { backgroundColor: category.color },
-                            selectedCategory === category.name && styles.categoryIconActive
-                        ]}>
-                            <Ionicons 
-                                name={category.icon} 
-                                size={24} 
-                                color="#FFF" 
+                        <View
+                            style={[
+                                styles.categoryIconCircle,
+                                { backgroundColor: category.color },
+                                selectedCategory === category.name &&
+                                    styles.categoryIconActive,
+                            ]}
+                        >
+                            <Ionicons
+                                name={category.icon}
+                                size={24}
+                                color="#FFF"
                             />
                         </View>
-                        <Text style={[
-                            styles.categoryLabel,
-                            selectedCategory === category.name && styles.categoryLabelActive
-                        ]}>
+                        <Text
+                            style={[
+                                styles.categoryLabel,
+                                selectedCategory === category.name &&
+                                    styles.categoryLabelActive,
+                            ]}
+                        >
                             {category.name}
                         </Text>
                     </Pressable>
@@ -181,7 +204,11 @@ export default function HomeScreen() {
                     </View>
                     <View style={styles.promoImage}>
                         <View style={styles.promoImagePlaceholder}>
-                            <Ionicons name="business" size={48} color="rgba(255,255,255,0.4)" />
+                            <Ionicons
+                                name="business"
+                                size={48}
+                                color="rgba(255,255,255,0.4)"
+                            />
                         </View>
                     </View>
                 </LinearGradient>
@@ -192,28 +219,36 @@ export default function HomeScreen() {
     // Renderizar Negocios Destacados (círculos con badges)
     const renderFeaturedBrands = () => {
         const featured = businesses.slice(0, 6)
-        
+
         if (featured.length === 0) return null
 
         return (
             <View style={styles.brandsSection}>
                 <Text style={styles.sectionTitle}>Destacados en tu zona</Text>
-                <ScrollView 
-                    horizontal 
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.brandsScroll}
                 >
                     {featured.map((business, index) => (
-                        <Pressable 
+                        <Pressable
                             key={business.id || business._id || index}
                             style={styles.brandCircle}
-                            onPress={() => router.push(`/business-profile?id=${business.id || business._id}`)}
+                            onPress={() =>
+                                router.push(
+                                    `/business-profile?id=${business.id || business._id}`
+                                )
+                            }
                         >
                             <LinearGradient
                                 colors={['#F5F5F5', '#E8E8E8']}
                                 style={styles.brandLogo}
                             >
-                                <Ionicons name="storefront" size={32} color="#9B59B6" />
+                                <Ionicons
+                                    name="storefront"
+                                    size={32}
+                                    color="#9B59B6"
+                                />
                             </LinearGradient>
                             <Text style={styles.brandName} numberOfLines={1}>
                                 {business.name}
@@ -228,7 +263,7 @@ export default function HomeScreen() {
     // Renderizar "Nuevos en PymeMap"
     const renderNewBusinesses = () => {
         const newBusinesses = businesses.slice(0, 3)
-        
+
         if (newBusinesses.length === 0) return null
 
         return (
@@ -239,9 +274,11 @@ export default function HomeScreen() {
                         <Text style={styles.seeMore}>Ver más</Text>
                     </Pressable>
                 </View>
-                <Text style={styles.sectionSubtitle}>Conoce los negocios que se unieron recientemente</Text>
-                <ScrollView 
-                    horizontal 
+                <Text style={styles.sectionSubtitle}>
+                    Conoce los negocios que se unieron recientemente
+                </Text>
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.newScroll}
                     snapToInterval={240}
@@ -251,14 +288,22 @@ export default function HomeScreen() {
                         <Pressable
                             key={business.id || business._id || index}
                             style={styles.newCard}
-                            onPress={() => router.push(`/business-profile?id=${business.id || business._id}`)}
+                            onPress={() =>
+                                router.push(
+                                    `/business-profile?id=${business.id || business._id}`
+                                )
+                            }
                         >
                             {/* Badge "Nuevo" */}
                             <View style={styles.newBadge}>
-                                <Ionicons name="sparkles" size={12} color="#9B59B6" />
+                                <Ionicons
+                                    name="sparkles"
+                                    size={12}
+                                    color="#9B59B6"
+                                />
                                 <Text style={styles.newBadgeText}>Nuevo</Text>
                             </View>
-                            
+
                             {/* Imagen del negocio */}
                             <View style={styles.newImageContainer}>
                                 <LinearGradient
@@ -267,32 +312,56 @@ export default function HomeScreen() {
                                 >
                                     {business.profile_pic ? (
                                         <Image
-                                            source={{ uri: business.profile_pic }}
-                                            style={{ width: '100%', height: '100%' }}
+                                            source={{
+                                                uri: business.profile_pic,
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                            }}
                                             resizeMode="cover"
                                         />
                                     ) : (
-                                        <Ionicons name="storefront" size={50} color="#9B59B6" />
+                                        <Ionicons
+                                            name="storefront"
+                                            size={50}
+                                            color="#9B59B6"
+                                        />
                                     )}
                                 </LinearGradient>
                             </View>
-                            
+
                             {/* Info del negocio */}
                             <View style={styles.newInfo}>
                                 <Text style={styles.newName} numberOfLines={1}>
                                     {business.name}
                                 </Text>
-                                <Text style={styles.newCategory} numberOfLines={1}>
+                                <Text
+                                    style={styles.newCategory}
+                                    numberOfLines={1}
+                                >
                                     {business.category || 'General'}
                                 </Text>
                                 <View style={styles.newMeta}>
                                     <View style={styles.newRating}>
-                                        <Ionicons name="star" size={12} color="#FFB800" />
-                                        <Text style={styles.newRatingText}>Nuevo</Text>
+                                        <Ionicons
+                                            name="star"
+                                            size={12}
+                                            color="#FFB800"
+                                        />
+                                        <Text style={styles.newRatingText}>
+                                            Nuevo
+                                        </Text>
                                     </View>
                                     <View style={styles.newDistance}>
-                                        <Ionicons name="location" size={12} color="#666" />
-                                        <Text style={styles.newDistanceText}>0.8 km</Text>
+                                        <Ionicons
+                                            name="location"
+                                            size={12}
+                                            color="#666"
+                                        />
+                                        <Text style={styles.newDistanceText}>
+                                            0.8 km
+                                        </Text>
                                     </View>
                                 </View>
                             </View>
@@ -305,7 +374,9 @@ export default function HomeScreen() {
 
     // Renderizar Negocios Cercanos (lista vertical)
     const renderNearbyStores = () => {
-        const displayBusinesses = selectedCategory ? filteredBusinesses : businesses
+        const displayBusinesses = selectedCategory
+            ? filteredBusinesses
+            : businesses
 
         return (
             <View ref={nearbyStoresRef} style={styles.hotSection}>
@@ -314,9 +385,17 @@ export default function HomeScreen() {
                 </View>
                 {displayBusinesses.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Ionicons name="business-outline" size={64} color="#DDD" />
-                        <Text style={styles.emptyText}>No se encontraron negocios</Text>
-                        <Text style={styles.emptySubtext}>Intenta buscar en otra ubicación</Text>
+                        <Ionicons
+                            name="business-outline"
+                            size={64}
+                            color="#DDD"
+                        />
+                        <Text style={styles.emptyText}>
+                            No se encontraron negocios
+                        </Text>
+                        <Text style={styles.emptySubtext}>
+                            Intenta buscar en otra ubicación
+                        </Text>
                     </View>
                 ) : (
                     <View style={styles.hotList}>
@@ -324,7 +403,11 @@ export default function HomeScreen() {
                             <Pressable
                                 key={business.id || business._id || index}
                                 style={styles.hotCard}
-                                onPress={() => router.push(`/business-profile?id=${business.id || business._id}`)}
+                                onPress={() =>
+                                    router.push(
+                                        `/business-profile?id=${business.id || business._id}`
+                                    )
+                                }
                             >
                                 {/* Imagen del negocio */}
                                 <View style={styles.hotImageContainer}>
@@ -334,34 +417,67 @@ export default function HomeScreen() {
                                     >
                                         {business.profile_pic ? (
                                             <Image
-                                                source={{ uri: business.profile_pic }}
-                                                style={{ width: '100%', height: '100%' }}
+                                                source={{
+                                                    uri: business.profile_pic,
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                }}
                                                 resizeMode="cover"
                                             />
                                         ) : (
-                                            <Ionicons name="storefront" size={40} color="#9B59B6" />
+                                            <Ionicons
+                                                name="storefront"
+                                                size={40}
+                                                color="#9B59B6"
+                                            />
                                         )}
                                     </LinearGradient>
                                 </View>
-                                
+
                                 {/* Info del negocio */}
                                 <View style={styles.hotInfo}>
-                                    <Text style={styles.hotName} numberOfLines={1}>
+                                    <Text
+                                        style={styles.hotName}
+                                        numberOfLines={1}
+                                    >
                                         {business.name}
                                     </Text>
-                                    <Text style={styles.hotCategory} numberOfLines={1}>
+                                    <Text
+                                        style={styles.hotCategory}
+                                        numberOfLines={1}
+                                    >
                                         {business.category || 'General'}
                                     </Text>
                                     <View style={styles.hotFooter}>
                                         <View style={styles.hotRating}>
-                                            <Ionicons name="star" size={14} color="#FFB800" />
-                                            <Text style={styles.hotRatingText}>4.{5 + (index % 4)}</Text>
-                                            <Text style={styles.hotReviews}>(50+)</Text>
+                                            <Ionicons
+                                                name="star"
+                                                size={14}
+                                                color="#FFB800"
+                                            />
+                                            <Text style={styles.hotRatingText}>
+                                                4.{5 + (index % 4)}
+                                            </Text>
+                                            <Text style={styles.hotReviews}>
+                                                (50+)
+                                            </Text>
                                         </View>
                                         <View style={styles.hotDistance}>
-                                            <Ionicons name="location" size={12} color="#9B59B6" />
-                                            <Text style={styles.hotDistanceText}>
-                                                {(Math.random() * 2 + 0.3).toFixed(1)} km
+                                            <Ionicons
+                                                name="location"
+                                                size={12}
+                                                color="#9B59B6"
+                                            />
+                                            <Text
+                                                style={styles.hotDistanceText}
+                                            >
+                                                {(
+                                                    Math.random() * 2 +
+                                                    0.3
+                                                ).toFixed(1)}{' '}
+                                                km
                                             </Text>
                                         </View>
                                     </View>
@@ -403,7 +519,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8F8F8',
     },
-    
+
     // Header con ubicación
     header: {
         backgroundColor: '#FFF',
@@ -454,7 +570,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#999',
     },
-    
+
     // Categorías (profesional para PyMEs)
     categoriesSection: {
         backgroundColor: '#FFF',
@@ -497,7 +613,7 @@ const styles = StyleSheet.create({
         color: '#9B59B6',
         fontWeight: '700',
     },
-    
+
     // Banner Promocional (PyMEs)
     promoSection: {
         paddingHorizontal: 16,
@@ -549,7 +665,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    
+
     // Destacados (círculos)
     brandsSection: {
         backgroundColor: '#FFF',
@@ -592,7 +708,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
     },
-    
+
     // Lo más nuevo
     newSection: {
         backgroundColor: '#FFF',
@@ -699,7 +815,7 @@ const styles = StyleSheet.create({
         color: '#666',
         fontWeight: '600',
     },
-    
+
     // Negocios Cercanos (lista vertical)
     hotSection: {
         backgroundColor: '#FFF',
@@ -776,7 +892,7 @@ const styles = StyleSheet.create({
         color: '#9B59B6',
         fontWeight: '600',
     },
-    
+
     // Empty State
     emptyState: {
         alignItems: 'center',

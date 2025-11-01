@@ -96,9 +96,7 @@ export default function ChatView() {
     }
 
     if (loading) {
-        return (
-            <LoadingSpinner />
-        )
+        return <LoadingSpinner />
     }
 
     if (error) {
@@ -111,73 +109,93 @@ export default function ChatView() {
 
     return (
         <Screen>
-        <View style={{ flex: 1 }}>
-            <ScrollView style={{ flex: 1 }} >
-                {messages.map(msg => {
-                    if (!msg) return null
-                    return (
-                        <View
-                            key={msg.id || msg._id}
-                            style={[
-                                styles.messageContainer,
-                                msg.sender_id === (user.id || user._id)
-                                    ? { backgroundColor: colors.secondary, 
-                                        alignSelf: 'flex-end',
-                                        borderTopRightRadius: 5,
-                                    }
-                                    : { backgroundColor: colors.white,
-                                        alignSelf: 'flex-start',
-                                        borderTopLeftRadius: 5
-                                     },
-                                {
-                                    marginLeft:
+            <View style={{ flex: 1 }}>
+                <ScrollView style={{ flex: 1 }}>
+                    {messages.map(msg => {
+                        if (!msg) return null
+                        return (
+                            <View
+                                key={msg.id || msg._id}
+                                style={[
+                                    styles.messageContainer,
+                                    msg.sender_id === (user.id || user._id)
+                                        ? {
+                                              backgroundColor: colors.secondary,
+                                              alignSelf: 'flex-end',
+                                              borderTopRightRadius: 0,
+                                          }
+                                        : {
+                                              backgroundColor: colors.white,
+                                              alignSelf: 'flex-start',
+                                              borderTopLeftRadius: 5,
+                                          },
+                                    {
+                                        marginLeft:
+                                            msg.sender_id ===
+                                            (user.id || user._id)
+                                                ? 50
+                                                : 0,
+                                    },
+                                    {
+                                        marginRight:
+                                            msg.sender_id ===
+                                            (user.id || user._id)
+                                                ? 0
+                                                : 50,
+                                    },
+                                    messages[messages.indexOf(msg) - 1] &&
+                                    messages[messages.indexOf(msg) - 1]
+                                        .sender_id === msg.sender_id
+                                        ? {
+                                              marginTop: 1,
+                                              borderTopRightRadius: 25,
+                                          }
+                                        : { marginTop: 15 },
+                                ]}
+                            >
+                                <Text
+                                    style={[
                                         msg.sender_id === (user.id || user._id)
-                                            ? 50
-                                            : 0,
-                                },
-                                {
-                                    marginRight:
-                                        msg.sender_id === (user.id || user._id)
-                                            ? 0
-                                            : 50,
-                                },
-                                messages[messages.indexOf(msg) - 1] &&
-                                messages[messages.indexOf(msg) - 1]
-                                    .sender_id === msg.sender_id
-                                    ? { marginTop: 1,
-                                        borderTopRightRadius: 25
-                                     }
-                                    : { marginTop: 15 }
-                            ]}
-                        >
-                            <Text style={[
-                                msg.sender_id === (user.id || user._id)
-                                    ? { color: colors.textPrimary }
-                                    : { color: colors.textSecondary },
-                            ]}>
-                                {msg.content}
-                            </Text>
-                        </View>
-                    )
-                })}
-            </ScrollView>
+                                            ? { color: colors.textPrimary }
+                                            : { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    {msg.content}
+                                </Text>
+                            </View>
+                        )
+                    })}
+                </ScrollView>
 
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={[globalStyles.textField, { fontSize: 14 }]}
-                    placeholder="Mensaje"
-                    value={messageText}
-                    onChangeText={setMessageText}
-                />
-                <Pressable
-                    onPress={newMessage}
-                    disabled={!messageText.trim()}
-                    style={[styles.button, { opacity: messageText.trim() ? 1 : 0.5 }]}
-                >
-                    <Ionicons name="send" size={24} color={colors.primary} style={{ transform: [{ translateY: -8 }, { translateX: -35 }] }}/>
-                </Pressable>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={[globalStyles.textField, { fontSize: 14 }]}
+                        placeholder="Mensaje"
+                        value={messageText}
+                        onChangeText={setMessageText}
+                    />
+                    <Pressable
+                        onPress={newMessage}
+                        disabled={!messageText.trim()}
+                        style={[
+                            styles.button,
+                            { opacity: messageText.trim() ? 1 : 0.5 },
+                        ]}
+                    >
+                        <Ionicons
+                            name="send"
+                            size={24}
+                            color={colors.primary}
+                            style={{
+                                transform: [
+                                    { translateY: -8 },
+                                    { translateX: -35 },
+                                ],
+                            }}
+                        />
+                    </Pressable>
+                </View>
             </View>
-        </View>
         </Screen>
     )
 }

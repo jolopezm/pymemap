@@ -13,7 +13,6 @@ import * as ImagePicker from 'expo-image-picker'
 import { uploadProfilePicture } from '../api/user-service'
 import { useAuth } from '../context/auth-context'
 import Screen from '../components/screen'
-import BackButton from '../components/back-button'
 import { globalStyles } from '../styles/global'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -79,7 +78,6 @@ export default function UploadProfilePic() {
 
     return (
         <Screen>
-            <BackButton />
             <View style={styles.container}>
                 {image ? (
                     <Image source={{ uri: image }} style={styles.image} />
