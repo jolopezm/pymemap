@@ -8,7 +8,7 @@ def upload_profile_picture(file, bucket_name="pymap_profile_pics"):
     """Sube una imagen a Google Cloud Storage y devuelve su URL pública."""
     
     # Inicializa el cliente
-    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_KEY")
     if credentials_json:
         credentials_dict = json.loads(credentials_json)
         credentials = service_account.Credentials.from_service_account_info(credentials_dict)

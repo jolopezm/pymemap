@@ -225,4 +225,5 @@ Thumbs.db
 # Ignore test user ID file generated during testing
 test_user_id.txt
 gcp-credentials.json
-frontend/gcp-credentials.json
+gcp-credentials.b64
+
