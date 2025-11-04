@@ -4,7 +4,7 @@ import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import {globalStyles} from '../styles/global'
+import { globalStyles } from '../styles/global'
 import { getBusiness, requestService } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
@@ -168,13 +168,6 @@ export default function BusinessProfile() {
                     { alignItems: 'stretch' },
                 ]}
             >
-                <Pressable
-                    onPress={() => router.back()}
-                    style={globalStyles.backButton}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-                    <Text>Volver</Text>
-                </Pressable>
                 <View style={globalStyles.card}>
                     <Ionicons
                         name="business"
@@ -206,6 +199,12 @@ export default function BusinessProfile() {
                     </Text>
 
                     <Button title="Contactar" onPress={handleRequestService} />
+                    <Button
+                        title="Editar"
+                        onPress={() =>
+                            router.push(`/edit-business?id=${business._id}`)
+                        }
+                    />
                 </View>
             </ScrollView>
         </LinearGradient>

@@ -1,6 +1,4 @@
-import React from 'react'
 import { useRouter } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
 import { View, Text, Pressable } from 'react-native'
 import { globalStyles } from '../styles/global'
 

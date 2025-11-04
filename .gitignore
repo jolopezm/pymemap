@@ -135,6 +135,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Google Cloud Platform credentials
+gcp-credentials.json
+**/gcp-credentials.json
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -217,3 +221,8 @@ Thumbs.db
 # ignore the files with the following extensions
 *.pyc
 .vercel
+
+# Ignore test user ID file generated during testing
+test_user_id.txt
+gcp-credentials.json
+frontend/gcp-credentials.json

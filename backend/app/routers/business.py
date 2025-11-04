@@ -1,7 +1,8 @@
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from ..db import db
 from ..models.sellers import Business, Service
+from ..services.upload_images_to_gcp import upload_profile_picture as upload_to_gcp
 
 router = APIRouter()
 
@@ -134,3 +135,49 @@ async def pay_service(service_id: str):
 
     updated_service = await db.services.find_one({"_id": ObjectId(service_id)})
     return Service(**updated_service)
+
+
+@router.post("/upload-pictures/{business_id}", response_model=Business)
+async def upload_pictures(business_id: str, file: UploadFile = File(...)):
+    """Sube una nueva foto de perfil para el negocio"""
+
+    business_id = business_id.strip()
+    print(f"🔍 Recibiendo upload para business_id: '{business_id}' (longitud: {len(business_id)})")
+    print(f"📎 Archivo: {file.filename}, Content-Type: {file.content_type}")
+
+    if not ObjectId.is_valid(business_id):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato de ID de negocio inválido: {business_id}"
+        )
+
+    # Usar db.business (singular) como en todos los demás endpoints
+    business = await db.business.find_one({"_id": ObjectId(business_id)})
+    if not business:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Negocio no encontrado con ID: {business_id}"
+        )
+    
+    try:
+        # Subir imagen a GCP
+        image_url = upload_to_gcp(file, bucket_name="pymap_businesses_pics")
+        print(f"✅ Imagen subida exitosamente: {image_url}")
+        
+        # Actualizar el negocio con la nueva URL
+        await db.business.update_one(
+            {"_id": ObjectId(business_id)},
+            {"$set": {"profile_pic": image_url}}
+        )
+        
+        updated_business = await db.business.find_one({"_id": ObjectId(business_id)})
+        return Business(**updated_business)
+        
+    except Exception as e:
+        print(f"❌ Error al subir imagen: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al subir la imagen: {str(e)}"
+        )

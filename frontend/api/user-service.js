@@ -1,4 +1,5 @@
 import axios from 'axios'
+import * as FileSystem from 'expo-file-system'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
 
@@ -71,3 +72,54 @@ export const updateBalance = async (userId, amount, isPositive = true) => {
 
     return await response.json()
 }
+
+export const uploadProfilePicture = async (userId, imageUri, filename) => {
+    try {
+        // Obtener headers de autenticación
+        const authHeaders = await getAuthHeaders();
+        
+        // Crear FormData
+        const formData = new FormData();
+        
+        // Para React Native en Web o Expo, necesitamos crear un objeto File-like
+        const uriParts = imageUri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        
+        console.log('📤 Subiendo imagen:', {
+            url: `${API_URL}/users/upload-profile-picture/${userId}`,
+            filename,
+            fileType,
+        });
+        
+        // Intentar con fetch y blob
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+        
+        // Crear un archivo con el blob
+        formData.append('file', blob, filename);
+        
+        // Hacer la petición
+        const uploadResponse = await fetch(
+            `${API_URL}/users/upload-profile-picture/${userId}`,
+            {
+                method: 'POST',
+                headers: authHeaders,
+                body: formData,
+            }
+        );
+
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({}));
+            console.error('❌ Error del servidor:', errorData);
+            throw new Error(errorData.detail || `HTTP ${uploadResponse.status}`);
+        }
+
+        const data = await uploadResponse.json();
+        console.log('✅ Upload exitoso:', data);
+        return data;
+        
+    } catch (error) {
+        console.error('❌ Error al subir imagen:', error);
+        throw error;
+    }
+};

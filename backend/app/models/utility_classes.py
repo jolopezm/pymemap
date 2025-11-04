@@ -75,6 +75,20 @@ class Chat(BaseModel):
         if not isinstance(v, list):
             raise ValueError("Participants must be a list")
         return [str(part) if isinstance(part, ObjectId) else str(part) for part in v]
+    
+    @field_validator('last_message', mode='before')
+    @classmethod
+    def _last_message_serialize(cls, v):
+        """Convert any ObjectId in last_message dict to string"""
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            # Recursively convert any ObjectId to string
+            return {
+                key: str(val) if isinstance(val, ObjectId) else val
+                for key, val in v.items()
+            }
+        return v
 
     @field_validator('id', mode='before')
     @classmethod

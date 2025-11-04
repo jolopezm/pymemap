@@ -119,3 +119,49 @@ export async function payService(serviceId) {
     )
     return response.data
 }
+
+export async function uploadBusinessPicture(businessId, imageUri, filename) {
+    try {
+        // Obtener headers de autenticación
+        const authHeaders = await getAuthHeaders()
+
+        // Crear FormData
+        const formData = new FormData()
+
+        console.log('📤 Subiendo imagen de negocio:', {
+            url: `${API_URL}/business/upload-pictures/${businessId}`,
+            imageUri,
+            filename,
+        })
+
+        // Leer la imagen como blob
+        const response = await fetch(imageUri)
+        const blob = await response.blob()
+
+        // Crear un archivo con el blob
+        formData.append('file', blob, filename)
+
+        // Hacer la petición
+        const uploadResponse = await fetch(
+            `${API_URL}/business/upload-pictures/${businessId}`,
+            {
+                method: 'POST',
+                headers: authHeaders,
+                body: formData,
+            }
+        )
+
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({}))
+            console.error('❌ Error del servidor:', errorData)
+            throw new Error(errorData.detail || `HTTP ${uploadResponse.status}`)
+        }
+
+        const data = await uploadResponse.json()
+        console.log('✅ Upload exitoso:', data)
+        return data
+    } catch (error) {
+        console.error('❌ Error al subir imagen:', error)
+        throw error
+    }
+}
