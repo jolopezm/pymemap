@@ -1,11 +1,20 @@
 from google.cloud import storage
 import uuid
+import os
+import json
+from google.auth import service_account
 
 def upload_profile_picture(file, bucket_name="pymap_profile_pics"):
     """Sube una imagen a Google Cloud Storage y devuelve su URL pública."""
     
     # Inicializa el cliente
-    storage_client = storage.Client()
+    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if credentials_json:
+        credentials_dict = json.loads(credentials_json)
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+        storage_client = storage.Client(credentials=credentials, project=credentials_dict['project_id'])
+    else:
+        storage_client = storage.Client()  # Usa GOOGLE_APPLICATION_CREDENTIALS automáticamente
     bucket = storage_client.bucket(bucket_name)
 
     # Crea un nombre único para el archivo
