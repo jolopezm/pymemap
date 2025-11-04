@@ -24,7 +24,7 @@ from app.services.upload_images_to_gcp import upload_profile_picture
 
 def test_upload_footer_logo():
     """
-    Test de integración que sube footer-logo.png a Google Cloud Storage
+    Test de integración que sube chayanne.jpeg a Google Cloud Storage
     y verifica que retorna una URL pública válida.
     
     Requisitos:
@@ -34,7 +34,7 @@ def test_upload_footer_logo():
     """
     
     # Ruta al archivo de prueba
-    test_image_path = Path(__file__).parent / "footer-logo.png"
+    test_image_path = Path(__file__).parent / "chayanne.jpeg"
     
     if not test_image_path.exists():
         raise FileNotFoundError(f"No se encontró la imagen de prueba en: {test_image_path}")
@@ -45,7 +45,7 @@ def test_upload_footer_logo():
     
     # Crear un objeto similar a UploadFile de FastAPI
     fake_file = SimpleNamespace(
-        filename="footer-logo.png",
+        filename="chayanne.jpeg",
         file=BytesIO(image_bytes),
         content_type="image/png"
     )
@@ -61,7 +61,7 @@ def test_upload_footer_logo():
         assert url is not None, "La URL retornada no debe ser None"
         assert url.startswith("https://"), f"La URL debe comenzar con https://, se obtuvo: {url}"
         assert "pymap_profile_pics" in url, f"La URL debe contener el nombre del bucket, se obtuvo: {url}"
-        assert "footer-logo.png" in url, f"La URL debe contener el nombre del archivo, se obtuvo: {url}"
+        assert "chayanne.jpeg" in url, f"La URL debe contener el nombre del archivo, se obtuvo: {url}"
         
         print(f"✅ Imagen subida exitosamente!")
         print(f"🔗 URL pública: {url}")
@@ -98,5 +98,8 @@ if __name__ == "__main__":
     except Exception as e:
         print("\n" + "=" * 60)
         print("❌ TEST FALLIDO")
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
         print("=" * 60)
         sys.exit(1)
