@@ -2,7 +2,7 @@ from google.cloud import storage
 import uuid
 import os
 import json
-from google.auth import service_account
+from google.oauth2 import service_account
 
 def upload_profile_picture(file, bucket_name="pymap_profile_pics"):
     """Sube una imagen a Google Cloud Storage y devuelve su URL pública."""
