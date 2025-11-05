@@ -12,7 +12,7 @@ class User(BaseModel):
     birthdate: str = Field()
     isAuthenticated: bool = Field(default=False)
     balance: float = Field(default=0.0)
-    profile_pic: Optional[str] = Field(default=None)
+    profile_pic: Optional[str] = Field(default="https://storage.googleapis.com/pymap_profile_pics/profile_pics/user-profile.jpg")
     
     @field_validator('password')
     @classmethod

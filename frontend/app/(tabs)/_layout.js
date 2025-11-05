@@ -4,48 +4,35 @@ import { Ionicons } from '@expo/vector-icons'
 import { View, StyleSheet, Image } from 'react-native'
 import { useNotif } from '../../context/notif-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useAuth } from '../../context/auth-context'
+import { checkProfilePicUrl } from '../../utils/check-profile-pic'
 
 export default function TabLayout() {
     const { unreadCount } = useNotif()
-    const [user, setUser] = React.useState(null)
-
-    React.useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const userData = await AsyncStorage.getItem('user')
-                if (userData) {
-                    setUser(JSON.parse(userData))
-                }
-            } catch (error) {
-                console.error('Error fetching user from storage:', error)
-            }
-        }
-
-        fetchUser()
-    }, [])
+    const { user } = useAuth()
 
     const renderUserProfileIcon = focused => {
-        const size = 24
+        const styles = StyleSheet.create({
+            profile_pic: {
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                borderWidth: focused ? 2 : 0,
+                borderColor: focused ? '#ff4dc4' : 'gray',
+            },
+        })
+
         return (
             <>
-                {user && user.profile_pic ? (
+                {user && checkProfilePicUrl(user) ? (
                     <Image
                         source={{ uri: user.profile_pic }}
-                        style={{
-                            width: size,
-                            height: size,
-                            borderRadius: size / 2,
-                            borderWidth: focused ? 2 : 0,
-                            borderColor: focused ? '#ff4dc4' : 'gray',
-                        }}
+                        style={styles.profile_pic}
                     />
                 ) : (
-                    <Ionicons
-                        name={
-                            focused ? 'person-circle' : 'person-circle-outline'
-                        }
-                        size={size}
-                        color="gray"
+                    <Image
+                        source={require('../../assets/default-profile-pic.svg')}
+                        style={[styles.profile_pic, { opacity: 0.5 }]}
                     />
                 )}
             </>
