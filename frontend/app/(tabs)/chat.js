@@ -6,18 +6,15 @@ import { globalStyles } from '../../styles/global'
 import { router } from 'expo-router'
 import Screen from '../../components/screen'
 import LoadingSpinner from '../../components/loading-spinner'
-import { getUserById } from '../../api/auth-service'
+import { getUserById } from '../../api/user-service'
 
 const ChatScreen = () => {
     const { user } = useAuth()
     const [chats, setChats] = React.useState([])
     const [loading, setLoading] = React.useState(true)
     const [error, setError] = React.useState(null)
-
-    const seller = {
-        id: user ? user.id || user._id : null,
-        name: user ? user.name || user.username || 'Unknown' : 'Unknown',
-    }
+    const [owner, setOwner] = React.useState(null)
+    const [owners, setOwners] = React.useState({})
 
     const handleChatPress = chat => {
         router.push(`/chat-view?chatId=${chat.id || chat._id}`)
@@ -32,13 +29,28 @@ const ChatScreen = () => {
                     return
                 }
                 const chatData = await getChats(user.id || user._id)
-                setChats(chatData)
+                const chatsWithOwners = await fetchOwners(chatData)
+                setChats(chatsWithOwners)
             } catch (error) {
                 console.error('Error fetching chats:', error)
                 setError('Error fetching chats')
             } finally {
                 setLoading(false)
             }
+        }
+
+        const fetchOwners = async chatsToFetch => {
+            return Promise.all(
+                chatsToFetch.map(async chat => {
+                    const otherParticipantId = chat.participants.find(
+                        id => id !== (user.id || user._id)
+                    )
+                    const ownerData = await getUserById(otherParticipantId)
+                    setOwner(ownerData)
+                    console.log('👤 Owner data:', ownerData)
+                    return { ...chat, owner: ownerData }
+                })
+            )
         }
 
         fetchChats()
@@ -79,14 +91,15 @@ const ChatScreen = () => {
                                 ]}
                             >
                                 <Image
-                                    source={require('../../assets/default-profile-pic.svg')}
+                                    source={{ uri: owner?.profile_pic }}
                                     style={{
                                         width: 50,
                                         height: 50,
+                                        borderRadius: 25,
                                     }}
                                 />
                                 <View>
-                                    <Text>{chat.participants.join(', ')}</Text>
+                                    <Text>{chat.owner?.name || 'Unknown'}</Text>
                                     <Text>
                                         {chat.lastMessage || 'No messages yet'}
                                     </Text>

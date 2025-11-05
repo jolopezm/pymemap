@@ -305,13 +305,6 @@ export default function BusinessProfile() {
                         <Text style={globalStyles.buttonText}>Enviar</Text>
                     )}
                 </Pressable>
-
-                <Button
-                    title="Editar"
-                    onPress={() =>
-                        router.push(`/edit-business?id=${business._id}`)
-                    }
-                />
             </View>
 
             {modalVisible && (
