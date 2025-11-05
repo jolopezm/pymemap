@@ -5,24 +5,18 @@ from types import SimpleNamespace
 from io import BytesIO
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde .env
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Configurar la ruta de credenciales de GCP si está en .env
 credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 if credentials_path and not credentials_path.startswith("/"):
-    # Si es una ruta relativa, hacerla absoluta desde el directorio backend
     credentials_path = str(Path(__file__).parent.parent / credentials_path.replace("backend/", ""))
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
 
-# Añadir el directorio raíz al path para importar los módulos
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from app.services.upload_images_to_gcp import upload_profile_picture
 
-
-def test_upload_footer_logo():
+def test_upload():
     """
     Test de integración que sube chayanne.jpeg a Google Cloud Storage
     y verifica que retorna una URL pública válida.
@@ -33,17 +27,14 @@ def test_upload_footer_logo():
     - Credenciales con permisos de escritura en el bucket
     """
     
-    # Ruta al archivo de prueba
     test_image_path = Path(__file__).parent / "chayanne.jpeg"
     
     if not test_image_path.exists():
         raise FileNotFoundError(f"No se encontró la imagen de prueba en: {test_image_path}")
     
-    # Leer el archivo
     with open(test_image_path, "rb") as f:
         image_bytes = f.read()
     
-    # Crear un objeto similar a UploadFile de FastAPI
     fake_file = SimpleNamespace(
         filename="chayanne.jpeg",
         file=BytesIO(image_bytes),
@@ -54,10 +45,8 @@ def test_upload_footer_logo():
     print(f"📦 Tamaño: {len(image_bytes)} bytes")
     
     try:
-        # Llamar a la función que queremos testear
         url = upload_profile_picture(fake_file, bucket_name="pymap_profile_pics")
         
-        # Verificaciones
         assert url is not None, "La URL retornada no debe ser None"
         assert url.startswith("https://"), f"La URL debe comenzar con https://, se obtuvo: {url}"
         assert "pymap_profile_pics" in url, f"La URL debe contener el nombre del bucket, se obtuvo: {url}"
@@ -79,19 +68,17 @@ def test_upload_footer_logo():
 
 
 if __name__ == "__main__":
-    # Permite ejecutar el test directamente con: python test_upload_images_to_gcp.py
     print("=" * 60)
     print("TEST DE SUBIDA DE IMÁGENES A GOOGLE CLOUD STORAGE")
     print("=" * 60)
     
-    # Verificar que las credenciales estén configuradas
     if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
         print("⚠️  ADVERTENCIA: GOOGLE_APPLICATION_CREDENTIALS no está configurada")
         print("   Configúrala con: export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json")
         print()
     
     try:
-        url = test_upload_footer_logo()
+        url = test_upload()
         print("\n" + "=" * 60)
         print("✅ TEST EXITOSO")
         print("=" * 60)

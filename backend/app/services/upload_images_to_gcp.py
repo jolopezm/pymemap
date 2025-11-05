@@ -4,32 +4,75 @@ import uuid
 import os
 import json
 import base64
+import binascii
+
+def _load_credentials_dict():
+    """
+    Intenta cargar credenciales desde:
+     - GOOGLE_APPLICATION_CREDENTIALS_JSON (JSON en la env)
+     - GOOGLE_APPLICATION_CREDENTIALS (puede ser: JSON, base64, o ruta a archivo .b64/.json)
+     - archivo local backend/gcp-credentials.b64
+    Devuelve dict de credenciales o None.
+    """
+    env_keys = ["GOOGLE_APPLICATION_CREDENTIALS_JSON", "GOOGLE_APPLICATION_CREDENTIALS"]
+    for key in env_keys:
+        val = os.getenv(key)
+        if not val:
+            continue
+        val = val.strip()
+        # 1) Si ya es JSON
+        if val.startswith("{"):
+            try:
+                return json.loads(val)
+            except json.JSONDecodeError:
+                raise
+        # 2) Si es una ruta de archivo existente
+        if os.path.exists(val):
+            content = open(val, "r").read().strip()
+            # intenta parsear como JSON directo
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                # intenta decodificar base64 y luego parsear
+                try:
+                    decoded = base64.b64decode(content + "===").decode("utf-8")
+                    return json.loads(decoded)
+                except Exception:
+                    raise
+        # 3) Intenta decodificar val como base64 directo
+        try:
+            # reparar padding si falta
+            padding = len(val) % 4
+            if padding:
+                val += "=" * (4 - padding)
+            decoded = base64.b64decode(val).decode("utf-8")
+            return json.loads(decoded)
+        except (binascii.Error, ValueError, json.JSONDecodeError):
+            # no es base64 válido o no decodifica a JSON -> continuar con siguientes opciones
+            continue
+
+    # 4) archivo local .b64 (ruta relativa al paquete)
+    b64_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "gcp-credentials.b64")
+    if os.path.exists(b64_file_path):
+        content = open(b64_file_path, "r").read().strip()
+        try:
+            decoded = base64.b64decode(content + "===").decode("utf-8")
+            return json.loads(decoded)
+        except Exception:
+            raise
+
+    return None
 
 def upload_profile_picture(file, bucket_name="pymap_profile_pics"):
     """Sube una imagen a Google Cloud Storage y devuelve su URL pública."""
     
-    # Intenta cargar credenciales desde variable de entorno (Railway)
-    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    
-    if credentials_json:
-        # En producción: usa JSON desde variable de entorno
-        credentials_dict = json.loads(credentials_json)
+    credentials_dict = _load_credentials_dict()
+    if credentials_dict:
         credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-        storage_client = storage.Client(credentials=credentials, project=credentials_dict['project_id'])
+        storage_client = storage.Client(credentials=credentials, project=credentials_dict.get("project_id"))
     else:
-        # En desarrollo: intenta cargar desde archivo base64
-        b64_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "gcp-credentials.b64")
-        
-        if os.path.exists(b64_file_path):
-            with open(b64_file_path, 'r') as f:
-                b64_content = f.read().strip()
-                credentials_json_decoded = base64.b64decode(b64_content).decode('utf-8')
-                credentials_dict = json.loads(credentials_json_decoded)
-                credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-                storage_client = storage.Client(credentials=credentials, project=credentials_dict['project_id'])
-        else:
-            # Fallback: usa GOOGLE_APPLICATION_CREDENTIALS del sistema
-            storage_client = storage.Client()
+        # Fallback: deja que la librería busque ADC (GOOGLE_APPLICATION_CREDENTIALS apunta a .json en disco, o entorno GCP)
+        storage_client = storage.Client()
     
     bucket = storage_client.bucket(bucket_name)
 
