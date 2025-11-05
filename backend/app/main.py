@@ -7,6 +7,8 @@ import os
 import re
 from dotenv import load_dotenv
 from .routers import gmaps, users, auth, business, notifications, chat
+from app.services.upload_images_to_gcp import ensure_gcp_credentials
+
 
 # Cargar variables de entorno
 load_dotenv()
@@ -55,6 +57,10 @@ app.include_router(gmaps.router, tags=["Gmaps"])
 app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 
+
+@app.on_event("startup")
+def _ensure_gcp_creds_on_startup():
+    ensure_gcp_credentials()
 
 @app.get("/")
 def read_root():

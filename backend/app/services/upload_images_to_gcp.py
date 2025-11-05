@@ -6,6 +6,45 @@ import json
 import base64
 import binascii
 
+def ensure_gcp_credentials():
+    """
+    Acepta cualquiera de:
+      - GOOGLE_APPLICATION_CREDENTIALS: path absoluto (ya ok)
+      - GOOGLE_APPLICATION_CREDENTIALS: contenido JSON (empieza por '{')
+      - GOOGLE_APPLICATION_CREDENTIALS: contenido base64 (decodificar)
+    Escribe un archivo en /tmp/gcloud_key.json y deja GOOGLE_APPLICATION_CREDENTIALS apuntando a él.
+    """
+    env_val = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if not env_val:
+        return  
+    env_val = env_val.strip()
+    if os.path.exists(env_val):
+        return  
+    credentials_dict = None
+    # 1) Si ya es JSON
+    if env_val.startswith("{"):
+        try:
+            credentials_dict = json.loads(env_val)
+        except json.JSONDecodeError:
+            raise
+    else:
+        # 2) Intenta decodificar como base64
+        try:
+            # reparar padding si falta
+            padding = len(env_val) % 4
+            if padding:
+                env_val += "=" * (4 - padding)
+            decoded = base64.b64decode(env_val).decode("utf-8")
+            credentials_dict = json.loads(decoded)
+        except (binascii.Error, ValueError, json.JSONDecodeError):
+            raise ValueError("GOOGLE_APPLICATION_CREDENTIALS no es un path válido, JSON, ni base64 decodificable.")
+    if credentials_dict:
+        temp_path = "/tmp/gcloud_key.json"
+        print(f"Escribiendo credenciales GCP decodificadas en: {temp_path}")
+        with open(temp_path, "w") as f:
+            json.dump(credentials_dict, f)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
+
 def _load_credentials_dict():
     """
     Intenta cargar credenciales desde:
@@ -65,7 +104,7 @@ def _load_credentials_dict():
 
 def upload_profile_picture(file, bucket_name="pymap_profile_pics"):
     """Sube una imagen a Google Cloud Storage y devuelve su URL pública."""
-    
+
     credentials_dict = _load_credentials_dict()
     if credentials_dict:
         credentials = service_account.Credentials.from_service_account_info(credentials_dict)
