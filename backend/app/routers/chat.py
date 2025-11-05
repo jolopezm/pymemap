@@ -23,6 +23,15 @@ async def get_chats_by_user(user_id: str = Query(...)):
         chats.append(Chat(**document))
     return chats
 
+@router.get("/participants", response_model=Chat)
+async def get_chat_by_participants(user1_id: str = Query(...), user2_id: str = Query(...)):
+    """Obtiene un chat entre dos usuarios específicos"""
+    chat = await db.chats.find_one({"participants": {"$all": [user1_id, user2_id]}})
+    if chat:
+        return Chat(**chat)
+    else:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
 @router.post("/message", response_model=Message)
 async def send_message(message: Message):
     """Envía un nuevo mensaje en un chat"""

@@ -1,5 +1,5 @@
 import { Modal, StyleSheet, Animated, Pressable } from 'react-native'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react' // Agregar useState
 import Feather from 'react-native-vector-icons/Feather'
 
 export default function DefaultModal({ visible, onRequestClose, children }) {

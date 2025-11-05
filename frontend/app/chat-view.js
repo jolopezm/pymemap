@@ -59,7 +59,6 @@ export default function ChatView() {
             timestamp: new Date().toISOString(),
         }
 
-        // Create temporary message with a unique ID for optimistic update
         const tempMessage = {
             ...messageData,
             id: Date.now().toString(), // temporary ID
@@ -68,14 +67,11 @@ export default function ChatView() {
         try {
             console.log('Sending message:', messageData)
 
-            // Optimistically add message to UI immediately
             setMessages(prev => [...prev, tempMessage])
             setMessageText('')
 
-            // Send message to server
             const sentMessage = await sendMessage(messageData)
 
-            // Replace temporary message with server response
             setMessages(prev =>
                 prev.map(msg =>
                     msg.id === tempMessage.id
@@ -88,7 +84,6 @@ export default function ChatView() {
             )
         } catch (error) {
             console.error('Error sending message:', error)
-            // Remove failed message from UI
             setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
             // Restore message text so user can try again
             setMessageText(messageData.content)

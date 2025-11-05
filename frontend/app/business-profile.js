@@ -1,39 +1,56 @@
 import React from 'react'
-import { View, Text, Pressable, ScrollView, Button } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    ScrollView,
+    Button,
+    TextInput,
+    Alert,
+} from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/global'
 import { getBusiness, requestService } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
+import Screen from '../components/screen'
+import DefaultModal from '../components/default-modal'
 import { useAuth } from '../context/auth-context'
-import { getUserById } from '../api/auth-service'
+import { getUserById } from '../api/user-service'
+import {
+    getChatByParticipants,
+    createChat,
+    sendMessage,
+} from '../api/chat-service'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
     const router = useRouter()
     const { user } = useAuth()
     const [error, setError] = React.useState(null)
-
     const idRaw =
         params?.get('id') ??
         params?.get('businessId') ??
         params?.get('bizId') ??
         null
     const id = idRaw != null ? decodeURIComponent(String(idRaw)) : null
-
     const [business, setBusiness] = React.useState(null)
     const [owner, setOwner] = React.useState(null)
     const [loading, setLoading] = React.useState(true)
+    const [message, setMessage] = React.useState(
+        'Hola. ¿Sigue estando disponible?'
+    )
+    const [chat, setChat] = React.useState(null)
+    const [modalVisible, setModalVisible] = React.useState(false)
 
     const fetchOwner = async ownerId => {
         try {
             const foundOwner = await getUserById(ownerId)
-            if (foundOwner) {
-                setOwner(foundOwner)
-            }
+            setOwner(foundOwner)
+            console.log('Owner:', foundOwner)
         } catch (error) {
             if (error && error.response) {
                 setError({
@@ -46,8 +63,71 @@ export default function BusinessProfile() {
         }
     }
 
+    const handleChatPress = async () => {
+        try {
+            console.log('🚀 Iniciando chat:', {
+                currentUser: user?._id,
+                owner: owner?._id,
+            })
+
+            if (!user?._id || !owner?._id) {
+                Alert.alert(
+                    'Error',
+                    'No se puede iniciar el chat. Usuario u owner no encontrado.'
+                )
+                return
+            }
+
+            let chat
+            try {
+                chat = await getChatByParticipants(user._id, owner._id)
+                console.log('✅ Chat existente encontrado:', chat._id)
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    console.log('📝 Chat no existe, creando uno nuevo...')
+                    chat = await createChat({
+                        participants: [user._id, owner._id],
+                        lastMessage: null,
+                        lastMessageTimestamp: new Date().toISOString(),
+                    })
+                    setChat(chat)
+                } else {
+                    throw error
+                }
+            }
+
+            await newMessage(chat)
+            setModalVisible(true)
+        } catch (error) {
+            console.error('❌ Error en handleChatPress:', error)
+            Alert.alert('Error', 'No se pudo iniciar el chat')
+        }
+    }
+
+    const newMessage = async chatObj => {
+        if (!message.trim()) return
+
+        const messageData = {
+            chatId: chatObj._id,
+            sender_id: user.id || user._id,
+            content: message,
+            read: false,
+            timestamp: new Date().toISOString(),
+        }
+
+        try {
+            console.log('Sending message:', messageData)
+            setMessage('')
+            await sendMessage(messageData)
+        } catch (error) {
+            console.error('Error sending message:', error)
+            setMessage(messageData.content)
+        }
+    }
+
     React.useEffect(() => {
         let mounted = true
+
         const fetch = async () => {
             try {
                 setLoading(true)
@@ -55,6 +135,10 @@ export default function BusinessProfile() {
                 if (!mounted) return
 
                 setBusiness(foundBusiness)
+
+                if (foundBusiness && foundBusiness.owner_id) {
+                    await fetchOwner(foundBusiness.owner_id)
+                }
             } catch (error) {
                 if (error && error.response) {
                     setError({
@@ -72,10 +156,6 @@ export default function BusinessProfile() {
 
         if (id) {
             fetch()
-            if (business && business.owner_id) {
-                fetchOwner(business.owner_id)
-                console.log('Owner fetched', owner)
-            }
         } else {
             setLoading(false)
         }
@@ -102,7 +182,6 @@ export default function BusinessProfile() {
         }
 
         await requestService(serviceData)
-        // Create notification using the fields expected by the backend Notification model
         await createNotification({
             targetUserId: business?.owner_id,
             type: 'service_request',
@@ -156,57 +235,105 @@ export default function BusinessProfile() {
     }
 
     return (
-        <LinearGradient
-            colors={['#9B59B6', '#F8BBD9']}
-            style={{ flex: 1 }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-        >
-            <ScrollView
-                contentContainerStyle={[
-                    globalStyles.gradientContainer,
-                    { alignItems: 'stretch' },
-                ]}
-            >
-                <View style={globalStyles.card}>
-                    <Ionicons
-                        name="business"
-                        size={48}
-                        color="#6A4C93"
-                        style={{ alignSelf: 'center', marginBottom: 16 }}
-                    />
+        <Screen>
+            <View>
+                <Ionicons
+                    name="business"
+                    size={48}
+                    color="#6A4C93"
+                    style={{ alignSelf: 'center', marginBottom: 16 }}
+                />
 
-                    <Text style={globalStyles.title}>
-                        {business?.name ?? 'Sin nombre'}
+                <Text
+                    style={{
+                        color: colors.textSecondary,
+                        fontSize: 24,
+                        fontWeight: '600',
+                        marginBottom: 8,
+                    }}
+                >
+                    {business?.name ?? 'Sin nombre'}
+                </Text>
+
+                <Text
+                    style={[
+                        globalStyles.subtitle,
+                        {
+                            color: colors.textSecondary,
+                            alignSelf: 'flex-start',
+                        },
+                    ]}
+                >
+                    {owner?.name ?? 'Sin nombre'}
+                </Text>
+
+                <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
+                    {business?.category ?? 'Sin categoría'}
+                </Text>
+
+                <Text style={globalStyles.subtitle}>Descripción</Text>
+                <Text style={{ color: '#555', marginBottom: 16 }}>
+                    {business?.description ?? 'Sin descripción'}
+                </Text>
+
+                <Text style={globalStyles.subtitle}>Ubicación</Text>
+                <Text style={{ color: '#555', marginBottom: 16 }}>
+                    {business?.address ?? 'Sin ubicación'}
+                </Text>
+
+                <Text style={globalStyles.subtitle}>¿Tienes preguntas?</Text>
+                <TextInput
+                    style={globalStyles.textField}
+                    placeholder="Hola. ¿Sigue estando disponible?"
+                    value={message}
+                    onChangeText={setMessage}
+                />
+
+                <Pressable
+                    style={[
+                        globalStyles.button,
+                        { opacity: message.trim() === '' ? 0.5 : 1 },
+                    ]}
+                    onPress={message.trim() === '' ? null : handleChatPress}
+                    disabled={message.trim() === ''}
+                >
+                    {message.trim() === '' ? (
+                        <Text style={globalStyles.buttonText}>
+                            Escribe un mensaje
+                        </Text>
+                    ) : (
+                        <Text style={globalStyles.buttonText}>Enviar</Text>
+                    )}
+                </Pressable>
+
+                <Button
+                    title="Editar"
+                    onPress={() =>
+                        router.push(`/edit-business?id=${business._id}`)
+                    }
+                />
+            </View>
+
+            {modalVisible && (
+                <DefaultModal
+                    visible={modalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <Text style={globalStyles.title}>Mensaje enviado</Text>
+                    <Text style={globalStyles.subtitle}>
+                        Tu mensaje ha sido enviado al propietario del negocio.
                     </Text>
-
-                    <Text style={globalStyles.title}>
-                        {owner?.name ?? 'Sin nombre'}
-                    </Text>
-
-                    <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
-                        {business?.category ?? 'Sin categoría'}
-                    </Text>
-
-                    <Text style={globalStyles.subtitle}>Descripción</Text>
-                    <Text style={{ color: '#555', marginBottom: 16 }}>
-                        {business?.description ?? 'Sin descripción'}
-                    </Text>
-
-                    <Text style={globalStyles.subtitle}>Ubicación</Text>
-                    <Text style={{ color: '#555', marginBottom: 16 }}>
-                        {business?.address ?? 'Sin ubicación'}
-                    </Text>
-
-                    <Button title="Contactar" onPress={handleRequestService} />
-                    <Button
-                        title="Editar"
-                        onPress={() =>
-                            router.push(`/edit-business?id=${business._id}`)
-                        }
-                    />
-                </View>
-            </ScrollView>
-        </LinearGradient>
+                    <Pressable
+                        style={globalStyles.button}
+                        onPress={() => {
+                            setModalVisible(false)
+                            router.push(`/chat-view?chatId=${chat._id}`)
+                        }}
+                    >
+                        <Text style={globalStyles.buttonText}>Ir al chat</Text>
+                    </Pressable>
+                </DefaultModal>
+            )}
+        </Screen>
     )
 }

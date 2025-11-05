@@ -44,6 +44,44 @@ export async function getChats(userId) {
     }
 }
 
+export async function getChatByParticipants(user1Id, user2Id) {
+    if (!user1Id || !user2Id)
+        throw new Error('Both user1Id and user2Id are required to fetch chat')
+
+    console.log('🔍 Buscando chat entre:', {
+        user1Id,
+        user2Id,
+        user1Type: typeof user1Id,
+        user2Type: typeof user2Id,
+    })
+
+    const token = await AsyncStorage.getItem('token')
+    const headers = token
+        ? {
+              Authorization: `Bearer ${token}`,
+          }
+        : {}
+
+    try {
+        const response = await axios.get(
+            `${API_URL}/chat/participants?user1_id=${encodeURIComponent(
+                user1Id
+            )}&user2_id=${encodeURIComponent(user2Id)}`,
+            { headers }
+        )
+        console.log('✅ Chat encontrado:', response.data)
+        return response.data
+    } catch (error) {
+        console.error('❌ Error fetching chat by participants:', {
+            status: error.response?.status,
+            detail: error.response?.data?.detail,
+            user1Id,
+            user2Id,
+        })
+        throw error
+    }
+}
+
 export async function sendMessage(messageData) {
     const token = await AsyncStorage.getItem('token')
     const headers = token
