@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
-import {globalStyles} from '../../styles/global'
+import { globalStyles } from '../../styles/global'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import {
@@ -69,9 +69,6 @@ export default function WalletScreen() {
         <Screen>
             {user ? (
                 <View>
-                    <Text style={globalStyles.title}>
-                        Solicitudes de servicio
-                    </Text>
                     <Text style={styles.debugText}>
                         User ID: {user?.id || user?._id || 'No user'}
                     </Text>
