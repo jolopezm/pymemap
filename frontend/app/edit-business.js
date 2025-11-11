@@ -143,20 +143,7 @@ export default function EditBusiness() {
     return (
         <Screen>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Pressable
-                    onPress={() => router.back()}
-                    style={styles.backButton}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#9B59B6" />
-                    <Text style={styles.backButtonText}>Volver</Text>
-                </Pressable>
-
                 <View style={styles.container}>
-                    <Text style={globalStyles.title}>{business.name}</Text>
-                    <Text style={globalStyles.subtitle}>
-                        {business.category || 'Sin categoría'}
-                    </Text>
-
                     {image ? (
                         <Image source={{ uri: image }} style={styles.image} />
                     ) : (
