@@ -9,12 +9,26 @@ import LoadingSpinner from '../../components/loading-spinner'
 import { getUserById } from '../../api/user-service'
 
 const ChatScreen = () => {
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [chats, setChats] = React.useState([])
     const [loading, setLoading] = React.useState(true)
     const [error, setError] = React.useState(null)
     const [owner, setOwner] = React.useState(null)
-    const [owners, setOwners] = React.useState({})
+
+    React.useEffect(() => {
+        const fetchOwner = async () => {
+            try {
+                if (user) {
+                    const userData = await getUserById(user.id || user._id)
+                    setOwner(userData)
+                }
+            } catch (error) {
+                console.error('Error fetching owner data:', error)
+            }
+        }
+
+        fetchOwner()
+    }, [user])
 
     const handleChatPress = chat => {
         router.push(`/chat-view?chatId=${chat.id || chat._id}`)
@@ -29,8 +43,7 @@ const ChatScreen = () => {
                     return
                 }
                 const chatData = await getChats(user.id || user._id)
-                const chatsWithOwners = await fetchOwners(chatData)
-                setChats(chatsWithOwners)
+                setChats(chatData)
             } catch (error) {
                 console.error('Error fetching chats:', error)
                 setError('Error fetching chats')
@@ -39,24 +52,12 @@ const ChatScreen = () => {
             }
         }
 
-        const fetchOwners = async chatsToFetch => {
-            return Promise.all(
-                chatsToFetch.map(async chat => {
-                    const otherParticipantId = chat.participants.find(
-                        id => id !== (user.id || user._id)
-                    )
-                    const ownerData = await getUserById(otherParticipantId)
-                    setOwner(ownerData)
-                    console.log('👤 Owner data:', ownerData)
-                    return { ...chat, owner: ownerData }
-                })
-            )
+        if (!authLoading) {
+            fetchChats()
         }
+    }, [user, authLoading])
 
-        fetchChats()
-    }, [user])
-
-    if (loading) {
+    if (authLoading || loading) {
         return <LoadingSpinner />
     }
 

@@ -1,94 +1,52 @@
-import { createContext, useState, useContext, useEffect } from 'react'
+import React, { createContext, useState, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-    getCurrentUser,
-    login as loginService,
-    logout as logoutService,
-} from '../api/auth-service'
 
-const AuthContext = createContext({})
-
-export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider')
-    }
-    return context
-}
+const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
 
     useEffect(() => {
-        checkAuthStatus()
-    }, [])
-
-    const checkAuthStatus = async () => {
-        try {
-            const token = await AsyncStorage.getItem('token')
-
-            if (token) {
-                const userData = await getCurrentUser()
-                setUser(userData)
-                setIsAuthenticated(true)
+        const loadUser = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user')
+                if (storedUser) {
+                    setUser(JSON.parse(storedUser))
+                }
+            } catch (error) {
+                console.error('Error loading user from storage:', error)
+            } finally {
+                setLoading(false)
             }
-        } catch (error) {
-            setUser(null)
-            setIsAuthenticated(false)
-        } finally {
-            setLoading(false)
         }
-    }
+
+        loadUser()
+    }, [])
 
     const login = async userData => {
         try {
-            await loginService(userData)
-            const user = await getCurrentUser()
-
-            setUser(user)
-            setIsAuthenticated(true)
-
-            return { success: true, data: user }
+            await AsyncStorage.setItem('user', JSON.stringify(userData))
+            setUser(userData)
         } catch (error) {
-            throw error
+            console.error('Error saving user to storage:', error)
         }
     }
 
     const logout = async () => {
         try {
-            await logoutService()
+            await AsyncStorage.removeItem('user')
             setUser(null)
-            setIsAuthenticated(false)
-            AsyncStorage.removeItem('token')
-            AsyncStorage.removeItem('user')
         } catch (error) {
-            return {
-                success: false,
-                error: error.response?.data?.detail || 'Error al cerrar sesión',
-            }
+            console.error('Error removing user from storage:', error)
         }
     }
 
-    const refreshUser = async () => {
-        try {
-            const userData = await getCurrentUser() // Tu función para obtener datos del usuario
-            setUser(userData)
-        } catch (error) {
-            console.error('Error refreshing user:', error)
-        }
-    }
-
-    const value = {
-        user,
-        loading,
-        isAuthenticated,
-        login,
-        logout,
-        checkAuthStatus,
-        refreshUser,
-    }
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    return (
+        <AuthContext.Provider value={{ user, login, logout, loading }}>
+            {children}
+        </AuthContext.Provider>
+    )
 }
+
+export const useAuth = () => React.useContext(AuthContext)
