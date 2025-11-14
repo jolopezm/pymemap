@@ -85,6 +85,10 @@ export default function Layout() {
                                 name="service-detail"
                                 options={{ title: 'Detalle del servicio' }}
                             />
+                            <Stack.Screen
+                                name="chat-view"
+                                options={{ title: '' }}
+                            />
                         </Stack>
                     </ChatProvider>
                 </NotifProvider>

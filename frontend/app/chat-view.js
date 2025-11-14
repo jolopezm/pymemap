@@ -8,25 +8,41 @@ import {
 } from 'react-native'
 import { useAuth } from '../context/auth-context'
 import { useChat } from '../context/chat-context'
-import { getMessages, sendMessage, markChatAsRead as markChatAsReadAPI } from '../api/chat-service'
+import {
+    getMessages,
+    sendMessage,
+    markChatAsRead as markChatAsReadAPI,
+} from '../api/chat-service'
 import React from 'react'
 import { globalStyles, colors } from '../styles/global'
-import { useSearchParams } from 'expo-router/build/hooks'
+import { useLocalSearchParams, useNavigation } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Screen from '../components/screen'
 import LoadingSpinner from '../components/loading-spinner'
 
 export default function ChatView() {
     const { user } = useAuth()
-    const { markChatAsRead, updateLastMessage } = useChat()
+    const { markChatAsRead, updateLastMessage, otherUsers, chats } = useChat()
+    const navigation = useNavigation()
     const [messageText, setMessageText] = React.useState('')
     const [tempMessage, setTempMessage] = React.useState(null)
     const [message, setMessage] = React.useState({})
     const [messages, setMessages] = React.useState([])
     const [loading, setLoading] = React.useState(true)
     const [error, setError] = React.useState(null)
-    const params = useSearchParams()
-    const chatId = params?.get('chatId')
+    const { chatId } = useLocalSearchParams()
+
+    // Obtener información del otro usuario
+    const otherUser = otherUsers[chatId]
+
+    // Actualizar el título del header con el nombre del otro usuario
+    React.useEffect(() => {
+        if (otherUser?.name) {
+            navigation.setOptions({
+                title: otherUser.name,
+            })
+        }
+    }, [otherUser, navigation])
 
     React.useEffect(() => {
         const fetchMessages = async () => {
@@ -45,10 +61,10 @@ export default function ChatView() {
             try {
                 const messageData = await getMessages(chatId)
                 setMessages(messageData)
-                
+
                 // Marcar todos los mensajes del chat como leídos en el backend
                 await markChatAsReadAPI(chatId, user.id || user._id)
-                
+
                 // Marcar el chat como leído en el contexto local
                 markChatAsRead(chatId)
             } catch (error) {
@@ -96,7 +112,7 @@ export default function ChatView() {
                         : msg
                 )
             )
-            
+
             // Actualizar el último mensaje en el contexto
             updateLastMessage(chatId, sentMessage)
         } catch (error) {
@@ -179,7 +195,10 @@ export default function ChatView() {
 
                 <View style={styles.inputContainer}>
                     <TextInput
-                        style={[globalStyles.textField, { fontSize: 14, flex: 1, marginBottom: 0 }]}
+                        style={[
+                            globalStyles.textField,
+                            { fontSize: 14, flex: 1, marginBottom: 0 },
+                        ]}
                         placeholder="Mensaje"
                         value={messageText}
                         onChangeText={setMessageText}
@@ -192,11 +211,7 @@ export default function ChatView() {
                             { opacity: messageText.trim() ? 1 : 0.5 },
                         ]}
                     >
-                        <Ionicons
-                            name="send"
-                            size={24}
-                            color={colors.white}
-                        />
+                        <Ionicons name="send" size={24} color={colors.white} />
                     </Pressable>
                 </View>
             </View>
