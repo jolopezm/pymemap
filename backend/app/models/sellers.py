@@ -12,11 +12,14 @@ class Business(BaseModel):
     #owner_id: PyObjectId = Field(default_factory=PyObjectId)
     owner_id: str = Field(...)
     profile_pic: Optional[str] = Field(default=None)
+    latitude: Optional[float] = Field(default=None)
+    longitude: Optional[float] = Field(default=None)
     
     model_config = ConfigDict(
         populate_by_name=True, 
         arbitrary_types_allowed=True,
-        json_schema_extra={"by_alias": True}
+        json_schema_extra={"by_alias": True},
+        json_encoders={ObjectId: str}
     )
     
     @field_validator('id', mode='before')

@@ -165,3 +165,32 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         throw error
     }
 }
+
+export async function updateBusiness(businessId, updateData) {
+    const headers = await getAuthHeaders()
+    const response = await axios.patch(
+        `${API_URL}/business/${businessId}`,
+        updateData,
+        { headers }
+    )
+    return response.data
+}
+
+export async function updateBusinessLocation(businessId, latitude, longitude) {
+    const headers = await getAuthHeaders()
+    const response = await axios.patch(
+        `${API_URL}/business/${businessId}/location`,
+        { latitude, longitude },
+        { headers }
+    )
+    return response.data
+}
+
+export async function getNearbyBusinesses(latitude, longitude, radiusKm = 10) {
+    const headers = await getAuthHeaders()
+    const response = await axios.get(`${API_URL}/business/nearby`, {
+        params: { latitude, longitude, radius_km: radiusKm },
+        headers,
+    })
+    return response.data
+}

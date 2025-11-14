@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from ..db import db
 from ..models.sellers import Business, Service
 from ..services.upload_images_to_gcp import upload_profile_picture as upload_to_gcp
+from ..services.geocoding import geocode_address_async
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ async def get_business():
 
 @router.post("/", response_model=Business)
 async def create_business(business: Business):
-    """Crea un nuevo negocio"""
+    """Crea un nuevo negocio y geocodifica su dirección automáticamente"""
     existing_business = await db.business.find_one({"name": business.name})
     if existing_business:
         raise HTTPException(
@@ -25,6 +26,16 @@ async def create_business(business: Business):
         )
         
     business_dict = business.dict()
+    
+    # Geocodificar dirección si no tiene coordenadas
+    if (not business_dict.get("latitude") or not business_dict.get("longitude")) and business_dict.get("address"):
+        print(f"📍 Geocodificando dirección: {business_dict['address']}")
+        coords = await geocode_address_async(business_dict["address"])
+        if coords:
+            business_dict.update(coords)
+            print(f"✅ Coordenadas obtenidas: {coords}")
+        else:
+            print(f"⚠️ No se pudieron obtener coordenadas")
     
     await db.business.insert_one(business_dict)
     created_business = await db.business.find_one({"name": business.name})
@@ -181,3 +192,108 @@ async def upload_pictures(business_id: str, file: UploadFile = File(...)):
             status_code=500,
             detail=f"Error al subir la imagen: {str(e)}"
         )
+
+
+@router.patch("/{business_id}", response_model=Business)
+async def update_business(business_id: str, update_data: dict):
+    """Actualiza un negocio. Si cambia la dirección, geocodifica automáticamente."""
+    if not ObjectId.is_valid(business_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid business ID format"
+        )
+    
+    # Verificar que el negocio existe
+    existing = await db.business.find_one({"_id": ObjectId(business_id)})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    # Si se actualiza la dirección, geocodificar automáticamente
+    if "address" in update_data and update_data["address"]:
+        # Solo geocodificar si la dirección cambió
+        if update_data["address"] != existing.get("address"):
+            print(f"📍 Dirección actualizada, geocodificando: {update_data['address']}")
+            coords = await geocode_address_async(update_data["address"])
+            if coords:
+                update_data.update(coords)
+                print(f"✅ Nuevas coordenadas: {coords}")
+    
+    # Actualizar
+    result = await db.business.update_one(
+        {"_id": ObjectId(business_id)},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    updated_business = await db.business.find_one({"_id": ObjectId(business_id)})
+    return Business(**updated_business)
+
+
+@router.patch("/{business_id}/location", response_model=Business)
+async def update_business_location(business_id: str, location_data: dict):
+    """Actualiza manualmente las coordenadas de ubicación de un negocio"""
+    if not ObjectId.is_valid(business_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid business ID format"
+        )
+    
+    latitude = location_data.get("latitude")
+    longitude = location_data.get("longitude")
+    
+    if latitude is None or longitude is None:
+        raise HTTPException(
+            status_code=400,
+            detail="latitude and longitude are required"
+        )
+    
+    result = await db.business.update_one(
+        {"_id": ObjectId(business_id)},
+        {"$set": {"latitude": latitude, "longitude": longitude}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    updated_business = await db.business.find_one({"_id": ObjectId(business_id)})
+    return Business(**updated_business)
+
+
+@router.get("/nearby", response_model=list[Business])
+async def get_nearby_businesses(latitude: float, longitude: float, radius_km: float = 10):
+    """
+    Obtiene negocios cercanos a unas coordenadas específicas.
+    
+    Args:
+        latitude: Latitud del punto de referencia
+        longitude: Longitud del punto de referencia
+        radius_km: Radio de búsqueda en kilómetros (default: 10km)
+    """
+    import math
+    
+    # Convertir el radio de km a grados (aproximado)
+    # 1 grado de latitud ≈ 111 km
+    # 1 grado de longitud varía según la latitud
+    lat_range = radius_km / 111.0
+    lon_range = radius_km / (111.0 * math.cos(math.radians(latitude)))
+    
+    # Buscar negocios dentro del rango
+    query = {
+        "latitude": {
+            "$gte": latitude - lat_range,
+            "$lte": latitude + lat_range
+        },
+        "longitude": {
+            "$gte": longitude - lon_range,
+            "$lte": longitude + lon_range
+        }
+    }
+    
+    businesses = []
+    cursor = db.business.find(query)
+    async for document in cursor:
+        businesses.append(Business(**document))
+    
+    return businesses
