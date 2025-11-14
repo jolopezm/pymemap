@@ -161,6 +161,7 @@ export default function ServiceDetail() {
             read: false,
             reference: {
                 serviceId: serviceId,
+                businessId: business.id || business._id,
                 title: title,
             },
         }
@@ -181,6 +182,7 @@ export default function ServiceDetail() {
             read: false,
             reference: {
                 serviceId: serviceId,
+                businessId: business?.id || business?._id,
                 title: title,
             },
         }

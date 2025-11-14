@@ -2,31 +2,36 @@ import { Text, View, Pressable } from 'react-native'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
-import { globalStyles, colors} from '../../styles/global'
+import { globalStyles, colors } from '../../styles/global'
 import * as notificationsService from '../../api/notifications-service'
 import DefaultModal from '../../components/default-modal'
 import { useNotif } from '../../context/notif-context'
 import NotificationFilter from '../../components/notif-filter'
 import LoadingSpinner from '../../components/loading-spinner'
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-
 
 const getNotifications =
     notificationsService?.getNotifications ??
     notificationsService?.default ??
-    (typeof notificationsService === 'function' ? notificationsService : undefined)
+    (typeof notificationsService === 'function'
+        ? notificationsService
+        : undefined)
 
 const markNotificationAsRead =
     notificationsService?.markNotificationAsRead ??
     notificationsService?.default?.markNotificationAsRead
 
 if (!getNotifications) {
-    console.error('getNotifications no disponible en notifications-service. Revisa sus exports.')
+    console.error(
+        'getNotifications no disponible en notifications-service. Revisa sus exports.'
+    )
 }
 
 if (!markNotificationAsRead) {
-    console.error('markNotificationAsRead no disponible en notifications-service. Revisa sus exports y la importación.')
+    console.error(
+        'markNotificationAsRead no disponible en notifications-service. Revisa sus exports y la importación.'
+    )
 }
 
 const { getNotifications: _unused1, markNotificationAsRead: _unused2 } = {}
@@ -72,9 +77,12 @@ export default function NotificationsScreen() {
 
                 await markNotificationAsRead(notificationId)
                 try {
-                    const updated = await markNotificationReadLocally(notificationId)
+                    const updated =
+                        await markNotificationReadLocally(notificationId)
                     if (!updated) {
-                        console.warn('markNotificationReadLocally returned falsy')
+                        console.warn(
+                            'markNotificationReadLocally returned falsy'
+                        )
                     }
                 } catch (e) {
                     console.warn('markNotificationReadLocally failed', e)
@@ -82,12 +90,22 @@ export default function NotificationsScreen() {
 
                 try {
                     const refreshed = await refreshNotifications()
-                    console.debug('notifications: refreshNotifications result', {
-                        refreshedCount: Array.isArray(refreshed) ? refreshed.length : null,
-                        refreshedUnread: Array.isArray(refreshed) ? refreshed.filter(n => !n.read).length : null,
-                    })
+                    console.debug(
+                        'notifications: refreshNotifications result',
+                        {
+                            refreshedCount: Array.isArray(refreshed)
+                                ? refreshed.length
+                                : null,
+                            refreshedUnread: Array.isArray(refreshed)
+                                ? refreshed.filter(n => !n.read).length
+                                : null,
+                        }
+                    )
                 } catch (e) {
-                    console.warn('refreshNotifications failed after mark as read', e)
+                    console.warn(
+                        'refreshNotifications failed after mark as read',
+                        e
+                    )
                 }
             } catch (err) {
                 console.error('Error marking notification as read:', err)
@@ -170,10 +188,10 @@ export default function NotificationsScreen() {
         <Screen>
             {user ? (
                 <>
-                <NotificationFilter
-                    notifications={notifications}
-                    onFilterChange={handleFilterChange}
-                />
+                    <NotificationFilter
+                        notifications={notifications}
+                        onFilterChange={handleFilterChange}
+                    />
                     <View>
                         {notifications.length > 0 ? (
                             <>
@@ -199,25 +217,34 @@ export default function NotificationsScreen() {
                                                 },
                                             ]}
                                         >
-                                            <Ionicons 
-                                                name="information-circle" 
-                                                size={32} color={colors.primary} 
+                                            <Ionicons
+                                                name="information-circle"
+                                                size={32}
+                                                color={colors.primary}
                                             />
                                             <View>
-                                                <Text 
-                                                    style={{ fontWeight: '600', fontSize: 16 }}
-                                                    numberOfLines={1} 
+                                                <Text
+                                                    style={{
+                                                        fontWeight: '600',
+                                                        fontSize: 16,
+                                                    }}
+                                                    numberOfLines={1}
                                                     ellipsizeMode="tail"
                                                 >
-                                                    {notification.message.length > 30
+                                                    {notification.message
+                                                        .length > 30
                                                         ? `${notification.message.substring(0, 30)}...`
-                                                        : notification.message
-                                                    }
+                                                        : notification.message}
                                                 </Text>
-                                                <Text 
-                                                    style={{ fontSize: 12, color: colors.gray }}
+                                                <Text
+                                                    style={{
+                                                        fontSize: 12,
+                                                        color: colors.gray,
+                                                    }}
                                                 >
-                                                    {new Date(notification.date).toLocaleString()}
+                                                    {new Date(
+                                                        notification.date
+                                                    ).toLocaleString()}
                                                 </Text>
                                             </View>
                                         </View>
@@ -239,29 +266,112 @@ export default function NotificationsScreen() {
                                 <Text
                                     style={{ fontWeight: '700', fontSize: 18 }}
                                 >
-                                    {selectedNotification.type == 'service_request' ? 'Solicitud de Servicio' : 'General'}
+                                    {selectedNotification.type ===
+                                    'service_request'
+                                        ? 'Solicitud de Servicio'
+                                        : selectedNotification.type ===
+                                            'service_review'
+                                          ? 'Califica el Servicio'
+                                          : selectedNotification.type ===
+                                              'service_payment'
+                                            ? 'Pago Recibido'
+                                            : 'Notificación'}
                                 </Text>
                                 <Text style={{ marginTop: 8 }}>
                                     {selectedNotification.message}
                                 </Text>
 
-                                <Pressable
-                                    onPress={() =>
-                                        router.push(
-                                            `/service-detail?id=${serviceId}`
-                                        )
-                                    }
-                                    style={globalStyles.button}
-                                >
-                                    <Text style={{ color: colors.white }}>Ver solicitud</Text>
-                                </Pressable>
+                                {/* Botón para ver solicitud de servicio */}
+                                {selectedNotification.type ===
+                                    'service_request' &&
+                                    selectedNotification.reference
+                                        ?.serviceId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/service-detail?id=${selectedNotification.reference.serviceId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                { marginTop: 16 },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Ver solicitud
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
+                                {/* Botón para calificar servicio */}
+                                {selectedNotification.type ===
+                                    'service_review' &&
+                                    selectedNotification.reference
+                                        ?.businessId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/rate-business?businessId=${selectedNotification.reference.businessId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                {
+                                                    marginTop: 16,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name="star"
+                                                size={20}
+                                                color="#fff"
+                                                style={{ marginRight: 8 }}
+                                            />
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Calificar ahora
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
+                                {/* Botón para ver detalle de servicio pagado */}
+                                {selectedNotification.type ===
+                                    'service_payment' &&
+                                    selectedNotification.reference
+                                        ?.serviceId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/service-detail?id=${selectedNotification.reference.serviceId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                { marginTop: 16 },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Ver servicio
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
                                 <Pressable
                                     onPress={closeModal}
                                     style={{ marginTop: 16 }}
                                 >
-                                    <Text style={{ color: 'red' }}>
-                                        Cerrar
-                                    </Text>
+                                    <Text style={{ color: 'red' }}>Cerrar</Text>
                                 </Pressable>
                             </>
                         ) : null}
