@@ -20,6 +20,7 @@ import {
     payService,
 } from '../api/business-service'
 import { createChat } from '../api/chat-service'
+import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
 
@@ -130,10 +131,63 @@ export default function ServiceDetail() {
                 s => (s.id || s._id) === serviceId
             )
             setService(updated)
+            sendNotificationToOwner(
+                'Servicio pagado',
+                `El servicio "${updated.name}" ha sido pagado por el cliente.`
+            )
+            const foundBusiness = businessData.find(
+                b => (b.id || b._id) === updated.business_id
+            )
+            setBusiness(foundBusiness)
+
+            sendNotificacionToClient(
+                'Danos tu opinión',
+                `Por favor, califica y deja una reseña para el servicio "${updated.name}".`
+            )
             alert('Pago realizado con éxito')
         } catch (error) {
             console.error('Error paying service:', error)
             alert('Error al realizar el pago')
+        }
+    }
+
+    const sendNotificationToOwner = async (title, message) => {
+        if (!business) return
+        const notificationData = {
+            targetUserId: business.owner_id,
+            type: 'service_payment',
+            message: message,
+            date: new Date().toISOString(),
+            read: false,
+            reference: {
+                serviceId: serviceId,
+                title: title,
+            },
+        }
+        try {
+            await createNotification(notificationData)
+        } catch (error) {
+            console.error('Error creating notification:', error)
+        }
+    }
+
+    const sendNotificacionToClient = async (title, message) => {
+        if (!service) return
+        const notificationData = {
+            targetUserId: service.client_id,
+            type: 'service_review',
+            message: message,
+            date: new Date().toISOString(),
+            read: false,
+            reference: {
+                serviceId: serviceId,
+                title: title,
+            },
+        }
+        try {
+            await createNotification(notificationData)
+        } catch (error) {
+            console.error('Error creating notification:', error)
         }
     }
 

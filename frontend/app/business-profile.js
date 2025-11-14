@@ -167,32 +167,62 @@ export default function BusinessProfile() {
 
     const handleRequestService = async () => {
         if (!user) {
-            alert('You must be logged in to request a service.')
-            router.push('/login')
+            Alert.alert(
+                'Inicio de sesión requerido',
+                'Debes iniciar sesión para solicitar un servicio.',
+                [
+                    {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Iniciar sesión',
+                        onPress: () => router.push('/login'),
+                    },
+                ]
+            )
             return
         }
 
-        const serviceData = {
-            name: 'Service Request',
-            description: 'Requesting a service from ' + (business?.name ?? ''),
-            price: 0.0,
-            state: 'pending',
-            business_id: business?._id,
-            client_id: user?._id,
-        }
+        try {
+            const serviceData = {
+                name: 'Solicitud de servicio',
+                description:
+                    'Solicitud de servicio para ' +
+                    (business?.name ?? 'negocio'),
+                price: 0.0,
+                state: 'pending',
+                business_id: business?._id,
+                client_id: user?._id,
+            }
 
-        await requestService(serviceData)
-        await createNotification({
-            targetUserId: business?.owner_id,
-            type: 'service_request',
-            message: `Nueva solicitud de servicio de ${user?.name}`,
-            date: new Date().toISOString(),
-            read: false,
-            reference: {
-                originUserId: user?._id,
-            },
-        })
-        alert('Service requested successfully!')
+            await requestService(serviceData)
+
+            // Crear notificación para el propietario
+            await createNotification({
+                targetUserId: business?.owner_id,
+                type: 'service_request',
+                message: `${user?.name || 'Un usuario'} ha solicitado un servicio`,
+                date: new Date().toISOString(),
+                read: false,
+                reference: {
+                    originUserId: user?._id,
+                    businessId: business?._id,
+                },
+            })
+
+            Alert.alert(
+                '¡Solicitud enviada!',
+                'Tu solicitud ha sido enviada al propietario del negocio. Te notificaremos cuando responda.',
+                [{ text: 'Entendido' }]
+            )
+        } catch (error) {
+            console.error('Error al solicitar servicio:', error)
+            Alert.alert(
+                'Error',
+                'No se pudo enviar la solicitud. Por favor, intenta nuevamente.'
+            )
+        }
     }
 
     if (loading) {
@@ -277,9 +307,54 @@ export default function BusinessProfile() {
                 </Text>
 
                 <Text style={globalStyles.subtitle}>Ubicación</Text>
-                <Text style={{ color: '#555', marginBottom: 16 }}>
+                <Text style={{ color: '#555', marginBottom: 24 }}>
                     {business?.address ?? 'Sin ubicación'}
                 </Text>
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                <Text style={globalStyles.subtitle}>Solicitar servicio</Text>
+                <Text style={{ color: '#666', marginBottom: 12, fontSize: 14 }}>
+                    ¿Te interesa este negocio? Solicita un servicio y el
+                    propietario te contactará.
+                </Text>
+                <Pressable
+                    style={[
+                        globalStyles.button,
+                        {
+                            marginBottom: 20,
+                            backgroundColor: '#4CAF50',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
+                    ]}
+                    onPress={handleRequestService}
+                >
+                    <Ionicons
+                        name="checkmark-circle-outline"
+                        size={20}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                    />
+                    <Text style={globalStyles.buttonText}>
+                        Solicitar servicio
+                    </Text>
+                </Pressable>
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
 
                 <Text style={globalStyles.subtitle}>¿Tienes preguntas?</Text>
                 <TextInput
@@ -292,17 +367,35 @@ export default function BusinessProfile() {
                 <Pressable
                     style={[
                         globalStyles.button,
-                        { opacity: message.trim() === '' ? 0.5 : 1 },
+                        {
+                            opacity: message.trim() === '' ? 0.5 : 1,
+                            backgroundColor: '#9B59B6',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
                     ]}
                     onPress={message.trim() === '' ? null : handleChatPress}
                     disabled={message.trim() === ''}
                 >
+                    <Ionicons
+                        name={
+                            message.trim() === ''
+                                ? 'chatbubble-outline'
+                                : 'send'
+                        }
+                        size={20}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                    />
                     {message.trim() === '' ? (
                         <Text style={globalStyles.buttonText}>
                             Escribe un mensaje
                         </Text>
                     ) : (
-                        <Text style={globalStyles.buttonText}>Enviar</Text>
+                        <Text style={globalStyles.buttonText}>
+                            Enviar mensaje
+                        </Text>
                     )}
                 </Pressable>
             </View>
