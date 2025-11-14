@@ -38,7 +38,7 @@ export const globalStyles = StyleSheet.create({
         fontWeight: '700',
         marginBottom: 40,
         textAlign: 'center',
-        color: colors.textPrimary,
+        color: colors.textSecondary,
         letterSpacing: 0.5,
         // Sombra muy sutil para legibilidad sin ser agresiva
         textShadowColor: 'rgba(0, 0, 0, 0.15)',
