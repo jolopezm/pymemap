@@ -3,41 +3,15 @@ import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { View, StyleSheet, Image } from 'react-native'
 import { useNotif } from '../../context/notif-context'
+import { useChat } from '../../context/chat-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth } from '../../context/auth-context'
 import { checkProfilePicUrl } from '../../utils/check-profile-pic'
 
 export default function TabLayout() {
     const { unreadCount } = useNotif()
+    const { unreadCount: chatUnreadCount } = useChat()
     const { user } = useAuth()
-
-    const renderUserProfileIcon = focused => {
-        const styles = StyleSheet.create({
-            profile_pic: {
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                borderWidth: focused ? 2 : 0,
-                borderColor: focused ? '#ff4dc4' : 'gray',
-            },
-        })
-
-        return (
-            <>
-                {user && checkProfilePicUrl(user) ? (
-                    <Image
-                        source={{ uri: user.profile_pic }}
-                        style={styles.profile_pic}
-                    />
-                ) : (
-                    <Image
-                        source={require('../../assets/default-profile-pic.svg')}
-                        style={[styles.profile_pic, { opacity: 0.5 }]}
-                    />
-                )}
-            </>
-        )
-    }
 
     return (
         <Tabs
@@ -49,7 +23,7 @@ export default function TabLayout() {
                         iconName = focused ? 'home' : 'home-outline'
                     } else if (route.name === 'stores') {
                         iconName = focused ? 'storefront' : 'storefront-outline'
-                    } else if (route.name === 'wallet') {
+                    } else if (route.name === 'services') {
                         iconName = focused ? 'receipt' : 'receipt-outline'
                     } else if (route.name === 'notifications') {
                         iconName = focused
@@ -60,7 +34,22 @@ export default function TabLayout() {
                             ? 'chatbubbles'
                             : 'chatbubbles-outline'
                     } else if (route.name === 'profile') {
-                        return renderUserProfileIcon(focused)
+                        const profilePicSource = user && checkProfilePicUrl(user)
+                            ? { uri: user.profile_pic }
+                            : require('../../assets/default-profile-pic.svg')
+
+                        return (
+                            <Image
+                                source={profilePicSource}
+                                style={{
+                                    width: size,
+                                    height: size,
+                                    borderRadius: size / 2,
+                                    borderWidth: focused ? 2 : 0,
+                                    borderColor: focused ? '#ff4dc4' : 'gray',
+                                }}
+                            />
+                        )
                     }
 
                     if (route.name === 'notifications') {
@@ -79,6 +68,28 @@ export default function TabLayout() {
                                     color={color}
                                 />
                                 {unreadCount > 0 ? (
+                                    <View style={styles.dot} />
+                                ) : null}
+                            </View>
+                        )
+                    }
+
+                    if (route.name === 'chat') {
+                        return (
+                            <View
+                                style={{
+                                    width: size,
+                                    height: size,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Ionicons
+                                    name={iconName}
+                                    size={size}
+                                    color={color}
+                                />
+                                {chatUnreadCount > 0 ? (
                                     <View style={styles.dot} />
                                 ) : null}
                             </View>
@@ -104,7 +115,7 @@ export default function TabLayout() {
         >
             <Tabs.Screen name="home" options={{ title: '' }} />
             <Tabs.Screen name="stores" options={{ title: '' }} />
-            <Tabs.Screen name="wallet" options={{ title: '' }} />
+            <Tabs.Screen name="services" options={{ title: '' }} />
             <Tabs.Screen name="notifications" options={{ title: '' }} />
             <Tabs.Screen name="chat" options={{ title: '' }} />
             <Tabs.Screen name="profile" options={{ title: '' }} />

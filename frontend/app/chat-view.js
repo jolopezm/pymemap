@@ -7,7 +7,8 @@ import {
     TextInput,
 } from 'react-native'
 import { useAuth } from '../context/auth-context'
-import { getMessages, sendMessage } from '../api/chat-service'
+import { useChat } from '../context/chat-context'
+import { getMessages, sendMessage, markChatAsRead as markChatAsReadAPI } from '../api/chat-service'
 import React from 'react'
 import { globalStyles, colors } from '../styles/global'
 import { useSearchParams } from 'expo-router/build/hooks'
@@ -17,6 +18,7 @@ import LoadingSpinner from '../components/loading-spinner'
 
 export default function ChatView() {
     const { user } = useAuth()
+    const { markChatAsRead, updateLastMessage } = useChat()
     const [messageText, setMessageText] = React.useState('')
     const [tempMessage, setTempMessage] = React.useState(null)
     const [message, setMessage] = React.useState({})
@@ -34,9 +36,21 @@ export default function ChatView() {
                 return
             }
 
+            if (!user) {
+                setError('User not authenticated')
+                setLoading(false)
+                return
+            }
+
             try {
                 const messageData = await getMessages(chatId)
                 setMessages(messageData)
+                
+                // Marcar todos los mensajes del chat como leídos en el backend
+                await markChatAsReadAPI(chatId, user.id || user._id)
+                
+                // Marcar el chat como leído en el contexto local
+                markChatAsRead(chatId)
             } catch (error) {
                 console.error('Error fetching messages:', error)
                 setError('Error fetching messages')
@@ -46,7 +60,7 @@ export default function ChatView() {
         }
 
         fetchMessages()
-    }, [chatId])
+    }, [chatId, user, markChatAsRead])
 
     const newMessage = async () => {
         if (!messageText.trim()) return
@@ -82,6 +96,9 @@ export default function ChatView() {
                         : msg
                 )
             )
+            
+            // Actualizar el último mensaje en el contexto
+            updateLastMessage(chatId, sentMessage)
         } catch (error) {
             console.error('Error sending message:', error)
             setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
@@ -104,8 +121,8 @@ export default function ChatView() {
 
     return (
         <Screen>
-            <View style={{ flex: 1 }}>
-                <ScrollView style={{ flex: 1 }}>
+            <View style={{ flex: 1, position: 'relative' }}>
+                <ScrollView style={{ flex: 1, marginBottom: 70 }}>
                     {messages.map(msg => {
                         if (!msg) return null
                         return (
@@ -117,12 +134,10 @@ export default function ChatView() {
                                         ? {
                                               backgroundColor: colors.secondary,
                                               alignSelf: 'flex-end',
-                                              borderTopRightRadius: 0,
                                           }
                                         : {
                                               backgroundColor: colors.white,
                                               alignSelf: 'flex-start',
-                                              borderTopLeftRadius: 5,
                                           },
                                     {
                                         marginLeft:
@@ -164,7 +179,7 @@ export default function ChatView() {
 
                 <View style={styles.inputContainer}>
                     <TextInput
-                        style={[globalStyles.textField, { fontSize: 14 }]}
+                        style={[globalStyles.textField, { fontSize: 14, flex: 1, marginBottom: 0 }]}
                         placeholder="Mensaje"
                         value={messageText}
                         onChangeText={setMessageText}
@@ -180,13 +195,7 @@ export default function ChatView() {
                         <Ionicons
                             name="send"
                             size={24}
-                            color={colors.primary}
-                            style={{
-                                transform: [
-                                    { translateY: -8 },
-                                    { translateX: -35 },
-                                ],
-                            }}
+                            color={colors.white}
                         />
                     </Pressable>
                 </View>
@@ -212,7 +221,14 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
+        width: '100%',
         borderTopWidth: 1,
-        borderTopColor: colors.lightGray,
+        borderTopColor: colors.lightGray || '#ddd',
+    },
+    button: {
+        marginLeft: 10,
+        backgroundColor: colors.primary,
+        padding: 10,
+        borderRadius: 25,
     },
 })

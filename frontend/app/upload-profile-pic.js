@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 export default function UploadProfilePic() {
     const { user, refreshUser } = useAuth()
-    const [image, setImage] = React.useState(user.profile_pic || null)
+    const [image, setImage] = React.useState(user?.profile_pic || null)
     const [uploading, setUploading] = React.useState(false)
 
     const pickImage = async () => {
@@ -42,12 +42,12 @@ export default function UploadProfilePic() {
             const filename = image.split('/').pop()
 
             console.log('📤 Subiendo imagen:', {
-                userId: user._id || user.id,
+                userId: user?._id || user?.id,
                 filename,
-                userIdLength: (user._id || user.id)?.length,
+                userIdLength: (user?._id || user?.id)?.length,
             })
 
-            const userId = user._id || user.id
+            const userId = user?._id || user?.id
 
             if (!userId || userId.length !== 24) {
                 throw new Error(`ID de usuario inválido: ${userId}`)
@@ -61,7 +61,11 @@ export default function UploadProfilePic() {
 
             console.log('✅ Usuario actualizado:', updatedUser)
 
-            await refreshUser()
+            // Refrescar los datos del usuario
+            if (refreshUser) {
+                await refreshUser()
+            }
+            
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente')
         } catch (error) {
             console.error('❌ Error al subir imagen:', error)

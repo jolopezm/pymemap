@@ -124,7 +124,10 @@ export default function NotificationsScreen() {
 
     React.useEffect(() => {
         const fetchNotifications = async () => {
-            if (!user) return
+            if (!user || !user._id) {
+                setLoading(false)
+                return
+            }
             setLoading(true)
             setError(null)
             try {

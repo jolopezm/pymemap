@@ -56,7 +56,7 @@ export default function Login() {
     const handleLoginPress = async () => {
         setError('')
         setEmailError('')
-        
+
         // Validación básica de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(user.email)) {
@@ -72,20 +72,13 @@ export default function Login() {
         setLoading(true)
 
         try {
+            // La función login ahora hace la petición al backend y obtiene el usuario
             await login({ email: user.email, password: user.password })
-            const authData = await AsyncStorage.getItem('authData')
-            if (authData) {
-                const parsedData = JSON.parse(authData)
-
-                if (parsedData.user) {
-                    delete parsedData.user.password
-                }
-
-                await AsyncStorage.setItem(
-                    'authData',
-                    JSON.stringify(parsedData)
-                )
-            }
+            
+            Toast.success('¡Has iniciado sesión exitosamente!', {
+                duration: 3000,
+            })
+            
             router.push('/home')
         } catch (e) {
             const errorMessage =
@@ -108,7 +101,7 @@ export default function Login() {
                 <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
                     <ScrollView
                         style={{ flex: 1 }}
-                        contentContainerStyle={{ 
+                        contentContainerStyle={{
                             flexGrow: 1,
                             justifyContent: 'center',
                             paddingHorizontal: 30,
@@ -117,195 +110,221 @@ export default function Login() {
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={{ width: '100%', alignItems: 'center' }}>
-                        {/* Icono de la app */}
-                        <View style={[globalStyles.logoContainer, { marginBottom: 20 }]}>
-                            <Ionicons
-                                name="business"
-                                size={56}
-                                color="#FFFFFF"
-                            />
-                        </View>
-
-                        {/* Título */}
-                        <Text style={[globalStyles.title, { fontSize: 28, marginBottom: 8 }]}>
-                            ¡Bienvenido de nuevo!
-                        </Text>
-                        
-                        {/* Subtítulo */}
-                        <Text style={[globalStyles.subtitle, { marginBottom: 24 }]}>
-                            Inicia sesión para continuar
-                        </Text>
-
-                        {/* Mensaje de error general */}
-                        {error ? (
+                            {/* Icono de la app */}
                             <View
+                                style={[
+                                    globalStyles.logoContainer,
+                                    { marginBottom: 20 },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="business"
+                                    size={56}
+                                    color="#FFFFFF"
+                                />
+                            </View>
+
+                            {/* Título */}
+                            <Text
+                                style={[
+                                    globalStyles.title,
+                                    { fontSize: 28, marginBottom: 8 },
+                                ]}
+                            >
+                                ¡Bienvenido de nuevo!
+                            </Text>
+
+                            {/* Subtítulo */}
+                            <Text
+                                style={[
+                                    globalStyles.subtitle,
+                                    { marginBottom: 24 },
+                                ]}
+                            >
+                                Inicia sesión para continuar
+                            </Text>
+
+                            {/* Mensaje de error general */}
+                            {error ? (
+                                <View
+                                    style={{
+                                        backgroundColor:
+                                            'rgba(255, 59, 48, 0.15)',
+                                        borderLeftWidth: 4,
+                                        borderLeftColor: '#FF3B30',
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 12,
+                                        marginBottom: 20,
+                                        width: '100%',
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            color: '#FFFFFF',
+                                            fontSize: 14,
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        ⚠️ {error}
+                                    </Text>
+                                </View>
+                            ) : null}
+
+                            {/* Campo Email */}
+                            <TextInput
+                                placeholder="Correo electrónico"
+                                placeholderTextColor="#999"
+                                style={[
+                                    globalStyles.textField,
+                                    emailError && {
+                                        borderWidth: 2,
+                                        borderColor: '#FF3B30',
+                                    },
+                                ]}
+                                value={user.email}
+                                onChangeText={email => {
+                                    setUser({ ...user, email })
+                                    setEmailError('')
+                                }}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                            {emailError ? (
+                                <Text
+                                    style={{
+                                        color: '#FFFFFF',
+                                        fontSize: 13,
+                                        marginTop: -10,
+                                        marginBottom: 10,
+                                        marginLeft: 4,
+                                        fontWeight: '500',
+                                    }}
+                                >
+                                    {emailError}
+                                </Text>
+                            ) : null}
+
+                            {/* Campo Contraseña */}
+                            <PasswordInput
+                                placeholder="Contraseña"
+                                value={user.password}
+                                onChangeText={password =>
+                                    setUser({ ...user, password })
+                                }
+                                onSubmitEditing={handleLoginPress}
+                                style={{ marginBottom: 8 }}
+                            />
+
+                            {/* Link Olvidaste contraseña */}
+                            <Link
+                                href="/forgot-password"
                                 style={{
-                                    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-                                    borderLeftWidth: 4,
-                                    borderLeftColor: '#FF3B30',
-                                    paddingVertical: 12,
-                                    paddingHorizontal: 16,
-                                    borderRadius: 12,
+                                    alignSelf: 'flex-end',
                                     marginBottom: 20,
-                                    width: '100%',
                                 }}
                             >
                                 <Text
                                     style={{
                                         color: '#FFFFFF',
-                                        fontSize: 14,
-                                        fontWeight: '600',
+                                        fontSize: 13,
+                                        fontWeight: '500',
+                                        opacity: 0.85,
                                     }}
                                 >
-                                    ⚠️ {error}
+                                    ¿Olvidaste tu contraseña?
                                 </Text>
+                            </Link>
+
+                            {/* Botón Principal */}
+                            <Button
+                                title="Ingresar"
+                                variant="primary"
+                                onPress={handleLoginPress}
+                                loading={loading}
+                                disabled={!user.email || !user.password}
+                                style={{ marginBottom: 20 }}
+                            />
+
+                            {/* Divider */}
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginBottom: 20,
+                                    width: '100%',
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor:
+                                            'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                />
+                                <Text
+                                    style={{
+                                        marginHorizontal: 15,
+                                        color: '#FFFFFF',
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                        opacity: 0.9,
+                                    }}
+                                >
+                                    ¿Primera vez aquí?
+                                </Text>
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor:
+                                            'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                />
                             </View>
-                        ) : null}
 
-                        {/* Campo Email */}
-                        <TextInput
-                            placeholder="Correo electrónico"
-                            placeholderTextColor="#999"
-                            style={[
-                                globalStyles.textField,
-                                emailError && {
-                                    borderWidth: 2,
-                                    borderColor: '#FF3B30',
-                                }
-                            ]}
-                            value={user.email}
-                            onChangeText={email => {
-                                setUser({ ...user, email })
-                                setEmailError('')
-                            }}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                        {emailError ? (
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 13,
-                                    marginTop: -10,
-                                    marginBottom: 10,
-                                    marginLeft: 4,
-                                    fontWeight: '500',
-                                }}
-                            >
-                                {emailError}
-                            </Text>
-                        ) : null}
-
-                        {/* Campo Contraseña */}
-                        <PasswordInput
-                            placeholder="Contraseña"
-                            value={user.password}
-                            onChangeText={password => setUser({ ...user, password })}
-                            onSubmitEditing={handleLoginPress}
-                            style={{ marginBottom: 8 }}
-                        />
-
-                        {/* Link Olvidaste contraseña */}
-                        <Link href="/forgot-password" style={{ alignSelf: 'flex-end', marginBottom: 20 }}>
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 13,
-                                    fontWeight: '500',
-                                    opacity: 0.85,
-                                }}
-                            >
-                                ¿Olvidaste tu contraseña?
-                            </Text>
-                        </Link>
-
-                        {/* Botón Principal */}
-                        <Button
-                            title="Ingresar"
-                            variant="primary"
-                            onPress={handleLoginPress}
-                            loading={loading}
-                            disabled={!user.email || !user.password}
-                            style={{ marginBottom: 20 }}
-                        />
-
-                        {/* Divider */}
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                marginBottom: 20,
-                                width: '100%',
-                            }}
-                        >
-                            <View
-                                style={{
-                                    flex: 1,
-                                    height: 1,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                }}
+                            {/* Botón Secundario */}
+                            <Button
+                                title="Crear cuenta nueva"
+                                variant="secondary"
+                                onPress={() => router.push('/sign-in')}
+                                style={{ marginBottom: 12 }}
                             />
-                            <Text
-                                style={{
-                                    marginHorizontal: 15,
-                                    color: '#FFFFFF',
-                                    fontSize: 14,
-                                    fontWeight: '600',
-                                    opacity: 0.9,
-                                }}
+
+                            {/* Botón de navegación al home */}
+                            <Pressable
+                                onPress={() => router.push('/(tabs)/home')}
+                                style={({ pressed }) => ({
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingVertical: 14,
+                                    marginTop: 12,
+                                    opacity: pressed ? 0.7 : 1,
+                                })}
                             >
-                                ¿Primera vez aquí?
-                            </Text>
-                            <View
-                                style={{
-                                    flex: 1,
-                                    height: 1,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                }}
-                            />
+                                <Ionicons
+                                    name="compass-outline"
+                                    size={20}
+                                    color="#FFFFFF"
+                                    style={{ marginRight: 8 }}
+                                />
+                                <Text
+                                    style={{
+                                        color: '#FFFFFF',
+                                        fontSize: 15,
+                                        fontWeight: '600',
+                                        opacity: 0.9,
+                                    }}
+                                >
+                                    Explorar sin cuenta
+                                </Text>
+                            </Pressable>
                         </View>
-
-                        {/* Botón Secundario */}
-                        <Button
-                            title="Crear cuenta nueva"
-                            variant="secondary"
-                            onPress={() => router.push('/sign-in')}
-                            style={{ marginBottom: 12 }}
-                        />
-
-                        {/* Botón de navegación al home */}
-                        <Pressable
-                            onPress={() => router.push('/(tabs)/home')}
-                            style={({ pressed }) => ({
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 14,
-                                marginTop: 12,
-                                opacity: pressed ? 0.7 : 1,
-                            })}
-                        >
-                            <Ionicons
-                                name="compass-outline"
-                                size={20}
-                                color="#FFFFFF"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 15,
-                                    fontWeight: '600',
-                                    opacity: 0.9,
-                                }}
-                            >
-                                Explorar sin cuenta
-                            </Text>
-                        </Pressable>
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        </LinearGradient>
-    </DismissKeyboard>
+                    </ScrollView>
+                </SafeAreaView>
+            </LinearGradient>
+        </DismissKeyboard>
     )
 }

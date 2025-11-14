@@ -51,7 +51,7 @@ export const globalStyles = StyleSheet.create({
         fontWeight: '400',
         marginBottom: 30,
         textAlign: 'center',
-        color: colors.textPrimary,
+        color: colors.textSecondary,
         opacity: 0.95,
         // Sombra mínima, casi imperceptible
         textShadowColor: 'rgba(0, 0, 0, 0.1)',

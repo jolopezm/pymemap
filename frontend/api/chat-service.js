@@ -123,3 +123,27 @@ export async function getMessages(chatId) {
         throw error
     }
 }
+
+export async function markChatAsRead(chatId, userId) {
+    if (!chatId) throw new Error('chatId is required to mark chat as read')
+    if (!userId) throw new Error('userId is required to mark chat as read')
+
+    const token = await AsyncStorage.getItem('token')
+    const headers = token
+        ? {
+              Authorization: `Bearer ${token}`,
+          }
+        : {}
+
+    try {
+        const response = await axios.put(
+            `${API_URL}/chat/chat/${encodeURIComponent(chatId)}/mark-as-read?user_id=${encodeURIComponent(userId)}`,
+            {},
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error('Error marking chat as read:', error)
+        throw error
+    }
+}
