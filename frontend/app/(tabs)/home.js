@@ -5,6 +5,8 @@ import {
     StyleSheet,
     ScrollView,
     Image,
+    ActivityIndicator,
+    Alert,
 } from 'react-native'
 import { useAuth } from '../../context/auth-context'
 import { getServices, getBusiness } from '../../api/business-service'
@@ -14,6 +16,11 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
+import {
+    getCurrentLocation,
+    calculateBusinessDistances,
+} from '../../utils/geolocation'
+import LocationPickerModal from '../../components/location-picker-modal'
 
 // Categorías de negocios PyME (más diversas y profesionales)
 const CATEGORIES = [
@@ -32,7 +39,10 @@ export default function HomeScreen() {
     const [services, setServices] = useState([])
     const [businesses, setBusinesses] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
-    const [userLocation, setUserLocation] = useState('Antonio Varas 666')
+    const [userLocation, setUserLocation] = useState('Obteniendo ubicación...')
+    const [userCoords, setUserCoords] = useState(null)
+    const [isLoadingLocation, setIsLoadingLocation] = useState(true)
+    const [showLocationPicker, setShowLocationPicker] = useState(false)
     const router = useRouter()
     const scrollViewRef = useRef(null)
     const nearbyStoresRef = useRef(null)
@@ -44,15 +54,68 @@ export default function HomeScreen() {
                 getBusiness(),
             ])
             setServices(servicesData)
-            setBusinesses(businessData)
+            
+            console.log('📊 Negocios recibidos:', businessData.length)
+            console.log('📍 Coordenadas de usuario:', userCoords)
+            
+            // Verificar cuántos negocios tienen coordenadas
+            const withCoords = businessData.filter(b => b.latitude && b.longitude).length
+            console.log(`✅ Negocios con coordenadas: ${withCoords}/${businessData.length}`)
+            
+            // Si tenemos coordenadas del usuario, calcular distancias
+            if (userCoords) {
+                const businessesWithDistance = calculateBusinessDistances(
+                    businessData,
+                    userCoords.latitude,
+                    userCoords.longitude
+                )
+                console.log('📏 Distancias calculadas:', businessesWithDistance.slice(0, 3).map(b => ({
+                    name: b.name,
+                    distance: b.distanceText
+                })))
+                setBusinesses(businessesWithDistance)
+            } else {
+                setBusinesses(businessData)
+            }
         } catch (error) {
             console.error('Error fetching data:', error)
         }
     }
 
+    const fetchUserLocation = async () => {
+        try {
+            setIsLoadingLocation(true)
+            const location = await getCurrentLocation()
+            
+            if (location) {
+                setUserLocation(location.address)
+                setUserCoords({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                })
+            } else {
+                setUserLocation('Ubicación no disponible')
+                Alert.alert(
+                    'Ubicación no disponible',
+                    'No pudimos obtener tu ubicación. Por favor, activa los servicios de ubicación.',
+                    [{ text: 'OK' }]
+                )
+            }
+        } catch (error) {
+            console.error('Error obteniendo ubicación:', error)
+            setUserLocation('Error al obtener ubicación')
+        } finally {
+            setIsLoadingLocation(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchUserLocation()
+    }, [])
+
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [userCoords])
 
     const handleQuickClick = category => {
         setSelectedCategory(category)
@@ -98,12 +161,14 @@ export default function HomeScreen() {
             {/* Ubicación actual */}
             <Pressable
                 style={styles.locationContainer}
-                onPress={() => {
-                    /* TODO: Abrir selector de ubicación */
-                }}
+                onPress={() => setShowLocationPicker(true)}
             >
                 <View style={styles.locationIcon}>
-                    <Ionicons name="location" size={20} color="#9B59B6" />
+                    {isLoadingLocation ? (
+                        <ActivityIndicator size="small" color="#9B59B6" />
+                    ) : (
+                        <Ionicons name="location" size={20} color="#9B59B6" />
+                    )}
                 </View>
                 <View style={styles.locationTextContainer}>
                     <Text style={styles.locationLabel}>Tu ubicación</Text>
@@ -111,7 +176,11 @@ export default function HomeScreen() {
                         <Text style={styles.locationText} numberOfLines={1}>
                             {userLocation}
                         </Text>
-                        <Ionicons name="chevron-down" size={16} color="#333" />
+                        <Ionicons
+                            name="chevron-down"
+                            size={16}
+                            color="#9B59B6"
+                        />
                     </View>
                 </View>
             </Pressable>
@@ -360,7 +429,7 @@ export default function HomeScreen() {
                                             color="#666"
                                         />
                                         <Text style={styles.newDistanceText}>
-                                            0.8 km
+                                            {business.distanceText || 'N/A'}
                                         </Text>
                                     </View>
                                 </View>
@@ -473,11 +542,7 @@ export default function HomeScreen() {
                                             <Text
                                                 style={styles.hotDistanceText}
                                             >
-                                                {(
-                                                    Math.random() * 2 +
-                                                    0.3
-                                                ).toFixed(1)}{' '}
-                                                km
+                                                {business.distanceText || 'N/A'}
                                             </Text>
                                         </View>
                                     </View>
@@ -488,6 +553,16 @@ export default function HomeScreen() {
                 )}
             </View>
         )
+    }
+
+    const handleLocationSelected = location => {
+        setUserLocation(location.address)
+        setUserCoords({
+            latitude: location.latitude,
+            longitude: location.longitude,
+        })
+        // Recalcular distancias con la nueva ubicación
+        fetchData()
     }
 
     return (
@@ -506,6 +581,14 @@ export default function HomeScreen() {
                 {renderNewBusinesses()}
                 {renderNearbyStores()}
             </ScrollView>
+
+            {/* Modal para cambiar ubicación */}
+            <LocationPickerModal
+                visible={showLocationPicker}
+                onClose={() => setShowLocationPicker(false)}
+                onLocationSelected={handleLocationSelected}
+                currentAddress={userLocation}
+            />
         </SafeAreaView>
     )
 }
