@@ -85,25 +85,40 @@ export default function HomeScreen() {
     const fetchUserLocation = async () => {
         try {
             setIsLoadingLocation(true)
+            console.log('🔄 Iniciando obtención de ubicación...')
+            
             const location = await getCurrentLocation()
             
             if (location) {
+                console.log('✅ Ubicación obtenida exitosamente:', location.address)
                 setUserLocation(location.address)
                 setUserCoords({
                     latitude: location.latitude,
                     longitude: location.longitude,
                 })
             } else {
-                setUserLocation('Ubicación no disponible')
+                console.warn('⚠️ No se pudo obtener ubicación')
+                setUserLocation('Toca aquí para activar ubicación')
                 Alert.alert(
                     'Ubicación no disponible',
-                    'No pudimos obtener tu ubicación. Por favor, activa los servicios de ubicación.',
-                    [{ text: 'OK' }]
+                    'No pudimos obtener tu ubicación. Asegúrate de:\n\n• Tener GPS/ubicación activado\n• Dar permisos a la app\n• Estar en un lugar con buena señal',
+                    [
+                        { text: 'Reintentar', onPress: fetchUserLocation },
+                        { text: 'Cancelar', style: 'cancel' }
+                    ]
                 )
             }
         } catch (error) {
-            console.error('Error obteniendo ubicación:', error)
-            setUserLocation('Error al obtener ubicación')
+            console.error('❌ Error obteniendo ubicación:', error)
+            setUserLocation('Error - Toca para reintentar')
+            Alert.alert(
+                'Error de ubicación',
+                `No pudimos obtener tu ubicación: ${error.message || 'Error desconocido'}`,
+                [
+                    { text: 'Reintentar', onPress: fetchUserLocation },
+                    { text: 'Cancelar', style: 'cancel' }
+                ]
+            )
         } finally {
             setIsLoadingLocation(false)
         }

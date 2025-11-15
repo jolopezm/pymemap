@@ -6,10 +6,28 @@ import * as Location from 'expo-location'
  */
 export async function requestLocationPermission() {
     try {
+        // Primero verificar si ya tenemos permisos
+        const { status: existingStatus } = await Location.getForegroundPermissionsAsync()
+        
+        if (existingStatus === 'granted') {
+            console.log('✅ Permisos de ubicación ya concedidos')
+            return true
+        }
+
+        console.log('📱 Solicitando permisos de ubicación...')
+        
+        // Solicitar permisos
         const { status } = await Location.requestForegroundPermissionsAsync()
-        return status === 'granted'
+        
+        if (status === 'granted') {
+            console.log('✅ Permisos de ubicación concedidos')
+            return true
+        } else {
+            console.warn('⚠️ Permisos de ubicación denegados. Estado:', status)
+            return false
+        }
     } catch (error) {
-        console.error('Error al solicitar permisos de ubicación:', error)
+        console.error('❌ Error al solicitar permisos de ubicación:', error)
         return false
     }
 }
@@ -23,18 +41,45 @@ export async function getCurrentLocation() {
         const hasPermission = await requestLocationPermission()
         
         if (!hasPermission) {
-            console.warn('No se concedieron permisos de ubicación')
+            console.warn('⚠️ No se concedieron permisos de ubicación')
             return null
         }
 
-        // Usar la mayor precisión posible para obtener coordenadas exactas
-        const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Highest,
-            maximumAge: 10000, // Cache de 10 segundos para respuestas más rápidas
-            timeout: 15000, // Timeout de 15 segundos
-        })
+        console.log('📍 Solicitando ubicación actual...')
+
+        // Intentar primero con alta precisión
+        let location = null
+        try {
+            location = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High, // Cambiar a High en lugar de Highest para mejor compatibilidad Android
+                maximumAge: 10000,
+                timeout: 15000,
+            })
+            console.log('✅ Ubicación obtenida con alta precisión')
+        } catch (highAccuracyError) {
+            console.warn('⚠️ Error con alta precisión, intentando con precisión balanceada...', highAccuracyError.message)
+            
+            // Fallback a precisión balanceada (más confiable en Android)
+            try {
+                location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                    maximumAge: 30000,
+                    timeout: 20000,
+                })
+                console.log('✅ Ubicación obtenida con precisión balanceada')
+            } catch (balancedError) {
+                console.error('❌ Error obteniendo ubicación:', balancedError.message)
+                throw balancedError
+            }
+        }
+
+        if (!location || !location.coords) {
+            console.error('❌ No se obtuvo ubicación válida')
+            return null
+        }
 
         const { latitude, longitude } = location.coords
+        console.log('📍 Coordenadas obtenidas:', { latitude, longitude })
 
         // Obtener dirección legible usando Nominatim (OpenStreetMap) - Gratuito
         let address = 'Ubicación actual'
