@@ -41,6 +41,14 @@ export default function WalletScreen() {
     React.useEffect(() => {
         if (filter === 'all') {
             setFilteredServices(services)
+        } else if (filter === 'pending') {
+            // Incluir tanto 'pending' como 'payment_requested' en el filtro de pendientes
+            setFilteredServices(
+                services.filter(
+                    s =>
+                        s.state === 'pending' || s.state === 'payment_requested'
+                )
+            )
         } else {
             setFilteredServices(services.filter(s => s.state === filter))
         }

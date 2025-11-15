@@ -8,7 +8,9 @@ function ServiceFilter({ onFilterChange, services }) {
     const [value, setValue] = React.useState('all')
 
     // Contar servicios por estado
-    const pendingCount = services.filter(s => s.state === 'pending').length
+    const pendingCount = services.filter(
+        s => s.state === 'pending' || s.state === 'payment_requested'
+    ).length
     const inProgressCount = services.filter(
         s => s.state === 'in progress'
     ).length

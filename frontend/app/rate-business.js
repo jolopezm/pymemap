@@ -17,6 +17,7 @@ import { getBusiness } from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
 import DefaultModal from '../components/default-modal'
+import { createReview } from '../api/review-service'
 
 export default function RateBusiness() {
     const { businessId } = useLocalSearchParams()
@@ -54,7 +55,7 @@ export default function RateBusiness() {
         setRating(star)
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (rating === 0) {
             Alert.alert(
                 'Calificación requerida',
@@ -71,18 +72,7 @@ export default function RateBusiness() {
             return
         }
 
-        // Crear objeto de reseña
-        const reviewData = {
-            businessId: businessId,
-            userId: user?.id || user?._id,
-            userName: user?.name || 'Usuario anónimo',
-            rating: rating,
-            comment: comment.trim(),
-            date: new Date().toISOString(),
-        }
-
-        // Imprimir en consola (por ahora, hasta que exista el endpoint)
-        console.log('📝 Nueva reseña:', JSON.stringify(reviewData, null, 2))
+        await saveReview()
 
         // Mostrar modal de confirmación
         setModalVisible(true)
@@ -91,6 +81,21 @@ export default function RateBusiness() {
     const handleGoHome = () => {
         setModalVisible(false)
         router.push('/(tabs)/home')
+    }
+
+    const saveReview = async () => {
+        try {
+            await createReview({
+                businessId: businessId,
+                userId: user?.id || user?._id,
+                userName: user?.name || 'Usuario anónimo',
+                rating: rating,
+                comment: comment.trim(),
+                date: new Date().toISOString(),
+            })
+        } catch (error) {
+            console.error('Error saving review:', error)
+        }
     }
 
     if (loading) {

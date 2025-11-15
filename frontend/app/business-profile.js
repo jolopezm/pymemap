@@ -25,6 +25,7 @@ import {
     createChat,
     sendMessage,
 } from '../api/chat-service'
+import { getReviewsByBusiness } from '../api/review-service'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
@@ -45,6 +46,7 @@ export default function BusinessProfile() {
     )
     const [chat, setChat] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
+    const [reviews, setReviews] = React.useState([])
 
     const fetchOwner = async ownerId => {
         try {
@@ -60,6 +62,16 @@ export default function BusinessProfile() {
             } else {
                 setError({ message: String(error) })
             }
+        }
+    }
+
+    const fetchReviews = async businessId => {
+        try {
+            const reviewsData = await getReviewsByBusiness(businessId)
+            console.log('Reviews for business:', reviewsData)
+            setReviews(reviewsData)
+        } catch (error) {
+            console.error('Error fetching reviews:', error)
         }
     }
 
@@ -138,6 +150,11 @@ export default function BusinessProfile() {
 
                 if (foundBusiness && foundBusiness.owner_id) {
                     await fetchOwner(foundBusiness.owner_id)
+                }
+
+                // Cargar reseñas del negocio
+                if (foundBusiness && (foundBusiness._id || foundBusiness.id)) {
+                    await fetchReviews(foundBusiness._id || foundBusiness.id)
                 }
             } catch (error) {
                 if (error && error.response) {
@@ -347,6 +364,77 @@ export default function BusinessProfile() {
                         Solicitar servicio
                     </Text>
                 </Pressable>
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                <Text style={globalStyles.subtitle}>Reseñas</Text>
+                {reviews.length === 0 ? (
+                    <Text style={{ color: '#666', marginBottom: 16 }}>
+                        No hay reseñas aún.
+                    </Text>
+                ) : (
+                    reviews.map((review, index) => (
+                        <View key={index} style={globalStyles.card}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 8,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontWeight: '600',
+                                        fontSize: 16,
+                                        color: colors.textSecondary,
+                                    }}
+                                >
+                                    {review.userName || 'Anónimo'}
+                                </Text>
+                                <View style={{ flexDirection: 'row' }}>
+                                    {[...Array(review.rating || 5)].map(
+                                        (_, i) => (
+                                            <Ionicons
+                                                key={i}
+                                                name="star"
+                                                size={16}
+                                                color="#FFD700"
+                                            />
+                                        )
+                                    )}
+                                </View>
+                            </View>
+                            <Text style={{ color: '#555', lineHeight: 20 }}>
+                                {review.comment || ''}
+                            </Text>
+                            {review.date && (
+                                <Text
+                                    style={{
+                                        color: '#999',
+                                        fontSize: 12,
+                                        marginTop: 8,
+                                    }}
+                                >
+                                    {new Date(review.date).toLocaleDateString(
+                                        'es-ES',
+                                        {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        }
+                                    )}
+                                </Text>
+                            )}
+                        </View>
+                    ))
+                )}
 
                 <View
                     style={{

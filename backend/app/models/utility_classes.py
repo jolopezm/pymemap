@@ -150,3 +150,25 @@ class Message(BaseModel):
     def _serialize_id(self, v):
         return str(v) if v is not None else None
     
+
+class Review(BaseModel):
+    businessId: str = Field(...)
+    userId: str = Field(...)
+    userName: str = Field(...)
+    rating: int = Field(..., ge=1, le=5)
+    comment: str = Field(...)
+    date: str = Field(...)
+    
+    @field_validator('businessId', mode='before')
+    @classmethod
+    def _business_id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_validator('userId', mode='before')
+    @classmethod
+    def _user_id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
