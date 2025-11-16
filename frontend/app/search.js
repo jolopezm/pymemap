@@ -1,4 +1,13 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Keyboard } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    StyleSheet,
+    ScrollView,
+    TextInput,
+    Keyboard,
+    Image,
+} from 'react-native'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -40,16 +49,20 @@ export default function SearchScreen() {
     // Buscar en negocios y servicios
     const getSearchResults = () => {
         if (!searchQuery.trim()) return []
-        
+
         const query = searchQuery.toLowerCase()
         const results = []
-        
+
         // Buscar en negocios
         businesses.forEach(business => {
             const matchesName = business.name?.toLowerCase().includes(query)
-            const matchesCategory = business.category?.toLowerCase().includes(query)
-            const matchesDescription = business.description?.toLowerCase().includes(query)
-            
+            const matchesCategory = business.category
+                ?.toLowerCase()
+                .includes(query)
+            const matchesDescription = business.description
+                ?.toLowerCase()
+                .includes(query)
+
             if (matchesName || matchesCategory || matchesDescription) {
                 results.push({
                     type: 'business',
@@ -57,12 +70,14 @@ export default function SearchScreen() {
                 })
             }
         })
-        
+
         // Buscar en servicios
         services.forEach(service => {
             const matchesName = service.name?.toLowerCase().includes(query)
-            const matchesDescription = service.description?.toLowerCase().includes(query)
-            
+            const matchesDescription = service.description
+                ?.toLowerCase()
+                .includes(query)
+
             if (matchesName || matchesDescription) {
                 results.push({
                     type: 'service',
@@ -70,7 +85,7 @@ export default function SearchScreen() {
                 })
             }
         })
-        
+
         return results.slice(0, 10)
     }
 
@@ -89,15 +104,17 @@ export default function SearchScreen() {
         { id: 6, label: 'Educación', icon: 'school-outline' },
     ]
 
-    const handleSelectResult = (result) => {
+    const handleSelectResult = result => {
         if (result.type === 'business') {
-            router.push(`/business-profile?id=${result.data.id || result.data._id}`)
+            router.push(
+                `/business-profile?id=${result.data.id || result.data._id}`
+            )
         } else {
             setSearchQuery(result.data.name)
         }
     }
 
-    const handleRecentSearch = (search) => {
+    const handleRecentSearch = search => {
         setSearchQuery(search)
     }
 
@@ -110,10 +127,6 @@ export default function SearchScreen() {
             <StatusBar style="dark" backgroundColor="#9B59B6" />
             {/* Header con búsqueda */}
             <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </Pressable>
-                
                 <View style={styles.searchBar}>
                     <Ionicons name="search-outline" size={20} color="#888" />
                     <TextInput
@@ -132,13 +145,20 @@ export default function SearchScreen() {
                     />
                     {searchQuery.length > 0 && (
                         <Pressable onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={20} color="#888" />
+                            <Ionicons
+                                name="close-circle"
+                                size={20}
+                                color="#888"
+                            />
                         </Pressable>
                     )}
                 </View>
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {searchQuery.trim().length > 0 ? (
                     // Resultados de búsqueda
                     searchResults.length > 0 ? (
@@ -150,30 +170,59 @@ export default function SearchScreen() {
                                     onPress={() => handleSelectResult(result)}
                                 >
                                     <View style={styles.resultIcon}>
-                                        <Ionicons 
-                                            name={result.type === 'business' ? 'business' : 'construct-outline'} 
-                                            size={20} 
-                                            color="#9B59B6" 
+                                        <Image
+                                            source={
+                                                result.type === 'business'
+                                                    ? result.data.profile_pic
+                                                        ? {
+                                                              uri: result.data
+                                                                  .profile_pic,
+                                                          }
+                                                        : require('../assets/default-profile-pic.svg')
+                                                    : require('../assets/default-profile-pic.svg')
+                                            }
+                                            style={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: 24,
+                                            }}
                                         />
                                     </View>
                                     <View style={styles.resultInfo}>
-                                        <Text style={styles.resultName} numberOfLines={1}>
+                                        <Text
+                                            style={styles.resultName}
+                                            numberOfLines={1}
+                                        >
                                             {result.data.name}
                                         </Text>
-                                        <Text style={styles.resultCategory} numberOfLines={1}>
-                                            {result.type === 'business' 
-                                                ? result.data.category 
-                                                : result.data.description || 'Servicio'}
+                                        <Text
+                                            style={styles.resultCategory}
+                                            numberOfLines={1}
+                                        >
+                                            {result.type === 'business'
+                                                ? result.data.category
+                                                : result.data.description ||
+                                                  'Servicio'}
                                         </Text>
                                     </View>
-                                    <Ionicons name="arrow-forward" size={16} color="#CCC" />
+                                    <Ionicons
+                                        name="arrow-forward"
+                                        size={16}
+                                        color="#CCC"
+                                    />
                                 </Pressable>
                             ))}
                         </View>
                     ) : (
                         <View style={styles.noResults}>
-                            <Ionicons name="search-outline" size={48} color="#CCC" />
-                            <Text style={styles.noResultsText}>No se encontraron resultados</Text>
+                            <Ionicons
+                                name="search-outline"
+                                size={48}
+                                color="#CCC"
+                            />
+                            <Text style={styles.noResultsText}>
+                                No se encontraron resultados
+                            </Text>
                             <Text style={styles.noResultsSubtext}>
                                 Intenta con otro término de búsqueda
                             </Text>
@@ -186,19 +235,31 @@ export default function SearchScreen() {
                         {recentSearches.length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
-                                    <Text style={styles.sectionTitle}>Búsquedas recientes</Text>
+                                    <Text style={styles.sectionTitle}>
+                                        Búsquedas recientes
+                                    </Text>
                                     <Pressable onPress={clearRecentSearches}>
-                                        <Text style={styles.clearButton}>Eliminar</Text>
+                                        <Text style={styles.clearButton}>
+                                            Eliminar
+                                        </Text>
                                     </Pressable>
                                 </View>
                                 {recentSearches.map((search, index) => (
                                     <Pressable
                                         key={index}
                                         style={styles.recentItem}
-                                        onPress={() => handleRecentSearch(search)}
+                                        onPress={() =>
+                                            handleRecentSearch(search)
+                                        }
                                     >
-                                        <Ionicons name="time-outline" size={20} color="#666" />
-                                        <Text style={styles.recentText}>{search}</Text>
+                                        <Ionicons
+                                            name="time-outline"
+                                            size={20}
+                                            color="#666"
+                                        />
+                                        <Text style={styles.recentText}>
+                                            {search}
+                                        </Text>
                                     </Pressable>
                                 ))}
                             </View>
@@ -206,15 +267,25 @@ export default function SearchScreen() {
 
                         {/* Marcas más buscadas */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Marcas más buscadas</Text>
+                            <Text style={styles.sectionTitle}>
+                                Marcas más buscadas
+                            </Text>
                             <View style={styles.brandsGrid}>
                                 {topBrands.map((brand, index) => (
                                     <Pressable
                                         key={brand.id || brand._id || index}
                                         style={styles.brandChip}
-                                        onPress={() => handleSelectResult({ type: 'business', data: brand })}
+                                        onPress={() =>
+                                            handleSelectResult({
+                                                type: 'business',
+                                                data: brand,
+                                            })
+                                        }
                                     >
-                                        <Text style={styles.brandText} numberOfLines={1}>
+                                        <Text
+                                            style={styles.brandText}
+                                            numberOfLines={1}
+                                        >
                                             {brand.name}
                                         </Text>
                                     </Pressable>
@@ -224,16 +295,26 @@ export default function SearchScreen() {
 
                         {/* Clicks rápidos */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Clicks rápidos</Text>
+                            <Text style={styles.sectionTitle}>
+                                Clicks rápidos
+                            </Text>
                             <View style={styles.quickGrid}>
-                                {quickClicks.map((item) => (
+                                {quickClicks.map(item => (
                                     <Pressable
                                         key={item.id}
                                         style={styles.quickChip}
-                                        onPress={() => setSearchQuery(item.label)}
+                                        onPress={() =>
+                                            setSearchQuery(item.label)
+                                        }
                                     >
-                                        <Ionicons name={item.icon} size={16} color="#9B59B6" />
-                                        <Text style={styles.quickText}>{item.label}</Text>
+                                        <Ionicons
+                                            name={item.icon}
+                                            size={16}
+                                            color="#9B59B6"
+                                        />
+                                        <Text style={styles.quickText}>
+                                            {item.label}
+                                        </Text>
                                     </Pressable>
                                 ))}
                             </View>

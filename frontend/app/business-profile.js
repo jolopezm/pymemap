@@ -7,6 +7,7 @@ import {
     Button,
     TextInput,
     Alert,
+    Image,
 } from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
@@ -25,6 +26,7 @@ import {
     createChat,
     sendMessage,
 } from '../api/chat-service'
+import { getReviewsByBusiness } from '../api/review-service'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
@@ -45,6 +47,7 @@ export default function BusinessProfile() {
     )
     const [chat, setChat] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
+    const [reviews, setReviews] = React.useState([])
 
     const fetchOwner = async ownerId => {
         try {
@@ -60,6 +63,16 @@ export default function BusinessProfile() {
             } else {
                 setError({ message: String(error) })
             }
+        }
+    }
+
+    const fetchReviews = async businessId => {
+        try {
+            const reviewsData = await getReviewsByBusiness(businessId)
+            console.log('Reviews for business:', reviewsData)
+            setReviews(reviewsData)
+        } catch (error) {
+            console.error('Error fetching reviews:', error)
         }
     }
 
@@ -139,6 +152,11 @@ export default function BusinessProfile() {
                 if (foundBusiness && foundBusiness.owner_id) {
                     await fetchOwner(foundBusiness.owner_id)
                 }
+
+                // Cargar reseñas del negocio
+                if (foundBusiness && (foundBusiness._id || foundBusiness.id)) {
+                    await fetchReviews(foundBusiness._id || foundBusiness.id)
+                }
             } catch (error) {
                 if (error && error.response) {
                     setError({
@@ -167,32 +185,62 @@ export default function BusinessProfile() {
 
     const handleRequestService = async () => {
         if (!user) {
-            alert('You must be logged in to request a service.')
-            router.push('/login')
+            Alert.alert(
+                'Inicio de sesión requerido',
+                'Debes iniciar sesión para solicitar un servicio.',
+                [
+                    {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Iniciar sesión',
+                        onPress: () => router.push('/login'),
+                    },
+                ]
+            )
             return
         }
 
-        const serviceData = {
-            name: 'Service Request',
-            description: 'Requesting a service from ' + (business?.name ?? ''),
-            price: 0.0,
-            state: 'pending',
-            business_id: business?._id,
-            client_id: user?._id,
-        }
+        try {
+            const serviceData = {
+                name: 'Solicitud de servicio',
+                description:
+                    'Solicitud de servicio para ' +
+                    (business?.name ?? 'negocio'),
+                price: 0.0,
+                state: 'pending',
+                business_id: business?._id,
+                client_id: user?._id,
+            }
 
-        await requestService(serviceData)
-        await createNotification({
-            targetUserId: business?.owner_id,
-            type: 'service_request',
-            message: `Nueva solicitud de servicio de ${user?.name}`,
-            date: new Date().toISOString(),
-            read: false,
-            reference: {
-                originUserId: user?._id,
-            },
-        })
-        alert('Service requested successfully!')
+            await requestService(serviceData)
+
+            // Crear notificación para el propietario
+            await createNotification({
+                targetUserId: business?.owner_id,
+                type: 'service_request',
+                message: `${user?.name || 'Un usuario'} ha solicitado un servicio`,
+                date: new Date().toISOString(),
+                read: false,
+                reference: {
+                    originUserId: user?._id,
+                    businessId: business?._id,
+                },
+            })
+
+            Alert.alert(
+                '¡Solicitud enviada!',
+                'Tu solicitud ha sido enviada al propietario del negocio. Te notificaremos cuando responda.',
+                [{ text: 'Entendido' }]
+            )
+        } catch (error) {
+            console.error('Error al solicitar servicio:', error)
+            Alert.alert(
+                'Error',
+                'No se pudo enviar la solicitud. Por favor, intenta nuevamente.'
+            )
+        }
     }
 
     if (loading) {
@@ -237,11 +285,19 @@ export default function BusinessProfile() {
     return (
         <Screen>
             <View>
-                <Ionicons
-                    name="business"
-                    size={48}
-                    color="#6A4C93"
-                    style={{ alignSelf: 'center', marginBottom: 16 }}
+                <Image
+                    source={
+                        business?.profile_pic
+                            ? { uri: business.profile_pic }
+                            : require('../assets/default-profile-pic.svg')
+                    }
+                    style={{
+                        width: '100%',
+                        height: 200,
+                        borderRadius: 8,
+                        marginBottom: 16,
+                    }}
+                    resizeMode="cover"
                 />
 
                 <Text
@@ -277,9 +333,125 @@ export default function BusinessProfile() {
                 </Text>
 
                 <Text style={globalStyles.subtitle}>Ubicación</Text>
-                <Text style={{ color: '#555', marginBottom: 16 }}>
+                <Text style={{ color: '#555', marginBottom: 24 }}>
                     {business?.address ?? 'Sin ubicación'}
                 </Text>
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                <Text style={globalStyles.subtitle}>Solicitar servicio</Text>
+                <Text style={{ color: '#666', marginBottom: 12, fontSize: 14 }}>
+                    ¿Te interesa este negocio? Solicita un servicio y el
+                    propietario te contactará.
+                </Text>
+                <Pressable
+                    style={[
+                        globalStyles.button,
+                        {
+                            marginBottom: 20,
+                            backgroundColor: '#4CAF50',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
+                    ]}
+                    onPress={handleRequestService}
+                >
+                    <Ionicons
+                        name="checkmark-circle-outline"
+                        size={20}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                    />
+                    <Text style={globalStyles.buttonText}>
+                        Solicitar servicio
+                    </Text>
+                </Pressable>
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                <Text style={globalStyles.subtitle}>Reseñas</Text>
+                {reviews.length === 0 ? (
+                    <Text style={{ color: '#666', marginBottom: 16 }}>
+                        No hay reseñas aún.
+                    </Text>
+                ) : (
+                    reviews.map((review, index) => (
+                        <View key={index} style={globalStyles.card}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 8,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontWeight: '600',
+                                        fontSize: 16,
+                                        color: colors.textSecondary,
+                                    }}
+                                >
+                                    {review.userName || 'Anónimo'}
+                                </Text>
+                                <View style={{ flexDirection: 'row' }}>
+                                    {[...Array(review.rating || 5)].map(
+                                        (_, i) => (
+                                            <Ionicons
+                                                key={i}
+                                                name="star"
+                                                size={16}
+                                                color="#FFD700"
+                                            />
+                                        )
+                                    )}
+                                </View>
+                            </View>
+                            <Text style={{ color: '#555', lineHeight: 20 }}>
+                                {review.comment || ''}
+                            </Text>
+                            {review.date && (
+                                <Text
+                                    style={{
+                                        color: '#999',
+                                        fontSize: 12,
+                                        marginTop: 8,
+                                    }}
+                                >
+                                    {new Date(review.date).toLocaleDateString(
+                                        'es-ES',
+                                        {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        }
+                                    )}
+                                </Text>
+                            )}
+                        </View>
+                    ))
+                )}
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
 
                 <Text style={globalStyles.subtitle}>¿Tienes preguntas?</Text>
                 <TextInput
@@ -292,17 +464,35 @@ export default function BusinessProfile() {
                 <Pressable
                     style={[
                         globalStyles.button,
-                        { opacity: message.trim() === '' ? 0.5 : 1 },
+                        {
+                            opacity: message.trim() === '' ? 0.5 : 1,
+                            backgroundColor: '#9B59B6',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
                     ]}
                     onPress={message.trim() === '' ? null : handleChatPress}
                     disabled={message.trim() === ''}
                 >
+                    <Ionicons
+                        name={
+                            message.trim() === ''
+                                ? 'chatbubble-outline'
+                                : 'send'
+                        }
+                        size={20}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                    />
                     {message.trim() === '' ? (
                         <Text style={globalStyles.buttonText}>
                             Escribe un mensaje
                         </Text>
                     ) : (
-                        <Text style={globalStyles.buttonText}>Enviar</Text>
+                        <Text style={globalStyles.buttonText}>
+                            Enviar mensaje
+                        </Text>
                     )}
                 </Pressable>
             </View>

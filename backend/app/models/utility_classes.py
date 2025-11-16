@@ -60,8 +60,10 @@ class Notification(BaseModel):
 class Chat(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     participants: list[str] = Field(...)
-    last_message: Optional[dict] = Field(default=None) 
+    last_message: Optional[str | dict] = Field(default=None) 
     last_message_at: Optional[datetime] = Field(default=None)
+    hasUnreadMessages: Optional[bool] = Field(default=False)
+    unreadMessageCount: Optional[int] = Field(default=0)
     
     model_config = {
         "populate_by_name": True,
@@ -79,9 +81,12 @@ class Chat(BaseModel):
     @field_validator('last_message', mode='before')
     @classmethod
     def _last_message_serialize(cls, v):
-        """Convert any ObjectId in last_message dict to string"""
+        """Convert any ObjectId in last_message dict to string, or accept string directly"""
         if v is None:
             return None
+        if isinstance(v, str):
+            # If it's already a string, return it as is
+            return v
         if isinstance(v, dict):
             # Recursively convert any ObjectId to string
             return {
@@ -145,3 +150,25 @@ class Message(BaseModel):
     def _serialize_id(self, v):
         return str(v) if v is not None else None
     
+
+class Review(BaseModel):
+    businessId: str = Field(...)
+    userId: str = Field(...)
+    userName: str = Field(...)
+    rating: int = Field(..., ge=1, le=5)
+    comment: str = Field(...)
+    date: str = Field(...)
+    
+    @field_validator('businessId', mode='before')
+    @classmethod
+    def _business_id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)
+
+    @field_validator('userId', mode='before')
+    @classmethod
+    def _user_id_to_str(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, ObjectId) else str(v)

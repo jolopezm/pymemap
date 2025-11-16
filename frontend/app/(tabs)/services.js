@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { globalStyles } from '../../styles/global'
 import Screen from '../../components/screen'
+import ServiceFilter from '../../components/service-filter'
 import { useAuth } from '../../context/auth-context'
 import {
     getServices,
@@ -14,7 +15,9 @@ import { useRouter } from 'expo-router'
 export default function WalletScreen() {
     const { user } = useAuth()
     const [services, setServices] = React.useState([])
+    const [filteredServices, setFilteredServices] = React.useState([])
     const [businesses, setBusinesses] = React.useState([])
+    const [filter, setFilter] = React.useState('all')
     const router = useRouter()
 
     const fetchData = async () => {
@@ -33,6 +36,27 @@ export default function WalletScreen() {
     React.useEffect(() => {
         fetchData()
     }, [])
+
+    // Aplicar filtro cuando cambien los servicios o el filtro
+    React.useEffect(() => {
+        if (filter === 'all') {
+            setFilteredServices(services)
+        } else if (filter === 'pending') {
+            // Incluir tanto 'pending' como 'payment_requested' en el filtro de pendientes
+            setFilteredServices(
+                services.filter(
+                    s =>
+                        s.state === 'pending' || s.state === 'payment_requested'
+                )
+            )
+        } else {
+            setFilteredServices(services.filter(s => s.state === filter))
+        }
+    }, [services, filter])
+
+    const handleFilterChange = newFilter => {
+        setFilter(newFilter)
+    }
 
     const handleReject = async serviceId => {
         try {
@@ -69,18 +93,26 @@ export default function WalletScreen() {
         <Screen>
             {user ? (
                 <View>
-                    <Text style={styles.debugText}>
-                        User ID: {user?.id || user?._id || 'No user'}
-                    </Text>
-                    <Text style={styles.debugText}>
-                        Negocios: {businesses.length}
-                    </Text>
-                    {services.length === 0 && (
+                    <ServiceFilter
+                        onFilterChange={handleFilterChange}
+                        services={services}
+                    />
+                    {filteredServices.length === 0 && (
                         <Text style={styles.emptyText}>
-                            No hay solicitudes de servicio.
+                            {filter === 'all'
+                                ? 'No hay solicitudes de servicio.'
+                                : `No hay servicios ${
+                                      filter === 'pending'
+                                          ? 'pendientes'
+                                          : filter === 'in progress'
+                                            ? 'en progreso'
+                                            : filter === 'completed'
+                                              ? 'completados'
+                                              : ''
+                                  }.`}
                         </Text>
                     )}
-                    {services.map(service => {
+                    {filteredServices.map(service => {
                         const serviceId = service.id || service._id
                         const showButtons =
                             isOwner(service.business_id) &&
