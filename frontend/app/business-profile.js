@@ -7,6 +7,7 @@ import {
     Button,
     TextInput,
     Alert,
+    Image,
 } from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
@@ -284,11 +285,19 @@ export default function BusinessProfile() {
     return (
         <Screen>
             <View>
-                <Ionicons
-                    name="business"
-                    size={48}
-                    color="#6A4C93"
-                    style={{ alignSelf: 'center', marginBottom: 16 }}
+                <Image
+                    source={
+                        business?.profile_pic
+                            ? { uri: business.profile_pic }
+                            : require('../assets/default-profile-pic.svg')
+                    }
+                    style={{
+                        width: '100%',
+                        height: 200,
+                        borderRadius: 8,
+                        marginBottom: 16,
+                    }}
+                    resizeMode="cover"
                 />
 
                 <Text
