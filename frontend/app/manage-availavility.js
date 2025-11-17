@@ -10,7 +10,6 @@ import {
 } from 'react-native'
 import { useLocalSearchParams } from 'expo-router'
 import Screen from '../components/screen'
-import { Calendar } from '../components/calendar'
 import {
     getBusinessBookings,
     confirmBooking,

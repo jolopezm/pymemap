@@ -87,6 +87,19 @@ export async function confirmBooking(bookingId) {
 }
 
 /**
+ * Rechazar reserva (dueño de negocio)
+ */
+export async function rejectBooking(bookingId) {
+    const headers = await getAuthHeaders()
+    const response = await axios.patch(
+        `${API_URL}/bookings/${bookingId}/reject`,
+        {},
+        { headers }
+    )
+    return response.data
+}
+
+/**
  * Obtener mis reservas (cliente)
  */
 export async function getMyBookings() {

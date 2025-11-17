@@ -343,6 +343,40 @@ export default function BusinessProfile() {
                             ]}
                             onPress={() =>
                                 router.push({
+                                    pathname: '/bookings-panel',
+                                    params: {
+                                        businessId:
+                                            business?._id || business?.id,
+                                        businessName:
+                                            business?.name || 'Negocio',
+                                    },
+                                })
+                            }
+                        >
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Ver Solicitudes
+                            </Text>
+                        </Pressable>
+
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    flexDirection: 'row',
+                                    backgroundColor: '#666',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: 12,
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push({
                                     pathname: '/manage-availavility',
                                     params: {
                                         businessId:
@@ -358,7 +392,7 @@ export default function BusinessProfile() {
                                 style={{ marginRight: 8 }}
                             />
                             <Text style={globalStyles.buttonText}>
-                                Gestionar Disponibilidad
+                                Configurar Disponibilidad
                             </Text>
                         </Pressable>
                     </>

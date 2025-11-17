@@ -210,6 +210,43 @@ async def confirm_booking(
     
     return {"message": "Reserva confirmada"}
 
+@router.patch("/{booking_id}/reject")
+async def reject_booking(
+    booking_id: str,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """Dueño de negocio rechaza reserva"""
+    booking = await db.bookings.find_one({"_id": booking_id})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    
+    # Verificar que el usuario sea dueño del negocio
+    user_id = await get_user_id_from_token(current_user)
+    
+    try:
+        business = await db.business.find_one({"_id": ObjectId(booking["business_id"])})
+    except Exception:
+        business = await db.business.find_one({"_id": booking["business_id"]})
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+    
+    # Comparar IDs como strings
+    owner_id = str(business.get("owner_id", ""))
+    
+    if owner_id != user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    await db.bookings.update_one(
+        {"_id": booking_id},
+        {"$set": {"status": "cancelled"}}
+    )
+    
+    # TODO: Enviar notificación al cliente
+    
+    return {"message": "Reserva rechazada"}
+
 @router.get("/my-bookings")
 async def get_my_bookings(current_user: TokenData = Depends(get_current_user)):
     """Obtener reservas del usuario actual"""
