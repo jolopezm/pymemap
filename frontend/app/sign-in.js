@@ -139,305 +139,322 @@ export default function SignIn() {
                                 { paddingVertical: 20 },
                             ]}
                         >
-                        {/* Icono de la app */}
-                        <View style={globalStyles.logoContainer}>
-                            <Ionicons
-                                name="business"
-                                size={64}
-                                color="#FFFFFF"
-                            />
-                        </View>
+                            {/* Icono de la app */}
+                            <View style={globalStyles.logoContainer}>
+                                <Ionicons
+                                    name="business"
+                                    size={64}
+                                    color="#FFFFFF"
+                                />
+                            </View>
 
-                        {/* Título */}
-                        <Text style={globalStyles.title}>¡Regístrate!</Text>
+                            {/* Título */}
+                            <Text style={globalStyles.title}>¡Regístrate!</Text>
 
-                        {/* Subtítulo */}
-                        <Text style={globalStyles.subtitle}>
-                            Crea tu cuenta y empieza a descubrir
-                        </Text>
+                            {/* Subtítulo */}
+                            <Text style={globalStyles.subtitle}>
+                                Crea tu cuenta y empieza a descubrir
+                            </Text>
 
-                        {/* Mensaje de error general */}
-                        {error ? (
-                            <View
-                                style={{
-                                    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-                                    borderLeftWidth: 4,
-                                    borderLeftColor: '#FF3B30',
-                                    paddingVertical: 12,
-                                    paddingHorizontal: 16,
-                                    borderRadius: 12,
-                                    marginBottom: 16,
-                                    width: '100%',
+                            {/* Mensaje de error general */}
+                            {error ? (
+                                <View
+                                    style={{
+                                        backgroundColor:
+                                            'rgba(255, 59, 48, 0.15)',
+                                        borderLeftWidth: 4,
+                                        borderLeftColor: '#FF3B30',
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 12,
+                                        marginBottom: 16,
+                                        width: '100%',
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            color: '#FFFFFF',
+                                            fontSize: 14,
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        ⚠️ {error}
+                                    </Text>
+                                </View>
+                            ) : null}
+
+                            {/* Campo RUT */}
+                            <TextInput
+                                placeholder="RUT (ej: 12.345.678-9)"
+                                placeholderTextColor="#999"
+                                value={user.rut}
+                                maxLength={12}
+                                onChangeText={value => {
+                                    // Limpiar todo excepto números y K
+                                    const cleaned = value
+                                        .replace(/[^0-9kK]/g, '')
+                                        .toUpperCase()
+
+                                    // Validar que K solo esté al final
+                                    let valid = cleaned
+
+                                    // Si hay una K, verificar que esté solo al final
+                                    const kIndex = cleaned.indexOf('K')
+                                    if (kIndex !== -1) {
+                                        // Si K no está en la última posición, o hay más de una K
+                                        if (
+                                            kIndex !== cleaned.length - 1 ||
+                                            cleaned.split('K').length > 2
+                                        ) {
+                                            setRutError(
+                                                'La letra K solo puede ir al final del RUT'
+                                            )
+                                            return // No actualizar el valor
+                                        }
+                                        // Si K está al principio o hay menos de 2 caracteres
+                                        if (cleaned.length < 2) {
+                                            setRutError(
+                                                'Ingresa primero los números del RUT'
+                                            )
+                                            return
+                                        }
+                                    }
+
+                                    // Si todo es válido, formatear y actualizar
+                                    setRutError('')
+                                    updateUser('rut', rutFormatter(valid))
                                 }}
-                            >
+                                style={[
+                                    globalStyles.textField,
+                                    rutError && {
+                                        borderWidth: 2,
+                                        borderColor: '#FF3B30',
+                                    },
+                                ]}
+                                keyboardType="default"
+                                autoCapitalize="characters"
+                            />
+                            {rutError ? (
                                 <Text
                                     style={{
                                         color: '#FFFFFF',
-                                        fontSize: 14,
-                                        fontWeight: '600',
+                                        fontSize: 13,
+                                        marginTop: -10,
+                                        marginBottom: 10,
+                                        marginLeft: 4,
+                                        fontWeight: '500',
                                     }}
                                 >
-                                    ⚠️ {error}
+                                    {rutError}
                                 </Text>
-                            </View>
-                        ) : null}
+                            ) : null}
 
-                        {/* Campo RUT */}
-                        <TextInput
-                            placeholder="RUT (ej: 12.345.678-9)"
-                            placeholderTextColor="#999"
-                            value={user.rut}
-                            maxLength={12}
-                            onChangeText={value => {
-                                // Limpiar todo excepto números y K
-                                const cleaned = value.replace(/[^0-9kK]/g, '').toUpperCase()
-                                
-                                // Validar que K solo esté al final
-                                let valid = cleaned
-                                
-                                // Si hay una K, verificar que esté solo al final
-                                const kIndex = cleaned.indexOf('K')
-                                if (kIndex !== -1) {
-                                    // Si K no está en la última posición, o hay más de una K
-                                    if (kIndex !== cleaned.length - 1 || cleaned.split('K').length > 2) {
-                                        setRutError('La letra K solo puede ir al final del RUT')
-                                        return // No actualizar el valor
-                                    }
-                                    // Si K está al principio o hay menos de 2 caracteres
-                                    if (cleaned.length < 2) {
-                                        setRutError('Ingresa primero los números del RUT')
-                                        return
-                                    }
+                            {/* Campo Nombre */}
+                            <TextInput
+                                placeholder="Nombre completo"
+                                placeholderTextColor="#999"
+                                value={user.name}
+                                onChangeText={value =>
+                                    updateUser('name', value)
                                 }
-                                
-                                // Si todo es válido, formatear y actualizar
-                                setRutError('')
-                                updateUser('rut', rutFormatter(valid))
-                            }}
-                            style={[
-                                globalStyles.textField,
-                                rutError && {
-                                    borderWidth: 2,
-                                    borderColor: '#FF3B30',
-                                }
-                            ]}
-                            keyboardType="default"
-                            autoCapitalize="characters"
-                        />
-                        {rutError ? (
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 13,
-                                    marginTop: -10,
-                                    marginBottom: 10,
-                                    marginLeft: 4,
-                                    fontWeight: '500',
+                                style={globalStyles.textField}
+                                autoCapitalize="words"
+                            />
+
+                            {/* Campo Email */}
+                            <TextInput
+                                placeholder="Correo electrónico"
+                                placeholderTextColor="#999"
+                                value={user.email}
+                                onChangeText={value => {
+                                    updateUser('email', value)
+                                    setEmailError('')
                                 }}
-                            >
-                                {rutError}
-                            </Text>
-                        ) : null}
-
-                        {/* Campo Nombre */}
-                        <TextInput
-                            placeholder="Nombre completo"
-                            placeholderTextColor="#999"
-                            value={user.name}
-                            onChangeText={value => updateUser('name', value)}
-                            style={globalStyles.textField}
-                            autoCapitalize="words"
-                        />
-
-                        {/* Campo Email */}
-                        <TextInput
-                            placeholder="Correo electrónico"
-                            placeholderTextColor="#999"
-                            value={user.email}
-                            onChangeText={value => {
-                                updateUser('email', value)
-                                setEmailError('')
-                            }}
-                            style={[
-                                globalStyles.textField,
-                                emailError && {
-                                    borderWidth: 2,
-                                    borderColor: '#FF3B30',
-                                }
-                            ]}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                        {emailError ? (
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 13,
-                                    marginTop: -10,
-                                    marginBottom: 10,
-                                    marginLeft: 4,
-                                    fontWeight: '500',
-                                }}
-                            >
-                                {emailError}
-                            </Text>
-                        ) : null}
-
-                        {/* Campo Contraseña */}
-                        <PasswordInput
-                            placeholder="Contraseña"
-                            value={user.password}
-                            onChangeText={value =>
-                                updateUser('password', value)
-                            }
-                            showRequirements={true}
-                            onValidationChange={(isValid, requirements) => {
-                                console.log(
-                                    'Contraseña válida:',
-                                    isValid,
-                                    requirements
-                                )
-                            }}
-                        />
-
-                        {/* Campo Confirmar Contraseña */}
-                        <PasswordInput
-                            placeholder="Confirmar contraseña"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            confirmValue={user.password}
-                            isConfirmField={true}
-                            showToggle={true}
-                            onValidationChange={(matches, data) => {
-                                console.log(
-                                    'Contraseñas coinciden:',
-                                    matches,
-                                    data
-                                )
-                            }}
-                        />
-
-                        {/* Campo Fecha de Nacimiento */}
-                        <Pressable onPress={openDateModal}>
-                            <View
                                 style={[
                                     globalStyles.textField,
-                                    {
-                                        justifyContent: 'center',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
+                                    emailError && {
+                                        borderWidth: 2,
+                                        borderColor: '#FF3B30',
                                     },
                                 ]}
-                            >
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                            {emailError ? (
                                 <Text
                                     style={{
-                                        flex: 1,
-                                        fontSize: 16,
-                                        color: user.birthdate ? '#333' : '#999',
+                                        color: '#FFFFFF',
+                                        fontSize: 13,
+                                        marginTop: -10,
+                                        marginBottom: 10,
+                                        marginLeft: 4,
+                                        fontWeight: '500',
                                     }}
                                 >
-                                    {user.birthdate || 'Fecha de nacimiento'}
+                                    {emailError}
                                 </Text>
-                                <Ionicons
-                                    name="calendar"
-                                    size={20}
-                                    color="#999"
+                            ) : null}
+
+                            {/* Campo Contraseña */}
+                            <PasswordInput
+                                placeholder="Contraseña"
+                                value={user.password}
+                                onChangeText={value =>
+                                    updateUser('password', value)
+                                }
+                                showRequirements={true}
+                                onValidationChange={(isValid, requirements) => {
+                                    console.log(
+                                        'Contraseña válida:',
+                                        isValid,
+                                        requirements
+                                    )
+                                }}
+                            />
+
+                            {/* Campo Confirmar Contraseña */}
+                            <PasswordInput
+                                placeholder="Confirmar contraseña"
+                                value={confirmPassword}
+                                onChangeText={setConfirmPassword}
+                                confirmValue={user.password}
+                                isConfirmField={true}
+                                showToggle={true}
+                                onValidationChange={(matches, data) => {
+                                    console.log(
+                                        'Contraseñas coinciden:',
+                                        matches,
+                                        data
+                                    )
+                                }}
+                            />
+
+                            {/* Campo Fecha de Nacimiento */}
+                            <Pressable onPress={openDateModal}>
+                                <View
+                                    style={[
+                                        globalStyles.textField,
+                                        {
+                                            justifyContent: 'center',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={{
+                                            flex: 1,
+                                            fontSize: 16,
+                                            color: user.birthdate
+                                                ? '#333'
+                                                : '#999',
+                                        }}
+                                    >
+                                        {user.birthdate ||
+                                            'Fecha de nacimiento'}
+                                    </Text>
+                                    <Ionicons
+                                        name="calendar"
+                                        size={20}
+                                        color="#999"
+                                    />
+                                </View>
+                            </Pressable>
+
+                            {/* Botón Principal */}
+                            <Button
+                                title="Crear cuenta"
+                                variant="primary"
+                                onPress={handleSignInPress}
+                                disabled={
+                                    !user.rut ||
+                                    !user.name ||
+                                    !user.email ||
+                                    !user.password ||
+                                    !confirmPassword ||
+                                    !user.birthdate
+                                }
+                                style={{ marginTop: 16, marginBottom: 24 }}
+                            />
+
+                            {/* Divider */}
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginBottom: 20,
+                                    width: '100%',
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor:
+                                            'rgba(255, 255, 255, 0.3)',
+                                    }}
+                                />
+                                <Text
+                                    style={{
+                                        marginHorizontal: 15,
+                                        color: '#FFFFFF',
+                                        fontSize: 14,
+                                        fontWeight: '500',
+                                        opacity: 0.85,
+                                    }}
+                                >
+                                    ¿Ya tienes cuenta?
+                                </Text>
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor:
+                                            'rgba(255, 255, 255, 0.3)',
+                                    }}
                                 />
                             </View>
-                        </Pressable>
 
-                        {/* Botón Principal */}
-                        <Button
-                            title="Crear cuenta"
-                            variant="primary"
-                            onPress={handleSignInPress}
-                            disabled={
-                                !user.rut ||
-                                !user.name ||
-                                !user.email ||
-                                !user.password ||
-                                !confirmPassword ||
-                                !user.birthdate
-                            }
-                            style={{ marginTop: 16, marginBottom: 24 }}
-                        />
-
-                        {/* Divider */}
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                marginBottom: 20,
-                                width: '100%',
-                            }}
-                        >
-                            <View
-                                style={{
-                                    flex: 1,
-                                    height: 1,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                }}
+                            {/* Botón Secundario */}
+                            <Button
+                                title="Iniciar sesión"
+                                variant="secondary"
+                                onPress={() => router.push('/login')}
+                                style={{ marginBottom: 12 }}
                             />
-                            <Text
-                                style={{
-                                    marginHorizontal: 15,
-                                    color: '#FFFFFF',
-                                    fontSize: 14,
-                                    fontWeight: '500',
-                                    opacity: 0.85,
-                                }}
+
+                            {/* Botón de navegación al home */}
+                            <Pressable
+                                onPress={() => router.push('/(tabs)/home')}
+                                style={({ pressed }) => ({
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingVertical: 14,
+                                    marginTop: 12,
+                                    opacity: pressed ? 0.7 : 1,
+                                })}
                             >
-                                ¿Ya tienes cuenta?
-                            </Text>
-                            <View
-                                style={{
-                                    flex: 1,
-                                    height: 1,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                }}
-                            />
+                                <Ionicons
+                                    name="compass-outline"
+                                    size={20}
+                                    color="#FFFFFF"
+                                    style={{ marginRight: 8 }}
+                                />
+                                <Text
+                                    style={{
+                                        color: '#FFFFFF',
+                                        fontSize: 15,
+                                        fontWeight: '600',
+                                        opacity: 0.9,
+                                    }}
+                                >
+                                    Explorar sin cuenta
+                                </Text>
+                            </Pressable>
                         </View>
-
-                        {/* Botón Secundario */}
-                        <Button
-                            title="Iniciar sesión"
-                            variant="secondary"
-                            onPress={() => router.push('/login')}
-                            style={{ marginBottom: 12 }}
-                        />
-
-                        {/* Botón de navegación al home */}
-                        <Pressable
-                            onPress={() => router.push('/(tabs)/home')}
-                            style={({ pressed }) => ({
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 14,
-                                marginTop: 12,
-                                opacity: pressed ? 0.7 : 1,
-                            })}
-                        >
-                            <Ionicons
-                                name="compass-outline"
-                                size={20}
-                                color="#FFFFFF"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text
-                                style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 15,
-                                    fontWeight: '600',
-                                    opacity: 0.9,
-                                }}
-                            >
-                                Explorar sin cuenta
-                            </Text>
-                        </Pressable>
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
+                    </ScrollView>
+                </SafeAreaView>
 
                 {/* Modal del calendario */}
                 <Modal

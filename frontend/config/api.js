@@ -8,7 +8,8 @@ const API_URLS = {
 const forceEnv = process.env.EXPO_PUBLIC_API_ENV
 
 // Exportar URL según configuración
-export const API_URL = forceEnv === 'local' ? API_URLS.local : API_URLS.production
+export const API_URL =
+    forceEnv === 'local' ? API_URLS.local : API_URLS.production
 
 // Para debugging - mostrar configuración actual
 console.log(`🔗 API URL: ${API_URL}`)

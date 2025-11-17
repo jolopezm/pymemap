@@ -183,11 +183,11 @@ export default function BusinessProfile() {
         }
     }, [id])
 
-    const handleRequestService = async () => {
+    const handleRequestService = () => {
         if (!user) {
             Alert.alert(
                 'Inicio de sesión requerido',
-                'Debes iniciar sesión para solicitar un servicio.',
+                'Debes iniciar sesión para reservar un servicio.',
                 [
                     {
                         text: 'Cancelar',
@@ -202,45 +202,14 @@ export default function BusinessProfile() {
             return
         }
 
-        try {
-            const serviceData = {
-                name: 'Solicitud de servicio',
-                description:
-                    'Solicitud de servicio para ' +
-                    (business?.name ?? 'negocio'),
-                price: 0.0,
-                state: 'pending',
-                business_id: business?._id,
-                client_id: user?._id,
-            }
-
-            await requestService(serviceData)
-
-            // Crear notificación para el propietario
-            await createNotification({
-                targetUserId: business?.owner_id,
-                type: 'service_request',
-                message: `${user?.name || 'Un usuario'} ha solicitado un servicio`,
-                date: new Date().toISOString(),
-                read: false,
-                reference: {
-                    originUserId: user?._id,
-                    businessId: business?._id,
-                },
-            })
-
-            Alert.alert(
-                '¡Solicitud enviada!',
-                'Tu solicitud ha sido enviada al propietario del negocio. Te notificaremos cuando responda.',
-                [{ text: 'Entendido' }]
-            )
-        } catch (error) {
-            console.error('Error al solicitar servicio:', error)
-            Alert.alert(
-                'Error',
-                'No se pudo enviar la solicitud. Por favor, intenta nuevamente.'
-            )
-        }
+        // Redirigir a la pantalla de reservas
+        router.push({
+            pathname: '/book-a-service',
+            params: {
+                businessId: business?._id || business?.id,
+                businessName: business?.name || 'Negocio',
+            },
+        })
     }
 
     if (loading) {
@@ -345,34 +314,128 @@ export default function BusinessProfile() {
                     }}
                 />
 
-                <Text style={globalStyles.subtitle}>Solicitar servicio</Text>
-                <Text style={{ color: '#666', marginBottom: 12, fontSize: 14 }}>
-                    ¿Te interesa este negocio? Solicita un servicio y el
-                    propietario te contactará.
-                </Text>
-                <Pressable
-                    style={[
-                        globalStyles.button,
-                        {
-                            marginBottom: 20,
-                            backgroundColor: '#4CAF50',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        },
-                    ]}
-                    onPress={handleRequestService}
-                >
-                    <Ionicons
-                        name="checkmark-circle-outline"
-                        size={20}
-                        color="#fff"
-                        style={{ marginRight: 8 }}
-                    />
-                    <Text style={globalStyles.buttonText}>
-                        Solicitar servicio
-                    </Text>
-                </Pressable>
+                {/* Mostrar botón de gestión si es el dueño del negocio */}
+                {String(business?.owner_id) === String(user?._id) ? (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Gestión del negocio
+                        </Text>
+                        <Text
+                            style={{
+                                color: '#666',
+                                marginBottom: 12,
+                                fontSize: 14,
+                            }}
+                        >
+                            Configura la disponibilidad y gestiona las reservas
+                            de tu negocio.
+                        </Text>
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    marginBottom: 20,
+                                    backgroundColor: '#FF6B6B',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/bookings-panel',
+                                    params: {
+                                        businessId:
+                                            business?._id || business?.id,
+                                        businessName:
+                                            business?.name || 'Negocio',
+                                    },
+                                })
+                            }
+                        >
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Ver Solicitudes
+                            </Text>
+                        </Pressable>
+
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    flexDirection: 'row',
+                                    backgroundColor: '#666',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: 12,
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/manage-availavility',
+                                    params: {
+                                        businessId:
+                                            business?._id || business?.id,
+                                    },
+                                })
+                            }
+                        >
+                            <Ionicons
+                                name="settings-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Configurar Disponibilidad
+                            </Text>
+                        </Pressable>
+                    </>
+                ) : (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Reservar servicio
+                        </Text>
+                        <Text
+                            style={{
+                                color: '#666',
+                                marginBottom: 12,
+                                fontSize: 14,
+                            }}
+                        >
+                            ¿Te interesa este negocio? Reserva una fecha y
+                            horario para recibir el servicio.
+                        </Text>
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    marginBottom: 20,
+                                    backgroundColor: '#4CAF50',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                },
+                            ]}
+                            onPress={handleRequestService}
+                        >
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Reservar servicio
+                            </Text>
+                        </Pressable>
+                    </>
+                )}
 
                 <View
                     style={{
