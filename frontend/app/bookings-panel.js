@@ -14,6 +14,7 @@ import {
     confirmBooking,
     rejectBooking,
 } from '../api/booking-service'
+import { createNotification } from '../api/notifications-service'
 import { Toast } from 'toastify-react-native'
 import { globalStyles } from '../styles/global'
 
@@ -55,22 +56,88 @@ export default function BookingsPanel() {
 
     const handleConfirm = async bookingId => {
         try {
+            const booking = bookings.find(b => (b._id || b.id) === bookingId)
+
+            console.log('✅ Confirming booking:', bookingId)
             await confirmBooking(bookingId)
+
+            // Enviar notificación al cliente
+            if (booking?.client_id) {
+                try {
+                    const notifPayload = {
+                        user_id: booking.client_id,
+                        title: '✅ Reserva confirmada',
+                        message: `Tu reserva para el ${booking.date} a las ${booking.start_time} ha sido confirmada`,
+                        type: 'booking_confirmed',
+                        related_id: bookingId,
+                        read: false,
+                    }
+
+                    console.log(
+                        '📤 Sending confirmation notification:',
+                        notifPayload
+                    )
+                    await createNotification(notifPayload)
+                    console.log('✅ Notification sent to client')
+                } catch (notifError) {
+                    console.error('⚠️ Error sending notification:', notifError)
+                    console.error(
+                        '⚠️ Error details:',
+                        notifError.response?.data
+                    )
+                }
+            } else {
+                console.warn('⚠️ No client_id found in booking')
+            }
+
             Toast.success('Reserva confirmada')
             fetchBookings()
         } catch (error) {
-            console.error('Error confirming booking:', error)
+            console.error('❌ Error confirming booking:', error)
             Toast.error('Error al confirmar reserva')
         }
     }
 
     const handleReject = async bookingId => {
         try {
+            const booking = bookings.find(b => (b._id || b.id) === bookingId)
+
+            console.log('❌ Rejecting booking:', bookingId)
             await rejectBooking(bookingId)
+
+            // Enviar notificación al cliente
+            if (booking?.client_id) {
+                try {
+                    const notifPayload = {
+                        user_id: booking.client_id,
+                        title: '❌ Reserva rechazada',
+                        message: `Tu reserva para el ${booking.date} a las ${booking.start_time} fue rechazada. Intenta otra fecha u horario.`,
+                        type: 'booking_rejected',
+                        related_id: bookingId,
+                        read: false,
+                    }
+
+                    console.log(
+                        '📤 Sending rejection notification:',
+                        notifPayload
+                    )
+                    await createNotification(notifPayload)
+                    console.log('✅ Notification sent to client')
+                } catch (notifError) {
+                    console.error('⚠️ Error sending notification:', notifError)
+                    console.error(
+                        '⚠️ Error details:',
+                        notifError.response?.data
+                    )
+                }
+            } else {
+                console.warn('⚠️ No client_id found in booking')
+            }
+
             Toast.success('Reserva rechazada')
             fetchBookings()
         } catch (error) {
-            console.error('Error rejecting booking:', error)
+            console.error('❌ Error rejecting booking:', error)
             Toast.error('Error al rechazar reserva')
         }
     }

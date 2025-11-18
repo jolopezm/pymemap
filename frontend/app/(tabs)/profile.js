@@ -119,6 +119,20 @@ export default function ProfileScreen() {
 
                     <Pressable
                         style={styles.buttonContainer}
+                        onPress={() => router.push('/bookings-panel')}
+                    >
+                        <Ionicons
+                            name="calendar-outline"
+                            size={16}
+                            color="#000"
+                        />
+                        <Text style={{ marginBottom: 10 }}>
+                            Ver reservas de mis negocios
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.buttonContainer}
                         onPress={() => router.push('/settings')}
                     >
                         <Ionicons

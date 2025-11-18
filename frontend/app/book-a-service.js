@@ -1,29 +1,33 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, Pressable, ScrollView, Platform } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import Screen from '../components/screen'
 import DateTimePicker from 'react-native-ui-datepicker'
 import RNDateTimePicker from '@react-native-community/datetimepicker'
 import { createBooking } from '../api/booking-service'
+import { createNotification } from '../api/notifications-service'
+import { getBusiness } from '../api/business-service'
 import { Toast } from 'toastify-react-native'
 import { globalStyles } from '../styles/global'
+import { useAuth } from '../context/auth-context'
 
 export default function BookService() {
     const { businessId, businessName } = useLocalSearchParams()
     const router = useRouter()
+    const { user } = useAuth()
     const [selectedDate, setSelectedDate] = useState(new Date())
     const [selectedTime, setSelectedTime] = useState(new Date())
     const [showTimePicker, setShowTimePicker] = useState(false)
     const [loading, setLoading] = useState(false)
 
-    const formatDate = (date) => {
+    const formatDate = date => {
         const year = date.getFullYear()
         const month = String(date.getMonth() + 1).padStart(2, '0')
         const day = String(date.getDate()).padStart(2, '0')
         return `${year}-${month}-${day}`
     }
 
-    const formatTime = (date) => {
+    const formatTime = date => {
         const hours = String(date.getHours()).padStart(2, '0')
         const minutes = String(date.getMinutes()).padStart(2, '0')
         return `${hours}:${minutes}`
@@ -42,28 +46,85 @@ export default function BookService() {
             return
         }
 
+        if (!user?._id) {
+            Toast.error('Debes iniciar sesión')
+            return
+        }
+
         setLoading(true)
         try {
             const dateStr = formatDate(selectedDate)
             const timeStr = formatTime(selectedTime)
-            
+
             // Calcular hora de fin (1 hora después por defecto)
             const endTime = new Date(selectedTime)
             endTime.setHours(endTime.getHours() + 1)
             const endTimeStr = formatTime(endTime)
 
-            await createBooking({
+            console.log('📤 Enviando booking:', {
                 business_id: businessId,
                 date: dateStr,
                 start_time: timeStr,
-                end_time: endTimeStr, // Backend aún lo requiere, pero el cliente no lo configura
+                end_time: endTimeStr,
             })
 
-            Toast.success('¡Solicitud enviada! El vendedor la revisará pronto')
-            router.push('/home')
+            // 1. Crear la reserva
+            const booking = await createBooking({
+                business_id: businessId,
+                date: dateStr,
+                start_time: timeStr,
+                end_time: endTimeStr,
+            })
+
+            console.log('✅ Booking created:', booking)
+
+            // 2. Obtener el negocio para tener el owner_id
+            const businessData = await getBusiness(businessId)
+            console.log('📍 Business data:', businessData)
+
+            if (!businessData?.owner_id) {
+                console.warn('⚠️ No se encontró owner_id en el negocio')
+                Toast.success(
+                    'Reserva creada (pero no se pudo notificar al vendedor)'
+                )
+                router.push('/my-bookings')
+                return
+            }
+
+            // 3. Crear notificación para el vendedor
+            try {
+                const notifPayload = {
+                    user_id: businessData.owner_id,
+                    title: '📅 Nueva solicitud de reserva',
+                    message: `${user.name || user.email} solicitó una reserva en ${businessName || businessData.name} para el ${dateStr} a las ${timeStr}`,
+                    type: 'booking_request',
+                    related_id: booking._id || booking.id,
+                    read: false,
+                }
+
+                console.log('📤 Enviando notificación:', notifPayload)
+
+                await createNotification(notifPayload)
+                console.log('✅ Notification sent to vendor')
+
+                Toast.success(
+                    '¡Solicitud enviada! El vendedor la revisará pronto'
+                )
+            } catch (notifError) {
+                console.error('⚠️ Error sending notification:', notifError)
+                console.error('⚠️ Error details:', notifError.response?.data)
+                Toast.success(
+                    'Reserva creada (pero hubo un problema al notificar)'
+                )
+            }
+
+            router.push('/my-bookings')
         } catch (error) {
-            Toast.error('Error al enviar solicitud')
-            console.error(error)
+            console.error('❌ Error completo:', error)
+            console.error('❌ Error response:', error.response?.data)
+            Toast.error(
+                error.response?.data?.detail || 'Error al enviar solicitud'
+            )
         } finally {
             setLoading(false)
         }
@@ -77,7 +138,8 @@ export default function BookService() {
                 </Text>
 
                 <Text style={styles.subtitle}>
-                    Selecciona la fecha y hora de inicio. El vendedor revisará tu solicitud y te confirmará.
+                    Selecciona la fecha y hora de inicio. El vendedor revisará
+                    tu solicitud y te confirmará.
                 </Text>
 
                 {/* Selector de fecha */}
@@ -114,7 +176,7 @@ export default function BookService() {
                 {/* Selector de hora */}
                 <View style={styles.section}>
                     <Text style={styles.label}>🕐 Hora de inicio</Text>
-                    
+
                     <Pressable
                         style={styles.timeButton}
                         onPress={() => setShowTimePicker(true)}
@@ -122,7 +184,9 @@ export default function BookService() {
                         <Text style={styles.timeButtonText}>
                             {formatTime(selectedTime)}
                         </Text>
-                        <Text style={styles.timeButtonHint}>Toca para cambiar</Text>
+                        <Text style={styles.timeButtonHint}>
+                            Toca para cambiar
+                        </Text>
                     </Pressable>
 
                     {showTimePicker && (
@@ -130,7 +194,9 @@ export default function BookService() {
                             value={selectedTime}
                             mode="time"
                             is24Hour={true}
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            display={
+                                Platform.OS === 'ios' ? 'spinner' : 'default'
+                            }
                             onChange={handleTimeChange}
                         />
                     )}
@@ -142,7 +208,9 @@ export default function BookService() {
 
                 {/* Resumen */}
                 <View style={styles.summary}>
-                    <Text style={styles.summaryTitle}>📋 Resumen de solicitud</Text>
+                    <Text style={styles.summaryTitle}>
+                        📋 Resumen de solicitud
+                    </Text>
                     <Text style={styles.summaryText}>
                         📅 Fecha: {formatDate(selectedDate)}
                     </Text>
@@ -150,7 +218,8 @@ export default function BookService() {
                         🕐 Hora de inicio: {formatTime(selectedTime)}
                     </Text>
                     <Text style={styles.summaryNote}>
-                        ⏳ El vendedor revisará tu solicitud y te confirmará si está disponible en este horario.
+                        ⏳ El vendedor revisará tu solicitud y te confirmará si
+                        está disponible en este horario.
                     </Text>
                 </View>
 

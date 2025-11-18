@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, FlatList, RefreshControl } from 'react-native'
 import { useRouter } from 'expo-router'
-import Screen from '../components/screen'
-import { getMyBookings } from '../api/booking-service'
+import Screen from '../../components/screen'
+import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles } from '../../styles/global'
 
 export default function MyBookings() {
     const router = useRouter()

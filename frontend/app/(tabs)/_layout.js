@@ -23,7 +23,7 @@ export default function TabLayout() {
                         iconName = focused ? 'home' : 'home-outline'
                     } else if (route.name === 'stores') {
                         iconName = focused ? 'storefront' : 'storefront-outline'
-                    } else if (route.name === 'services') {
+                    } else if (route.name === 'my-bookings') {
                         iconName = focused ? 'receipt' : 'receipt-outline'
                     } else if (route.name === 'notifications') {
                         iconName = focused
@@ -34,9 +34,10 @@ export default function TabLayout() {
                             ? 'chatbubbles'
                             : 'chatbubbles-outline'
                     } else if (route.name === 'profile') {
-                        const profilePicSource = user && checkProfilePicUrl(user)
-                            ? { uri: user.profile_pic }
-                            : require('../../assets/default-profile-pic.svg')
+                        const profilePicSource =
+                            user && checkProfilePicUrl(user)
+                                ? { uri: user.profile_pic }
+                                : require('../../assets/default-profile-pic.svg')
 
                         return (
                             <Image
@@ -115,7 +116,7 @@ export default function TabLayout() {
         >
             <Tabs.Screen name="home" options={{ title: '' }} />
             <Tabs.Screen name="stores" options={{ title: '' }} />
-            <Tabs.Screen name="services" options={{ title: '' }} />
+            <Tabs.Screen name="my-bookings" options={{ title: '' }} />
             <Tabs.Screen name="notifications" options={{ title: '' }} />
             <Tabs.Screen name="chat" options={{ title: '' }} />
             <Tabs.Screen name="profile" options={{ title: '' }} />
