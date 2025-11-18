@@ -86,6 +86,10 @@ export default function Layout() {
                                 options={{ title: 'Detalle del servicio' }}
                             />
                             <Stack.Screen
+                                name="booking-detail"
+                                options={{ title: 'Detalle de la reserva' }}
+                            />
+                            <Stack.Screen
                                 name="chat-view"
                                 options={{ title: '' }}
                             />

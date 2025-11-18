@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, FlatList, RefreshControl } from 'react-native'
+import { View, Text, FlatList, RefreshControl, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
@@ -54,6 +54,16 @@ export default function MyBookings() {
             cancelled: {
                 text: '❌ Cancelada',
                 color: '#dc3545',
+                textColor: '#fff',
+            },
+            completed: {
+                text: '✅ Completada',
+                color: '#17a2b8',
+                textColor: '#fff',
+            },
+            payment_requested: {
+                text: '💳 Pago pendiente',
+                color: '#fd7e14',
                 textColor: '#fff',
             },
         }
@@ -151,6 +161,66 @@ export default function MyBookings() {
                             </Text>
                         </View>
                     )}
+                    {item.status === 'completed' && (
+                        <View
+                            style={[
+                                styles.messageBox,
+                                { backgroundColor: '#e7f3ff' },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.messageText,
+                                    { color: '#0066cc' },
+                                ]}
+                            >
+                                ✅ ¡Reserva completada! ¿Qué tal fue tu experiencia?
+                            </Text>
+                        </View>
+                    )}
+                    
+                    {/* Botón para ver detalle */}
+                    <View style={styles.detailSection}>
+                        <Pressable
+                            style={styles.detailButton}
+                            onPress={() => router.push({
+                                pathname: '/booking-detail',
+                                params: { id: item._id }
+                            })}
+                        >
+                            <Text style={styles.detailButtonText}>📋 Ver Detalle</Text>
+                        </Pressable>
+                        
+                        {/* Mostrar estado de pago si aplica */}
+                        {item.status === 'payment_requested' && (
+                            <Pressable
+                                style={styles.payButton}
+                                onPress={() => router.push({
+                                    pathname: '/booking-detail',
+                                    params: { id: item._id }
+                                })}
+                            >
+                                <Text style={styles.payButtonText}>💳 Pagar</Text>
+                            </Pressable>
+                        )}
+                        
+                        {/* Botón para calificar si está completada */}
+                        {item.status === 'completed' && (
+                            <Pressable
+                                style={styles.rateButton}
+                                onPress={() => router.push({
+                                    pathname: '/rate-business',
+                                    params: { 
+                                        id: item.business_id,
+                                        bookingId: item._id,
+                                        businessName: item.business_name || 'Negocio'
+                                    }
+                                })}
+                            >
+                                <Text style={styles.rateButtonText}>⭐ Calificar</Text>
+                            </Pressable>
+                        )}
+                    </View>
                 </View>
             </View>
         )
@@ -335,5 +405,46 @@ const styles = {
         color: '#666',
         textAlign: 'center',
         paddingHorizontal: 40,
+    },
+    detailSection: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 12,
+    },
+    detailButton: {
+        flex: 1,
+        backgroundColor: '#3498db',
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    detailButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    payButton: {
+        flex: 1,
+        backgroundColor: '#e74c3c',
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    payButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    rateButton: {
+        flex: 1,
+        backgroundColor: '#FFD700',
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    rateButtonText: {
+        color: '#000',
+        fontSize: 12,
+        fontWeight: '600',
     },
 }

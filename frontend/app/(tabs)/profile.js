@@ -127,7 +127,7 @@ export default function ProfileScreen() {
                             color="#000"
                         />
                         <Text style={{ marginBottom: 10 }}>
-                            Ver reservas de mis negocios
+                            Ver todas mis reservas
                         </Text>
                     </Pressable>
 

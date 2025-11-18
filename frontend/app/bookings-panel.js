@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import Screen from '../components/screen'
 import {
     getBusinessBookings,
+    getAllMyBusinessBookings,
     confirmBooking,
     rejectBooking,
 } from '../api/booking-service'
@@ -27,12 +28,12 @@ export default function BookingsPanel() {
 
     useEffect(() => {
         fetchBookings()
-    }, [businessId])
+    }, [])
 
     const fetchBookings = async () => {
         setLoading(true)
         try {
-            const data = await getBusinessBookings(businessId)
+            const data = await getAllMyBusinessBookings()
             // Ordenar por fecha y estado (pending primero)
             const sorted = data.sort((a, b) => {
                 if (a.status === 'pending' && b.status !== 'pending') return -1
@@ -191,7 +192,10 @@ export default function BookingsPanel() {
                 {/* Información de la reserva */}
                 <View style={styles.cardContent}>
                     <Text style={styles.cardTitle}>
-                        Cliente ID: {item.client_id}
+                        {item.business_name || 'Negocio'}
+                    </Text>
+                    <Text style={styles.clientInfo}>
+                        Cliente: {item.client_id}
                     </Text>
 
                     <View style={styles.infoRow}>
@@ -237,6 +241,32 @@ export default function BookingsPanel() {
                         </Pressable>
                     </View>
                 )}
+                
+                {/* Botón para ver detalles siempre visible */}
+                <View style={styles.detailSection}>
+                    <Pressable
+                        style={styles.detailButton}
+                        onPress={() => router.push({
+                            pathname: '/booking-detail',
+                            params: { id: item._id }
+                        })}
+                    >
+                        <Text style={styles.detailButtonText}>📋 Ver Detalle</Text>
+                    </Pressable>
+                    
+                    {/* Botón para solicitar pago cuando está confirmada */}
+                    {item.status === 'confirmed' && (
+                        <Pressable
+                            style={styles.paymentButton}
+                            onPress={() => router.push({
+                                pathname: '/booking-detail',
+                                params: { id: item._id }
+                            })}
+                        >
+                            <Text style={styles.paymentButtonText}>💰 Solicitar Pago</Text>
+                        </Pressable>
+                    )}
+                </View>
             </View>
         )
     }
@@ -246,8 +276,10 @@ export default function BookingsPanel() {
     return (
         <Screen>
             <View style={styles.container}>
-                <Text style={globalStyles.title}>Panel de Reservas</Text>
-                <Text style={styles.subtitle}>{businessName}</Text>
+                <Text style={globalStyles.title}>📋 Mis Reservas</Text>
+                <Text style={styles.subtitle}>
+                    Todas las reservas de tus negocios
+                </Text>
 
                 {/* Resumen */}
                 <View style={styles.summaryContainer}>
@@ -279,11 +311,10 @@ export default function BookingsPanel() {
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📭</Text>
                         <Text style={styles.emptyText}>
-                            No hay reservas todavía
+                            No tienes reservas aún
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            Las solicitudes aparecerán aquí cuando los clientes
-                            las envíen
+                            Aquí aparecerán todas las solicitudes de reserva de tus negocios
                         </Text>
                     </View>
                 ) : (
@@ -371,8 +402,13 @@ const styles = {
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 12,
+        marginBottom: 4,
         color: '#333',
+    },
+    clientInfo: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 12,
     },
     infoRow: {
         flexDirection: 'row',
@@ -440,5 +476,63 @@ const styles = {
         color: '#666',
         textAlign: 'center',
         paddingHorizontal: 40,
+    },
+    errorText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#e74c3c',
+        textAlign: 'center',
+        marginTop: 40,
+        marginBottom: 8,
+    },
+    errorSubText: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 30,
+        paddingHorizontal: 40,
+    },
+    backButton: {
+        backgroundColor: '#3498db',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignSelf: 'center',
+    },
+    backButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    detailSection: {
+        flexDirection: 'row',
+        gap: 8,
+        padding: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    detailButton: {
+        flex: 1,
+        backgroundColor: '#3498db',
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    detailButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    paymentButton: {
+        flex: 1,
+        backgroundColor: '#f39c12',
+        paddingVertical: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    paymentButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
     },
 }
