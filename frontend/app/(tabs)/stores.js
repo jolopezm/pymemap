@@ -1,33 +1,34 @@
-import {
-    View,
-    Text,
-    Pressable,
-    StyleSheet,
-    ScrollView,
-    TextInput,
-    Image,
-    Modal,
-    Animated,
-} from 'react-native'
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Image, Modal, Animated, Dimensions } from 'react-native'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getServices, getBusiness } from '../../api/business-service'
-import { getUserById } from '../../api/user-service'
+import { calculateBusinessDistances, formatDistance } from '../../utils/geolocation'
+import { useLocation } from '../../context/location-context'
+import LocationPickerModal from '../../components/location-picker-modal'
+import MapView, { Marker } from 'react-native-maps'
+
+const CARD_WIDTH = Dimensions.get('window').width * 0.7 // 70% del ancho de pantalla
+const CARD_PADDING = 16
 
 export default function StoresScreen() {
     const router = useRouter()
-    const [businesses, setBusinesses] = useState([])
-    const [owners, setOwners] = useState([])
+    const { userLocation, userCoords, updateLocation } = useLocation()
+    const [allBusinesses, setAllBusinesses] = useState([]) // Todos los negocios sin filtrar
+    const [businesses, setBusinesses] = useState([]) // Negocios filtrados y ordenados
     const [activeView, setActiveView] = useState('list') // 'list' o 'map'
-    const [userLocation, setUserLocation] = useState('Antonio Varas 666')
+    const [locationModalVisible, setLocationModalVisible] = useState(false)
+    const [selectedMapBusiness, setSelectedMapBusiness] = useState(null) // Negocio seleccionado en el mapa
+    const mapRef = useRef(null) // Referencia al mapa
+    const scrollViewRef = useRef(null) // Referencia al ScrollView de cards
+    const [mapRegion, setMapRegion] = useState(null) // Región visible del mapa
     const [selectedFilters, setSelectedFilters] = useState({
         domicilio: false,
         categories: [],
         recoger: false,
-        vendedor: [], // Ya está bien, pero no se usa
+        distance: null, // null, 1, 3, 5, 10 (km)
     })
     const [showSortModal, setShowSortModal] = useState(false)
     const [showCategoriesModal, setShowCategoriesModal] = useState(false)
@@ -40,12 +41,17 @@ export default function StoresScreen() {
         fetchData()
     }, [])
 
-    // ✅ CORRECCIÓN: Cargar owners DESPUÉS de que businesses se cargue
-    useEffect(() => {
-        if (businesses.length > 0) {
-            fetchOwners()
+    const handleLocationSelected = async (coords) => {
+        // Actualizar ubicación en el contexto global
+        updateLocation(coords, coords.address || `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`)
+        setLocationModalVisible(false)
+        
+        // Recalcular distancias con la nueva ubicación
+        if (allBusinesses.length > 0) {
+            const withDistances = calculateBusinessDistances(allBusinesses, coords)
+            setAllBusinesses(withDistances)
         }
-    }, [businesses])
+    }
 
     useEffect(() => {
         if (showSortModal) {
@@ -81,94 +87,189 @@ export default function StoresScreen() {
     const fetchData = async () => {
         try {
             const businessData = await getBusiness()
-            setBusinesses(businessData)
+            
+            // Calcular distancias si hay ubicación del usuario
+            if (userCoords) {
+                const withDistances = calculateBusinessDistances(businessData, userCoords)
+                setAllBusinesses(withDistances)
+            } else {
+                setAllBusinesses(businessData)
+            }
         } catch (error) {
             console.error('Error fetching data:', error)
         }
     }
 
-    const fetchOwners = async () => {
-        try {
-            console.log('🔍 Fetching owners for businesses:', businesses.length)
-
-            const ownerIds = businesses
-                .map(biz => biz.owner_id)
-                .filter(id => id)
-            console.log('🔍 Owner IDs:', ownerIds)
-
-            const uniqueOwnerIds = [...new Set(ownerIds)]
-            console.log('🔍 Unique Owner IDs:', uniqueOwnerIds)
-
-            const ownerPromises = uniqueOwnerIds.map(id => getUserById(id))
-            const ownersData = await Promise.all(ownerPromises)
-
-            console.log('✅ Owners loaded:', ownersData)
-            setOwners(ownersData)
-        } catch (error) {
-            console.error('❌ Error fetching owners:', error)
+    // Recalcular distancias cuando cambia userCoords
+    useEffect(() => {
+        if (userCoords && allBusinesses.length > 0) {
+            const withDistances = calculateBusinessDistances(allBusinesses, userCoords)
+            setAllBusinesses(withDistances)
         }
+    }, [userCoords])
+
+    // Aplicar filtros y ordenamiento cuando cambian
+    useEffect(() => {
+        let filtered = getFilteredBusinesses()
+        let sorted = applySorting(filtered)
+        setBusinesses(sorted)
+    }, [allBusinesses, selectedFilters, sortOption])
+
+    // Función para filtrar negocios
+    const getFilteredBusinesses = () => {
+        let filtered = [...allBusinesses]
+
+        // Filtrar por domicilio
+        if (selectedFilters.domicilio) {
+            filtered = filtered.filter(business => business.hasDelivery !== false)
+        }
+
+        // Filtrar por recoger en tienda
+        if (selectedFilters.recoger) {
+            filtered = filtered.filter(business => business.hasPickup !== false)
+        }
+
+        // Filtrar por categorías
+        if (selectedFilters.categories.length > 0) {
+            filtered = filtered.filter(business => 
+                selectedFilters.categories.some(cat => 
+                    business.category?.toLowerCase().includes(cat.toLowerCase())
+                )
+            )
+        }
+
+        // Filtrar por distancia (solo si el negocio tiene coordenadas Y distancia calculada)
+        if (selectedFilters.distance && userCoords) {
+            console.log(`🔍 Filtrando por distancia: < ${selectedFilters.distance} km`)
+            const before = filtered.length
+            filtered = filtered.filter(business => {
+                const hasDistance = business.distance !== undefined && business.distance !== null
+                const withinRange = hasDistance && business.distance <= selectedFilters.distance
+                
+                if (hasDistance && !withinRange) {
+                    console.log(`❌ ${business.name}: ${business.distance.toFixed(2)} km (fuera de rango)`)
+                }
+                
+                return withinRange
+            })
+            console.log(`📊 Filtrados: ${before} → ${filtered.length} negocios dentro de ${selectedFilters.distance} km`)
+        }
+
+        return filtered
     }
 
-    const handleVendorToggle = vendorId => {
-        setSelectedFilters(prev => {
-            const currentVendors = prev.vendedor
-            const isSelected = currentVendors.includes(vendorId)
-
-            return {
-                ...prev,
-                vendedor: isSelected
-                    ? currentVendors.filter(v => v !== vendorId)
-                    : [...currentVendors, vendorId],
-            }
-        })
-    }
-
-    const handleSelectBusiness = business => {
-        router.push(`/business-profile?id=${business.id || business._id}`)
-    }
-
-    const toggleFilter = filter => {
-        setSelectedFilters(prev => ({
-            ...prev,
-            [filter]: !prev[filter],
-        }))
-    }
-
-    const handleSortSelect = option => {
-        setSortOption(option)
-        setShowSortModal(false)
-
-        // Lógica de ordenamiento
-        let sortedBusinesses = [...businesses]
-
-        switch (option) {
+    // Función para aplicar ordenamiento
+    const applySorting = (businessList) => {
+        let sorted = [...businessList]
+        
+        switch(sortOption) {
             case 'Más cercanos':
-                // Ordenar por distancia (simulada con random)
-                sortedBusinesses.sort(() => Math.random() - 0.5)
+                if (userCoords) {
+                    sorted.sort((a, b) => {
+                        const distA = a.distance !== undefined ? a.distance : Infinity
+                        const distB = b.distance !== undefined ? b.distance : Infinity
+                        return distA - distB
+                    })
+                }
                 break
             case 'Mejor calificados':
-                // Ordenar por rating de mayor a menor
-                sortedBusinesses.sort((a, b) => {
+                sorted.sort((a, b) => {
                     const ratingA = 4.5 + Math.random() * 0.5
                     const ratingB = 4.5 + Math.random() * 0.5
                     return ratingB - ratingA
                 })
                 break
             case 'Más populares':
-                // Ordenar por popularidad (simulada)
-                sortedBusinesses.sort(() => Math.random() - 0.5)
+                sorted.sort(() => Math.random() - 0.5)
                 break
             case 'Nuevos':
-                // Ordenar por más recientes (reverso)
-                sortedBusinesses.reverse()
+                sorted.reverse()
                 break
             case 'Recomendados':
             default:
-                // Orden original o por algoritmo de recomendación
+                if (userCoords) {
+                    sorted.sort((a, b) => {
+                        const distA = a.distance !== undefined ? a.distance : Infinity
+                        const distB = b.distance !== undefined ? b.distance : Infinity
+                        return distA - distB
+                    })
+                }
                 break
         }
+        
+        return sorted
+    }
 
-        setBusinesses(sortedBusinesses)
+    const handleSelectBusiness = (business) => {
+        router.push(`/business-profile?id=${business.id || business._id}`)
+    }
+
+    // Manejar clic en marcador del mapa
+    const handleMarkerPress = (business) => {
+        setSelectedMapBusiness(business)
+        // Encontrar el índice de la card y hacer scroll
+        const businessesWithCoords = businesses.filter(b => b.latitude && b.longitude)
+        const index = businessesWithCoords.findIndex(b => (b.id && b.id === business.id) || (b._id && b._id === business._id))
+        
+        if (index !== -1 && scrollViewRef.current) {
+            // Calcular posición exacta: (ancho de card + gap) * índice
+            const scrollX = index * (CARD_WIDTH + 12)
+            scrollViewRef.current.scrollTo({ x: scrollX, animated: true })
+        }
+    }
+
+    // Centrar mapa en un negocio específico
+    const centerMapOnBusiness = (business) => {
+        if (mapRef.current && business.latitude && business.longitude) {
+            mapRef.current.animateToRegion({
+                latitude: business.latitude,
+                longitude: business.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            }, 500)
+        }
+    }
+
+    // Ajustar mapa para mostrar todos los marcadores
+    const fitMapToMarkers = () => {
+        if (!mapRef.current || !userCoords) return
+        
+        const businessesWithCoords = businesses.filter(b => b.latitude && b.longitude)
+        if (businessesWithCoords.length === 0) return
+
+        // Calcular bounds
+        const lats = [...businessesWithCoords.map(b => b.latitude), userCoords.latitude]
+        const lons = [...businessesWithCoords.map(b => b.longitude), userCoords.longitude]
+        
+        const minLat = Math.min(...lats)
+        const maxLat = Math.max(...lats)
+        const minLon = Math.min(...lons)
+        const maxLon = Math.max(...lons)
+        
+        const centerLat = (minLat + maxLat) / 2
+        const centerLon = (minLon + maxLon) / 2
+        const latDelta = (maxLat - minLat) * 1.3 // 30% padding
+        const lonDelta = (maxLon - minLon) * 1.3
+        
+        mapRef.current.animateToRegion({
+            latitude: centerLat,
+            longitude: centerLon,
+            latitudeDelta: Math.max(latDelta, 0.02), // Mínimo zoom
+            longitudeDelta: Math.max(lonDelta, 0.02),
+        }, 500)
+    }
+
+    // Ajustar mapa cuando cambian los negocios filtrados
+    useEffect(() => {
+        if (activeView === 'map' && businesses.length > 0) {
+            // Pequeño delay para que el mapa esté renderizado
+            setTimeout(() => fitMapToMarkers(), 300)
+        }
+    }, [businesses, activeView])
+
+    const handleSortSelect = (option) => {
+        setSortOption(option)
+        setShowSortModal(false)
     }
 
     const sortOptions = [
@@ -204,54 +305,12 @@ export default function StoresScreen() {
         })
     }
 
-    // Filtrar negocios según los filtros activos
-    const getFilteredBusinesses = () => {
-        let filtered = [...businesses]
-
-        // Filtrar por domicilio
-        if (selectedFilters.domicilio) {
-            filtered = filtered.filter(
-                business => business.hasDelivery !== false
-            )
-        }
-
-        // Filtrar por recoger en tienda
-        if (selectedFilters.recoger) {
-            filtered = filtered.filter(business => business.hasPickup !== false)
-        }
-
-        // Filtrar por categorías
-        if (selectedFilters.categories.length > 0) {
-            filtered = filtered.filter(business =>
-                selectedFilters.categories.some(cat =>
-                    business.category?.toLowerCase().includes(cat.toLowerCase())
-                )
-            )
-        }
-
-        // ✅ NUEVO: Filtrar por vendedor
-        if (selectedFilters.vendedor.length > 0) {
-            filtered = filtered.filter(business =>
-                selectedFilters.vendedor.includes(business.owner_id)
-            )
-        }
-
-        return filtered
-    }
-
-    const filteredBusinesses = getFilteredBusinesses()
-
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header con ubicación y búsqueda */}
             <View style={styles.header}>
                 {/* Ubicación actual */}
-                <Pressable
-                    style={styles.locationContainer}
-                    onPress={() => {
-                        /* TODO: Abrir selector de ubicación */
-                    }}
-                >
+                <Pressable style={styles.locationContainer} onPress={() => setLocationModalVisible(true)}>
                     <View style={styles.locationIcon}>
                         <Ionicons name="location" size={20} color="#9B59B6" />
                     </View>
@@ -367,12 +426,9 @@ export default function StoresScreen() {
                         </Text>
                     </Pressable>
 
-                    <Pressable
-                        style={[
-                            styles.filterChip,
-                            selectedFilters.recoger && styles.filterChipActive,
-                        ]}
-                        onPress={() => toggleFilter('recoger')}
+                    <Pressable 
+                        style={[styles.filterChip, selectedFilters.recoger && styles.filterChipActive]}
+                        onPress={() => setSelectedFilters(prev => ({ ...prev, recoger: !prev.recoger }))}
                     >
                         <Ionicons
                             name="bag-handle-outline"
@@ -390,13 +446,9 @@ export default function StoresScreen() {
                         </Text>
                     </Pressable>
 
-                    <Pressable
-                        style={[
-                            styles.filterChip,
-                            selectedFilters.domicilio &&
-                                styles.filterChipActive,
-                        ]}
-                        onPress={() => toggleFilter('domicilio')}
+                    <Pressable 
+                        style={[styles.filterChip, selectedFilters.domicilio && styles.filterChipActive]}
+                        onPress={() => setSelectedFilters(prev => ({ ...prev, domicilio: !prev.domicilio }))}
                     >
                         <Ionicons
                             name="car-outline"
@@ -413,35 +465,52 @@ export default function StoresScreen() {
                             Domicilio
                         </Text>
                     </Pressable>
-                    <Pressable
-                        style={[
-                            styles.filterChip,
-                            selectedFilters.vendedor.length > 0 &&
-                                styles.filterChipActive,
-                        ]}
-                        onPress={() => setShowVendorsModal(true)}
-                    >
-                        <Ionicons
-                            name="storefront-outline"
-                            size={14}
-                            color={
-                                selectedFilters.vendedor.length > 0
-                                    ? '#FFF'
-                                    : '#333'
-                            }
-                        />
-                        <Text
-                            style={[
-                                styles.filterText,
-                                selectedFilters.vendedor.length > 0 &&
-                                    styles.filterTextActive,
-                            ]}
-                        >
-                            Ofrecido por{' '}
-                            {selectedFilters.vendedor.length > 0 &&
-                                `(${selectedFilters.vendedor.length})`}
-                        </Text>
-                    </Pressable>
+
+                    {userCoords && (
+                        <>
+                            <Pressable 
+                                style={[styles.filterChip, selectedFilters.distance === 1 && styles.filterChipActive]}
+                                onPress={() => {
+                                    const newDistance = selectedFilters.distance === 1 ? null : 1
+                                    console.log('🔘 Filtro distancia: < 1 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
+                                    setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
+                                }}
+                            >
+                                <Ionicons name="navigate-outline" size={14} color={selectedFilters.distance === 1 ? '#FFF' : '#333'} />
+                                <Text style={[styles.filterText, selectedFilters.distance === 1 && styles.filterTextActive]}>
+                                    Menos de 1 km
+                                </Text>
+                            </Pressable>
+
+                            <Pressable 
+                                style={[styles.filterChip, selectedFilters.distance === 3 && styles.filterChipActive]}
+                                onPress={() => {
+                                    const newDistance = selectedFilters.distance === 3 ? null : 3
+                                    console.log('🔘 Filtro distancia: < 3 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
+                                    setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
+                                }}
+                            >
+                                <Ionicons name="navigate-outline" size={14} color={selectedFilters.distance === 3 ? '#FFF' : '#333'} />
+                                <Text style={[styles.filterText, selectedFilters.distance === 3 && styles.filterTextActive]}>
+                                    Menos de 3 km
+                                </Text>
+                            </Pressable>
+
+                            <Pressable 
+                                style={[styles.filterChip, selectedFilters.distance === 5 && styles.filterChipActive]}
+                                onPress={() => {
+                                    const newDistance = selectedFilters.distance === 5 ? null : 5
+                                    console.log('🔘 Filtro distancia: < 5 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
+                                    setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
+                                }}
+                            >
+                                <Ionicons name="navigate-outline" size={14} color={selectedFilters.distance === 5 ? '#FFF' : '#333'} />
+                                <Text style={[styles.filterText, selectedFilters.distance === 5 && styles.filterTextActive]}>
+                                    Menos de 5 km
+                                </Text>
+                            </Pressable>
+                        </>
+                    )}
                 </ScrollView>
             </View>
 
@@ -451,21 +520,38 @@ export default function StoresScreen() {
             >
                 {activeView === 'list' ? (
                     <View style={styles.resultsContainer}>
-                        {filteredBusinesses.length > 0 ? (
-                            filteredBusinesses.map((business, index) => (
-                                <Pressable
-                                    key={business.id || business._id || index}
-                                    style={styles.businessCard}
-                                    onPress={() =>
-                                        handleSelectBusiness(business)
-                                    }
-                                >
-                                    {/* Badge de disponibilidad */}
-                                    <View style={styles.stockBadge}>
-                                        <Text style={styles.stockText}>
-                                            Disponible
+                        {businesses.length > 0 ? (
+                            <>
+                                {/* Contador de resultados */}
+                                <View style={{ paddingBottom: 12 }}>
+                                    <Text style={{ fontSize: 14, color: '#666', fontWeight: '500' }}>
+                                        {businesses.length} {businesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}
+                                        {selectedFilters.distance && ` a menos de ${selectedFilters.distance} km`}
+                                    </Text>
+                                    {userCoords && businesses.some(b => b.distance) && (
+                                        <Text style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                                            {selectedFilters.distance 
+                                                ? 'Mostrando solo negocios con ubicación. Distancias aproximadas por calles.'
+                                                : 'Las distancias son aproximadas por calles'}
                                         </Text>
-                                    </View>
+                                    )}
+                                </View>
+                                
+                                {businesses.map((business, index) => (
+                            <Pressable
+                                key={business.id || business._id || index}
+                                style={styles.businessCard}
+                                onPress={() => handleSelectBusiness(business)}
+                            >
+                                {/* Badge de disponibilidad */}
+                                <View style={styles.stockBadge}>
+                                    <Text style={styles.stockText}>Disponible</Text>
+                                </View>
+
+                                {/* Botón de favoritos */}
+                                <Pressable style={styles.favoriteButton}>
+                                    <Ionicons name="heart-outline" size={20} color="#333" />
+                                </Pressable>
 
                                     {/* Botón de favoritos */}
                                     <Pressable style={styles.favoriteButton}>
@@ -527,178 +613,201 @@ export default function StoresScreen() {
                                                 </Text>
                                             </View>
                                         </View>
-                                        <View style={styles.businessFooter}>
+                                        {business.distance !== undefined && (
                                             <View style={styles.infoItem}>
-                                                <Ionicons
-                                                    name="time-outline"
-                                                    size={14}
-                                                    color="#9B59B6"
+                                                <Ionicons 
+                                                    name="location-outline" 
+                                                    size={14} 
+                                                    color={business.distance < 1 ? '#4CAF50' : business.distance < 5 ? '#FF9800' : '#9B59B6'} 
                                                 />
-                                                <Text style={styles.infoText}>
-                                                    Abierto hoy
+                                                <Text style={[
+                                                    styles.infoText,
+                                                    { color: business.distance < 1 ? '#4CAF50' : business.distance < 5 ? '#FF9800' : '#666' }
+                                                ]}>
+                                                    {formatDistance(business.distance)}
                                                 </Text>
                                             </View>
-                                            <View style={styles.infoItem}>
-                                                <Ionicons
-                                                    name="location-outline"
-                                                    size={14}
-                                                    color="#9B59B6"
-                                                />
-                                                <Text style={styles.infoText}>
-                                                    {(
-                                                        Math.random() * 5
-                                                    ).toFixed(1)}{' '}
-                                                    km
-                                                </Text>
-                                            </View>
-                                        </View>
+                                        )}
                                     </View>
 
-                                    {/* Logo circular */}
-                                    <View style={styles.businessLogo}>
-                                        <LinearGradient
-                                            colors={['#9B59B6', '#8E44AD']}
-                                            style={styles.logoCircle}
-                                        >
-                                            <Text style={styles.logoText}>
-                                                {business.name
-                                                    .substring(0, 2)
-                                                    .toUpperCase()}
-                                            </Text>
-                                        </LinearGradient>
-                                    </View>
-                                </Pressable>
-                            ))
+                                {/* Logo circular */}
+                                <View style={styles.businessLogo}>
+                                    <LinearGradient
+                                        colors={['#9B59B6', '#8E44AD']}
+                                        style={styles.logoCircle}
+                                    >
+                                        <Text style={styles.logoText}>
+                                            {business.name.substring(0, 2).toUpperCase()}
+                                        </Text>
+                                    </LinearGradient>
+                                </View>
+                            </Pressable>
+                                ))}
+                            </>
                         ) : (
                             <View style={styles.noResults}>
-                                <Ionicons
-                                    name="storefront-outline"
-                                    size={48}
-                                    color="#CCC"
-                                />
+                                <Ionicons name="storefront-outline" size={48} color="#CCC" />
                                 <Text style={styles.noResultsText}>
-                                    No hay tiendas disponibles
+                                    {selectedFilters.distance 
+                                        ? `No hay negocios a menos de ${selectedFilters.distance} km`
+                                        : selectedFilters.categories.length > 0
+                                        ? 'No hay negocios con estas categorías'
+                                        : 'No hay tiendas disponibles'}
                                 </Text>
+                                {selectedFilters.distance && (
+                                    <Pressable 
+                                        style={{ marginTop: 12, padding: 8 }}
+                                        onPress={() => setSelectedFilters(prev => ({ ...prev, distance: null }))}
+                                    >
+                                        <Text style={{ color: '#9B59B6', fontWeight: '600' }}>
+                                            Quitar filtro de distancia
+                                        </Text>
+                                    </Pressable>
+                                )}
                             </View>
                         )}
                     </View>
                 ) : (
                     // Vista de Mapa
                     <View style={styles.mapContainer}>
-                        {/* Mapa simulado */}
-                        <View style={styles.mapPlaceholder}>
-                            <LinearGradient
-                                colors={['#E8E8E8', '#F5F5F5']}
-                                style={styles.mapGradient}
-                            >
-                                {/* Marcador de ubicación central */}
-                                <View style={styles.centerMarker}>
-                                    <View style={styles.markerPulse} />
-                                    <Ionicons
-                                        name="location"
-                                        size={40}
-                                        color="#9B59B6"
-                                    />
-                                </View>
+                        {userCoords && businesses.length > 0 ? (
+                            <>
+                                {/* Mapa interactivo con React Native Maps */}
+                                <MapView
+                                    ref={mapRef}
+                                    style={styles.map}
+                                    initialRegion={{
+                                        latitude: userCoords.latitude,
+                                        longitude: userCoords.longitude,
+                                        latitudeDelta: 0.05,
+                                        longitudeDelta: 0.05,
+                                    }}
+                                    showsUserLocation={true}
+                                    showsMyLocationButton={true}
+                                    onRegionChangeComplete={(region) => setMapRegion(region)}
+                                >
+                                    {/* Marcadores de negocios - pins púrpura */}
+                                    {businesses.filter(b => b.latitude && b.longitude).map((business) => {
+                                        const lat = parseFloat(business.latitude)
+                                        const lng = parseFloat(business.longitude)
+                                        
+                                        return (
+                                            <Marker
+                                                key={business.id || business._id}
+                                                coordinate={{
+                                                    latitude: lat,
+                                                    longitude: lng
+                                                }}
+                                                title={business.name}
+                                                description={business.category}
+                                                onPress={() => handleMarkerPress(business)}
+                                                pinColor="#9B59B6"
+                                            />
+                                        )
+                                    })}
+                                </MapView>
 
-                                {/* Texto informativo */}
-                                <View style={styles.mapInfo}>
-                                    <Text style={styles.mapInfoText}>
-                                        Vista de mapa (requiere geolocalización)
-                                    </Text>
-                                </View>
-                            </LinearGradient>
-                        </View>
-
-                        {/* Cards de negocios en la parte inferior */}
-                        <View style={styles.mapCardsContainer}>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.mapCardsScroll}
-                            >
-                                {filteredBusinesses
-                                    .slice(0, 5)
-                                    .map((business, index) => (
-                                        <Pressable
-                                            key={
-                                                business.id ||
-                                                business._id ||
-                                                index
-                                            }
-                                            style={styles.mapCard}
-                                            onPress={() =>
-                                                handleSelectBusiness(business)
-                                            }
-                                        >
-                                            {/* Imagen del negocio */}
-                                            <View style={styles.mapCardImage}>
-                                                <LinearGradient
-                                                    colors={[
-                                                        '#F5F5F5',
-                                                        '#EBEBEB',
+                                {/* Cards rediseñadas - estilo visual grande */}
+                                <View style={styles.mapCardsContainer}>
+                                    <ScrollView 
+                                        ref={scrollViewRef}
+                                        horizontal 
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={styles.mapCardsScroll}
+                                        snapToInterval={CARD_WIDTH + 12}
+                                        decelerationRate="fast"
+                                        snapToAlignment="start"
+                                    >
+                                        {businesses.filter(b => b.latitude && b.longitude).map((business, index) => {
+                                            // Comparar usando el ID que exista (_id de MongoDB o id)
+                                            const businessId = business._id || business.id
+                                            const selectedId = selectedMapBusiness?._id || selectedMapBusiness?.id
+                                            const isSelected = selectedMapBusiness !== null && businessId === selectedId
+                                            
+                                            return (
+                                                <Pressable
+                                                    key={business.id || business._id || index}
+                                                    style={[
+                                                        styles.mapCard,
+                                                        isSelected && styles.mapCardSelected
                                                     ]}
-                                                    style={
-                                                        styles.mapCardImagePlaceholder
-                                                    }
+                                                    onPress={() => {
+                                                        setSelectedMapBusiness(business)
+                                                        centerMapOnBusiness(business)
+                                                    }}
                                                 >
-                                                    <Ionicons
-                                                        name="storefront-outline"
-                                                        size={32}
-                                                        color="#9B59B6"
-                                                    />
-                                                </LinearGradient>
-                                            </View>
+                                                    {/* Imagen compacta */}
+                                                    <View style={styles.mapCardImageLarge}>
+                                                        {business.profile_pic ? (
+                                                            <Image
+                                                                source={{ uri: business.profile_pic }}
+                                                                style={styles.mapCardImageFull}
+                                                                resizeMode="cover"
+                                                            />
+                                                        ) : (
+                                                            <LinearGradient
+                                                                colors={['#F5F0FF', '#E8D5FF']}
+                                                                style={styles.mapCardImageFull}
+                                                            >
+                                                                <Ionicons name="storefront-outline" size={36} color="#9B59B6" />
+                                                            </LinearGradient>
+                                                        )}
+                                                        
+                                                        {/* Badge de distancia */}
+                                                        {business.distance !== undefined && (
+                                                            <View style={styles.distanceBadge}>
+                                                                <Ionicons name="location" size={10} color="#FFF" />
+                                                                <Text style={styles.distanceBadgeText}>
+                                                                    {formatDistance(business.distance)}
+                                                                </Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
 
-                                            {/* Info del negocio */}
-                                            <View style={styles.mapCardInfo}>
-                                                <Text
-                                                    style={styles.mapCardName}
-                                                    numberOfLines={1}
-                                                >
-                                                    {business.name}
-                                                </Text>
-                                                <Text
-                                                    style={
-                                                        styles.mapCardCategory
-                                                    }
-                                                    numberOfLines={1}
-                                                >
-                                                    {business.category ||
-                                                        'Servicios generales'}
-                                                </Text>
-                                                <View
-                                                    style={styles.mapCardMeta}
-                                                >
-                                                    <Ionicons
-                                                        name="star"
-                                                        size={12}
-                                                        color="#FFB800"
-                                                    />
-                                                    <Text
-                                                        style={
-                                                            styles.mapCardRating
-                                                        }
-                                                    >
-                                                        4.{5 + (index % 5)}
-                                                    </Text>
-                                                    <Text
-                                                        style={
-                                                            styles.mapCardDistance
-                                                        }
-                                                    >
-                                                        •{' '}
-                                                        {(
-                                                            Math.random() * 5
-                                                        ).toFixed(1)}{' '}
-                                                        km
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                        </Pressable>
-                                    ))}
-                            </ScrollView>
-                        </View>
+                                                    {/* Info del negocio */}
+                                                    <View style={styles.mapCardContent}>
+                                                        <Text style={styles.mapCardTitle} numberOfLines={1}>
+                                                            {business.name}
+                                                        </Text>
+                                                        <View style={styles.mapCardFooter}>
+                                                            <View style={styles.mapCardMeta}>
+                                                                <Ionicons name="star" size={12} color="#FFB800" />
+                                                                <Text style={styles.mapCardRating}>4.{5 + (index % 5)}</Text>
+                                                                <Text style={styles.mapCardCategory}>• {business.category || 'Servicios'}</Text>
+                                                            </View>
+                                                            <Pressable onPress={() => handleSelectBusiness(business)}>
+                                                                <Ionicons name="chevron-forward-circle" size={24} color="#9B59B6" />
+                                                            </Pressable>
+                                                        </View>
+                                                    </View>
+                                                </Pressable>
+                                            )
+                                        })}
+                                    </ScrollView>
+                                </View>
+                            </>
+                        ) : (
+                            // Placeholder cuando no hay ubicación o negocios
+                            <View style={styles.mapPlaceholder}>
+                                <LinearGradient
+                                    colors={['#E8E8E8', '#F5F5F5']}
+                                    style={styles.mapGradient}
+                                >
+                                    <View style={styles.centerMarker}>
+                                        <Ionicons name="location-outline" size={48} color="#999" />
+                                    </View>
+                                    <View style={styles.mapInfo}>
+                                        <Text style={styles.mapInfoText}>
+                                            {!userCoords 
+                                                ? 'Habilita tu ubicación para ver el mapa'
+                                                : businesses.length === 0
+                                                ? 'No hay negocios para mostrar'
+                                                : `${businesses.filter(b => !b.latitude || !b.longitude).length} negocios sin coordenadas`}
+                                        </Text>
+                                    </View>
+                                </LinearGradient>
+                            </View>
+                        )}
                     </View>
                 )}
             </ScrollView>
@@ -1012,6 +1121,14 @@ export default function StoresScreen() {
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            {/* Modal de cambiar ubicación */}
+            <LocationPickerModal
+                visible={locationModalVisible}
+                onClose={() => setLocationModalVisible(false)}
+                onLocationSelected={handleLocationSelected}
+                currentLocation={userCoords}
+            />
         </SafeAreaView>
     )
 }
@@ -1497,6 +1614,10 @@ const styles = StyleSheet.create({
         height: '100%',
         minHeight: 600,
     },
+    map: {
+        width: '100%',
+        height: '100%',
+    },
     mapPlaceholder: {
         flex: 1,
         height: '100%',
@@ -1549,63 +1670,90 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     mapCardsScroll: {
-        paddingHorizontal: 16,
+        paddingHorizontal: CARD_PADDING,
         gap: 12,
     },
+
+    // Cards compactas
     mapCard: {
-        width: 280,
+        width: CARD_WIDTH,
         backgroundColor: '#FFF',
-        borderRadius: 12,
-        flexDirection: 'row',
-        padding: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    mapCardImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
+        borderRadius: 16,
         overflow: 'hidden',
-        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    mapCardImagePlaceholder: {
+    mapCardSelected: {
+        borderWidth: 3,
+        borderColor: '#9B59B6',
+        shadowColor: '#9B59B6',
+        shadowOpacity: 0.4,
+    },
+    mapCardImageLarge: {
+        width: '100%',
+        height: 100, // Reducido de 140 a 100
+        position: 'relative',
+    },
+    mapCardImageFull: {
         width: '100%',
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    mapCardInfo: {
-        flex: 1,
-        justifyContent: 'space-between',
+    distanceBadge: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        backgroundColor: 'rgba(155, 89, 182, 0.95)',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
     },
-    mapCardName: {
-        fontSize: 14,
+    distanceBadgeText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#FFF',
+    },
+    mapCardContent: {
+        padding: 12,
+    },
+    mapCardTitle: {
+        fontSize: 15,
         fontWeight: '700',
         color: '#333',
-        marginBottom: 4,
+        marginBottom: 8,
     },
-    mapCardCategory: {
-        fontSize: 12,
-        color: '#9B59B6',
-        fontWeight: '500',
-        marginBottom: 4,
+    mapCardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     mapCardMeta: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+        flex: 1,
     },
     mapCardRating: {
         fontSize: 12,
         fontWeight: '600',
         color: '#333',
     },
-    mapCardDistance: {
+    mapCardCategory: {
         fontSize: 12,
         color: '#888',
+        flex: 1,
     },
 
     // ✅ NUEVOS estilos para el modal de vendedores

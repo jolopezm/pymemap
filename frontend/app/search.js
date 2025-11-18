@@ -13,19 +13,27 @@ import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
-import { getServices, getBusiness } from '../api/business-service'
+import { getBusiness } from '../api/business-service'
 import { StatusBar } from 'expo-status-bar'
+import { calculateBusinessDistances, formatDistance } from '../utils/geolocation'
+import { useLocation } from '../context/location-context'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+const RECENT_SEARCHES_KEY = '@pymemap_recent_searches'
+const MAX_RECENT_SEARCHES = 6
 
 export default function SearchScreen() {
     const router = useRouter()
+    const { userCoords } = useLocation()
     const [searchQuery, setSearchQuery] = useState('')
-    const [services, setServices] = useState([])
     const [businesses, setBusinesses] = useState([])
-    const [recentSearches, setRecentSearches] = useState([]) // Vacío por defecto
+    const [recentSearches, setRecentSearches] = useState([])
     const [inputReady, setInputReady] = useState(false)
+    const [nearbyFilter, setNearbyFilter] = useState(false)
 
     useEffect(() => {
         fetchData()
+        loadRecentSearches()
         // Esperar a que la animación de fade termine antes de hacer autoFocus
         const timer = setTimeout(() => {
             setInputReady(true)
@@ -35,24 +43,43 @@ export default function SearchScreen() {
 
     const fetchData = async () => {
         try {
-            const [servicesData, businessData] = await Promise.all([
-                getServices(),
-                getBusiness(),
-            ])
-            setServices(servicesData)
+            const businessData = await getBusiness()
             setBusinesses(businessData)
         } catch (error) {
             console.error('Error fetching data:', error)
         }
     }
 
+    // Calcular distancias cuando cambia userCoords
+    useEffect(() => {
+        if (userCoords && businesses.length > 0) {
+            const withDistances = calculateBusinessDistances(businesses, userCoords)
+            setBusinesses(withDistances)
+        }
+    }, [userCoords])
+
     // Buscar en negocios y servicios
     const getSearchResults = () => {
+        // Si solo está activo el filtro "Cerca de mí" sin búsqueda, mostrar negocios cercanos
+        if (nearbyFilter && !searchQuery.trim() && userCoords) {
+            const nearbyDistance = 3 // 3 km se considera "cerca"
+            const nearbyBusinesses = businesses
+                .filter(business => business.distance !== undefined && business.distance <= nearbyDistance)
+                .map(business => ({
+                    type: 'business',
+                    data: business,
+                }))
+                .sort((a, b) => a.data.distance - b.data.distance)
+            
+            console.log(`📍 Mostrando ${nearbyBusinesses.length} negocios cerca de ti (< ${nearbyDistance} km)`)
+            return nearbyBusinesses
+        }
+        
         if (!searchQuery.trim()) return []
 
         const query = searchQuery.toLowerCase()
-        const results = []
-
+        let results = []
+        
         // Buscar en negocios
         businesses.forEach(business => {
             const matchesName = business.name?.toLowerCase().includes(query)
@@ -70,41 +97,90 @@ export default function SearchScreen() {
                 })
             }
         })
-
-        // Buscar en servicios
-        services.forEach(service => {
-            const matchesName = service.name?.toLowerCase().includes(query)
-            const matchesDescription = service.description
-                ?.toLowerCase()
-                .includes(query)
-
-            if (matchesName || matchesDescription) {
-                results.push({
-                    type: 'service',
-                    data: service,
-                })
-            }
-        })
-
+        
+        // Aplicar filtro de cercanía si está activo (3 km - "Cerca de mí")
+        if (nearbyFilter && userCoords) {
+            const nearbyDistance = 3 // 3 km se considera "cerca"
+            results = results.filter(result => {
+                if (result.type === 'business' && result.data.distance !== undefined) {
+                    return result.data.distance <= nearbyDistance
+                }
+                return true // Mantener servicios sin distancia
+            })
+            console.log(`📍 Filtro "Cerca de mí": ${results.length} resultados dentro de ${nearbyDistance} km`)
+        }
+        
+        // Ordenar por distancia si hay coordenadas
+        if (userCoords) {
+            results.sort((a, b) => {
+                const distA = a.data.distance || Infinity
+                const distB = b.data.distance || Infinity
+                return distA - distB
+            })
+        }
+        
         return results.slice(0, 10)
     }
 
     const searchResults = getSearchResults()
 
-    // Marcas más buscadas (top 6 negocios)
-    const topBrands = businesses.slice(0, 6)
-
     // Clicks rápidos relevantes para PyMEs
     const quickClicks = [
-        { id: 1, label: 'Servicios técnicos', icon: 'construct-outline' },
-        { id: 2, label: 'Belleza y estética', icon: 'cut-outline' },
-        { id: 3, label: 'Salud', icon: 'medkit-outline' },
-        { id: 4, label: 'Comida', icon: 'restaurant-outline' },
-        { id: 5, label: 'Retail', icon: 'bag-outline' },
-        { id: 6, label: 'Educación', icon: 'school-outline' },
+        { id: 0, label: 'Cerca de mí', icon: 'location-outline', isNearby: true, maxDistance: 3 },
+        { id: 1, label: 'Servicios', icon: 'construct-outline', searchQuery: 'servicios' },
+        { id: 2, label: 'Belleza', icon: 'cut-outline', searchQuery: 'belleza' },
+        { id: 3, label: 'Salud', icon: 'medkit-outline', searchQuery: 'salud' },
+        { id: 4, label: 'Comida', icon: 'restaurant-outline', searchQuery: 'comida' },
+        { id: 5, label: 'Retail', icon: 'bag-outline', searchQuery: 'retail' },
+        { id: 6, label: 'Educación', icon: 'school-outline', searchQuery: 'educación' },
     ]
 
-    const handleSelectResult = result => {
+    // Cargar búsquedas recientes desde AsyncStorage
+    const loadRecentSearches = async () => {
+        try {
+            const stored = await AsyncStorage.getItem(RECENT_SEARCHES_KEY)
+            if (stored) {
+                setRecentSearches(JSON.parse(stored))
+            }
+        } catch (error) {
+            console.error('Error cargando búsquedas recientes:', error)
+        }
+    }
+
+    // Guardar una nueva búsqueda
+    const saveRecentSearch = async (query) => {
+        try {
+            const trimmedQuery = query.trim()
+            if (!trimmedQuery) return
+
+            // Obtener búsquedas actuales
+            let searches = [...recentSearches]
+            
+            // Eliminar duplicados (si ya existe, la movemos al inicio)
+            searches = searches.filter(s => s.toLowerCase() !== trimmedQuery.toLowerCase())
+            
+            // Agregar al inicio
+            searches.unshift(trimmedQuery)
+            
+            // Limitar a MAX_RECENT_SEARCHES
+            searches = searches.slice(0, MAX_RECENT_SEARCHES)
+            
+            // Guardar en estado y AsyncStorage
+            setRecentSearches(searches)
+            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches))
+            
+            console.log('✅ Búsqueda guardada:', trimmedQuery)
+        } catch (error) {
+            console.error('Error guardando búsqueda reciente:', error)
+        }
+    }
+
+    const handleSelectResult = (result) => {
+        // Guardar la búsqueda antes de navegar
+        if (searchQuery.trim()) {
+            saveRecentSearch(searchQuery)
+        }
+        
         if (result.type === 'business') {
             router.push(
                 `/business-profile?id=${result.data.id || result.data._id}`
@@ -118,8 +194,14 @@ export default function SearchScreen() {
         setSearchQuery(search)
     }
 
-    const clearRecentSearches = () => {
-        setRecentSearches([])
+    const clearRecentSearches = async () => {
+        try {
+            setRecentSearches([])
+            await AsyncStorage.removeItem(RECENT_SEARCHES_KEY)
+            console.log('🗑️ Búsquedas recientes eliminadas')
+        } catch (error) {
+            console.error('Error eliminando búsquedas recientes:', error)
+        }
     }
 
     return (
@@ -135,6 +217,12 @@ export default function SearchScreen() {
                         placeholderTextColor="#999"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
+                        onSubmitEditing={() => {
+                            if (searchQuery.trim()) {
+                                saveRecentSearch(searchQuery)
+                                Keyboard.dismiss()
+                            }
+                        }}
                         autoFocus={inputReady}
                         keyboardAppearance="light"
                         returnKeyType="search"
@@ -155,14 +243,24 @@ export default function SearchScreen() {
                 </View>
             </View>
 
-            <ScrollView
-                style={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                {searchQuery.trim().length > 0 ? (
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {searchQuery.trim().length > 0 || nearbyFilter ? (
                     // Resultados de búsqueda
                     searchResults.length > 0 ? (
                         <View style={styles.resultsSection}>
+                            {/* Contador de resultados */}
+                            <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                                <Text style={{ fontSize: 14, color: '#666', fontWeight: '500' }}>
+                                    {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'}
+                                    {nearbyFilter && ` cerca de ti (< 3 km)`}
+                                </Text>
+                                {userCoords && searchResults.some(r => r.data.distance) && (
+                                    <Text style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                                        Las distancias son aproximadas por calles
+                                    </Text>
+                                )}
+                            </View>
+                            
                             {searchResults.map((result, index) => (
                                 <Pressable
                                     key={`${result.type}-${result.data.id || result.data._id || index}`}
@@ -195,15 +293,33 @@ export default function SearchScreen() {
                                         >
                                             {result.data.name}
                                         </Text>
-                                        <Text
-                                            style={styles.resultCategory}
-                                            numberOfLines={1}
-                                        >
-                                            {result.type === 'business'
-                                                ? result.data.category
-                                                : result.data.description ||
-                                                  'Servicio'}
-                                        </Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                            <Text style={styles.resultCategory} numberOfLines={1}>
+                                                {result.type === 'business' 
+                                                    ? result.data.category 
+                                                    : result.data.description || 'Servicio'}
+                                            </Text>
+                                            {result.data.distance && (
+                                                <>
+                                                    <Text style={styles.resultCategory}>•</Text>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                        <Ionicons 
+                                                            name="location" 
+                                                            size={12} 
+                                                            color={result.data.distance < 1 ? '#4CAF50' : result.data.distance < 5 ? '#FF9800' : '#888'} 
+                                                        />
+                                                        <Text style={{
+                                                            fontSize: 12,
+                                                            color: result.data.distance < 1 ? '#4CAF50' : result.data.distance < 5 ? '#FF9800' : '#888',
+                                                            fontWeight: '600',
+                                                            marginLeft: 2,
+                                                        }}>
+                                                            {formatDistance(result.data.distance)}
+                                                        </Text>
+                                                    </View>
+                                                </>
+                                            )}
+                                        </View>
                                     </View>
                                     <Ionicons
                                         name="arrow-forward"
@@ -235,84 +351,83 @@ export default function SearchScreen() {
                         {recentSearches.length > 0 && (
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
-                                    <Text style={styles.sectionTitle}>
-                                        Búsquedas recientes
-                                    </Text>
-                                    <Pressable onPress={clearRecentSearches}>
-                                        <Text style={styles.clearButton}>
-                                            Eliminar
-                                        </Text>
+                                    <View style={styles.sectionTitleContainer}>
+                                        <Ionicons name="time-outline" size={18} color="#9B59B6" style={{ marginRight: 8 }} />
+                                        <Text style={styles.sectionTitle}>Recientes</Text>
+                                    </View>
+                                    <Pressable onPress={clearRecentSearches} style={styles.clearButtonContainer}>
+                                        <Text style={styles.clearButton}>Limpiar</Text>
                                     </Pressable>
                                 </View>
-                                {recentSearches.map((search, index) => (
-                                    <Pressable
-                                        key={index}
-                                        style={styles.recentItem}
-                                        onPress={() =>
-                                            handleRecentSearch(search)
-                                        }
-                                    >
-                                        <Ionicons
-                                            name="time-outline"
-                                            size={20}
-                                            color="#666"
-                                        />
-                                        <Text style={styles.recentText}>
-                                            {search}
-                                        </Text>
-                                    </Pressable>
-                                ))}
+                                <View style={styles.recentGrid}>
+                                    {recentSearches.map((search, index) => (
+                                        <Pressable
+                                            key={index}
+                                            style={styles.recentChip}
+                                            onPress={() => handleRecentSearch(search)}
+                                        >
+                                            <Text style={styles.recentChipText} numberOfLines={1}>
+                                                {search}
+                                            </Text>
+                                            <Ionicons name="arrow-forward" size={14} color="#9B59B6" />
+                                        </Pressable>
+                                    ))}
+                                </View>
                             </View>
                         )}
 
-                        {/* Marcas más buscadas */}
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>
-                                Marcas más buscadas
-                            </Text>
-                            <View style={styles.brandsGrid}>
-                                {topBrands.map((brand, index) => (
-                                    <Pressable
-                                        key={brand.id || brand._id || index}
-                                        style={styles.brandChip}
-                                        onPress={() =>
-                                            handleSelectResult({
-                                                type: 'business',
-                                                data: brand,
-                                            })
-                                        }
-                                    >
-                                        <Text
-                                            style={styles.brandText}
-                                            numberOfLines={1}
-                                        >
-                                            {brand.name}
-                                        </Text>
-                                    </Pressable>
-                                ))}
-                            </View>
-                        </View>
-
                         {/* Clicks rápidos */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>
-                                Clicks rápidos
-                            </Text>
+                            <View style={styles.sectionHeaderSimple}>
+                                <Ionicons name="flash-outline" size={18} color="#9B59B6" style={{ marginRight: 8 }} />
+                                <Text style={styles.sectionTitle}>Explorar</Text>
+                            </View>
                             <View style={styles.quickGrid}>
                                 {quickClicks.map(item => (
                                     <Pressable
                                         key={item.id}
-                                        style={styles.quickChip}
-                                        onPress={() =>
-                                            setSearchQuery(item.label)
-                                        }
+                                        style={({ pressed }) => [
+                                            styles.quickChip,
+                                            item.isNearby && nearbyFilter && styles.quickChipActive,
+                                            item.isNearby && !userCoords && styles.quickChipDisabled,
+                                            pressed && !item.isNearby && styles.quickChipPressed,
+                                        ]}
+                                        onPress={() => {
+                                            if (item.isNearby) {
+                                                if (userCoords) {
+                                                    setNearbyFilter(!nearbyFilter)
+                                                    if (!nearbyFilter) {
+                                                        console.log(`📍 Filtro "Cerca de mí" ACTIVADO: < ${item.maxDistance} km`)
+                                                    } else {
+                                                        console.log('📍 Filtro "Cerca de mí" DESACTIVADO')
+                                                    }
+                                                }
+                                            } else {
+                                                // Buscar automáticamente con la query del botón y guardarla
+                                                const query = item.searchQuery || item.label
+                                                setSearchQuery(query)
+                                                saveRecentSearch(query)
+                                                console.log(`🔍 Búsqueda rápida: ${query}`)
+                                            }
+                                        }}
+                                        disabled={item.isNearby && !userCoords}
                                     >
-                                        <Ionicons
-                                            name={item.icon}
-                                            size={16}
-                                            color="#9B59B6"
-                                        />
-                                        <Text style={styles.quickText}>
+                                        <View style={[
+                                            styles.quickIconContainer,
+                                            item.isNearby && nearbyFilter && styles.quickIconContainerActive,
+                                            item.isNearby && !userCoords && styles.quickIconContainerDisabled,
+                                        ]}>
+                                            <Ionicons 
+                                                name={item.icon} 
+                                                size={18} 
+                                                color={item.isNearby && nearbyFilter ? '#FFF' : item.isNearby && !userCoords ? '#CCC' : '#9B59B6'} 
+                                            />
+                                        </View>
+                                        <Text style={[
+                                            styles.quickText,
+                                            item.isNearby && nearbyFilter && styles.quickTextActive,
+                                            item.isNearby && !userCoords && styles.quickTextDisabled,
+                                        ]} numberOfLines={1}>
                                             {item.label}
                                         </Text>
                                     </Pressable>
@@ -373,14 +488,23 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 16,
-        marginBottom: 12,
+        marginBottom: 16,
+    },
+    sectionTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     sectionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#666',
-        paddingHorizontal: 16,
-        marginBottom: 12,
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#333',
+        letterSpacing: -0.3,
+    },
+    clearButtonContainer: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        backgroundColor: '#F5F0FF',
     },
     clearButton: {
         fontSize: 13,
@@ -388,62 +512,117 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // Búsquedas recientes
-    recentItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        gap: 12,
-    },
-    recentText: {
-        fontSize: 15,
-        color: '#333',
-    },
-
-    // Marcas más buscadas
-    brandsGrid: {
+    // Búsquedas recientes (estilo chips/pills)
+    recentGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         paddingHorizontal: 16,
-        gap: 8,
+        gap: 10,
     },
-    brandChip: {
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
+    recentChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#F8F8F8',
+        paddingHorizontal: 12,
         paddingVertical: 10,
-        borderRadius: 20,
+        borderRadius: 12,
         borderWidth: 1,
         borderColor: '#E8E8E8',
+        minWidth: '48%',
+        maxWidth: '48%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    brandText: {
+    recentChipText: {
         fontSize: 13,
         color: '#333',
         fontWeight: '500',
+        flex: 1,
+        flexShrink: 1,
     },
 
-    // Clicks rápidos
+    // Sección header simple (sin botón)
+    sectionHeaderSimple: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginBottom: 16,
+    },
+
+    // Clicks rápidos (estilo cards modernas)
     quickGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         paddingHorizontal: 16,
-        gap: 8,
+        gap: 12,
+        justifyContent: 'center',
     },
     quickChip: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
-        gap: 6,
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        borderWidth: 1,
+        justifyContent: 'center',
+        gap: 10,
+        backgroundColor: '#FFFFFF',
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        borderWidth: 1.5,
         borderColor: '#E8E8E8',
+        minWidth: '30%',
+        maxWidth: '31%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    quickChipPressed: {
+        backgroundColor: '#F5F0FF',
+        borderColor: '#D4B5F7',
+        transform: [{ scale: 0.98 }],
+    },
+    quickChipActive: {
+        backgroundColor: '#9B59B6',
+        borderColor: '#9B59B6',
+        shadowColor: '#9B59B6',
+        shadowOpacity: 0.3,
+    },
+    quickChipDisabled: {
+        backgroundColor: '#F9F9F9',
+        borderColor: '#E8E8E8',
+        opacity: 0.4,
+    },
+    quickIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#F5F0FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    quickIconContainerActive: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    quickIconContainerDisabled: {
+        backgroundColor: '#F5F5F5',
     },
     quickText: {
         fontSize: 13,
         color: '#333',
-        fontWeight: '500',
+        fontWeight: '600',
+        textAlign: 'center',
+        letterSpacing: 0,
+        marginTop: 4,
+    },
+    quickTextActive: {
+        color: '#FFF',
+    },
+    quickTextDisabled: {
+        color: '#CCC',
     },
 
     // Resultados de búsqueda
