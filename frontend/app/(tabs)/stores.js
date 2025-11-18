@@ -437,7 +437,7 @@ export default function StoresScreen() {
                                     styles.filterTextActive,
                             ]}
                         >
-                            Vendido por{' '}
+                            Ofrecido por{' '}
                             {selectedFilters.vendedor.length > 0 &&
                                 `(${selectedFilters.vendedor.length})`}
                         </Text>

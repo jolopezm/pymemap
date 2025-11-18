@@ -32,7 +32,7 @@ export async function createNotification(notificationData) {
     }
 }
 
-export default async function getNotifications(userId) {
+export async function getNotifications(userId) {
     if (!userId) {
         console.warn('⚠️ No userId provided to getNotifications')
         return []
@@ -43,7 +43,7 @@ export default async function getNotifications(userId) {
 
     try {
         console.log(`📥 Fetching notifications for user: ${userId}`)
-        const response = await axios.get(`${API_URL}/notifications/${userId}`, {
+        const response = await axios.get(`${API_URL}/notifications?user_id=${userId}`, {
             headers,
         })
         console.log(`✅ Notifications fetched: ${response.data.length} items`)
@@ -66,7 +66,7 @@ export async function markNotificationAsRead(notificationId) {
     try {
         console.log(`📝 Marking notification as read: ${notificationId}`)
         const response = await axios.patch(
-            `${API_URL}/notifications/${notificationId}/read`,
+            `${API_URL}/notifications/${notificationId}`,
             {},
             { headers }
         )
@@ -77,3 +77,6 @@ export async function markNotificationAsRead(notificationId) {
         throw error
     }
 }
+
+// Default export for backward compatibility  
+export default getNotifications

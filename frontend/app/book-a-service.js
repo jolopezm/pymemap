@@ -94,12 +94,16 @@ export default function BookService() {
             // 3. Crear notificación para el vendedor
             try {
                 const notifPayload = {
-                    user_id: businessData.owner_id,
-                    title: '📅 Nueva solicitud de reserva',
+                    targetUserId: businessData.owner_id,
                     message: `${user.name || user.email} solicitó una reserva en ${businessName || businessData.name} para el ${dateStr} a las ${timeStr}`,
                     type: 'booking_request',
-                    related_id: booking._id || booking.id,
-                    read: false,
+                    date: new Date().toISOString(),
+                    reference: {
+                        booking_id: booking._id || booking.id,
+                        business_name: businessName || businessData.name,
+                        requested_date: dateStr,
+                        requested_time: timeStr
+                    }
                 }
 
                 console.log('📤 Enviando notificación:', notifPayload)

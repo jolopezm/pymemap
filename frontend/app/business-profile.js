@@ -573,7 +573,7 @@ export default function BusinessProfile() {
                         style={globalStyles.button}
                         onPress={() => {
                             setModalVisible(false)
-                            router.push(`/chat-view?chatId=${chat._id}`)
+                            router.push(`/chat-view?chatId=${chat?._id}`)
                         }}
                     >
                         <Text style={globalStyles.buttonText}>Ir al chat</Text>

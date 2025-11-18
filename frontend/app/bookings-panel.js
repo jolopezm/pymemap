@@ -65,12 +65,15 @@ export default function BookingsPanel() {
             if (booking?.client_id) {
                 try {
                     const notifPayload = {
-                        user_id: booking.client_id,
-                        title: '✅ Reserva confirmada',
+                        targetUserId: booking.client_id,
                         message: `Tu reserva para el ${booking.date} a las ${booking.start_time} ha sido confirmada`,
                         type: 'booking_confirmed',
-                        related_id: bookingId,
-                        read: false,
+                        date: new Date().toISOString(),
+                        reference: {
+                            booking_id: bookingId,
+                            date: booking.date,
+                            start_time: booking.start_time
+                        }
                     }
 
                     console.log(
@@ -109,12 +112,15 @@ export default function BookingsPanel() {
             if (booking?.client_id) {
                 try {
                     const notifPayload = {
-                        user_id: booking.client_id,
-                        title: '❌ Reserva rechazada',
+                        targetUserId: booking.client_id,
                         message: `Tu reserva para el ${booking.date} a las ${booking.start_time} fue rechazada. Intenta otra fecha u horario.`,
                         type: 'booking_rejected',
-                        related_id: bookingId,
-                        read: false,
+                        date: new Date().toISOString(),
+                        reference: {
+                            booking_id: bookingId,
+                            date: booking.date,
+                            start_time: booking.start_time
+                        }
                     }
 
                     console.log(
