@@ -13,8 +13,23 @@
 ### Ahora:
 
 -   Cliente puede solicitar **cualquier fecha y hora**
+-   **Sin validaciones previas** - No se verifica disponibilidad ni conflictos
 -   Vendedor **revisa y aprueba/rechaza** cada solicitud
 -   Sistema más flexible y menos mantenimiento
+
+---
+
+## ⚠️ Validaciones Desactivadas
+
+En este flujo simplificado, el backend **NO valida**:
+
+-   ❌ Si la fecha está en la colección `availability`
+-   ❌ Si hay conflictos con otras reservas (overlapping)
+-   ❌ Si el horario está disponible
+
+**Filosofía:** El cliente puede solicitar lo que quiera, el vendedor decide si acepta o no.
+
+**Código preservado:** Las validaciones están comentadas en el backend para reactivarlas en el futuro si se desea mostrar alertas de conflicto al vendedor (sin bloquear la solicitud).
 
 ---
 
@@ -133,6 +148,13 @@ export async function rejectBooking(bookingId) {
 
 #### 6. **`backend/app/routers/bookings.py`** (Actualizado)
 
+**Cambio crítico en `POST /bookings/`:**
+
+-   ✅ **Validaciones desactivadas**: No verifica `availability` ni `overlapping`
+-   ✅ **Código preservado**: Validaciones comentadas para uso futuro
+-   ✅ **Status por defecto**: Todas las nuevas solicitudes inician como `pending`
+-   ✅ **Sin restricciones**: Cliente puede solicitar cualquier fecha/hora
+
 **Nuevo endpoint:**
 
 ```python
@@ -151,8 +173,9 @@ async def reject_booking(booking_id: str, current_user: TokenData)
 -   `POST /business/{business_id}/availability` - Configurar disponibilidad
 -   `GET /business/{business_id}/availability/{year}/{month}` - Obtener disponibilidad
 -   `GET /business/{business_id}/availability/date/{date}/slots` - Obtener slots
--   `POST /bookings/` - Crear reserva ✅ **Usado por nuevo flujo**
+-   `POST /bookings/` - Crear reserva ✅ **Usado por nuevo flujo (sin validaciones)**
 -   `PATCH /bookings/{booking_id}/confirm` - Confirmar ✅ **Usado por nuevo flujo**
+-   `PATCH /bookings/{booking_id}/reject` - Rechazar ✅ **Nuevo endpoint**
 -   `GET /bookings/my-bookings` - Mis reservas ✅ **Usado por nuevo flujo**
 -   `GET /business/{business_id}/bookings` - Reservas del negocio ✅ **Usado por nuevo flujo**
 

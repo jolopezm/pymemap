@@ -137,30 +137,35 @@ async def create_booking(
     # Obtener el user_id
     user_id = await get_user_id_from_token(current_user)
     
-    # Verificar disponibilidad
-    availability = await db.availability.find_one({
-        "business_id": booking.business_id,
-        "date": booking.date
-    })
+    # NOTA: Validaciones de disponibilidad desactivadas en el flujo simplificado
+    # El vendedor revisará y aprobará/rechazará cada solicitud manualmente
+    # Este código se mantiene comentado para uso futuro si se desea habilitar validaciones
     
-    if not availability:
-        raise HTTPException(status_code=400, detail="Fecha no disponible")
-    
-    # Verificar que el slot esté libre
-    overlapping_booking = await db.bookings.find_one({
-        "business_id": booking.business_id,
-        "date": booking.date,
-        "status": {"$in": ["pending", "confirmed"]},
-        "start_time": {"$lt": booking.end_time},
-        "end_time": {"$gt": booking.start_time}
-    })
-    
-    if overlapping_booking:
-        raise HTTPException(status_code=400, detail="Horario no disponible")
+    # # Verificar disponibilidad
+    # availability = await db.availability.find_one({
+    #     "business_id": booking.business_id,
+    #     "date": booking.date
+    # })
+    # 
+    # if not availability:
+    #     raise HTTPException(status_code=400, detail="Fecha no disponible")
+    # 
+    # # Verificar que el slot esté libre
+    # overlapping_booking = await db.bookings.find_one({
+    #     "business_id": booking.business_id,
+    #     "date": booking.date,
+    #     "status": {"$in": ["pending", "confirmed"]},
+    #     "start_time": {"$lt": booking.end_time},
+    #     "end_time": {"$gt": booking.start_time}
+    # })
+    # 
+    # if overlapping_booking:
+    #     raise HTTPException(status_code=400, detail="Horario no disponible")
     
     booking_dict = booking.dict()
     booking_dict["client_id"] = user_id
     booking_dict["created_at"] = datetime.now()
+    booking_dict["status"] = "pending"  # Todas las nuevas solicitudes inician como pending
     
     result = await db.bookings.insert_one(booking_dict)
     created_booking = await db.bookings.find_one({"_id": result.inserted_id})

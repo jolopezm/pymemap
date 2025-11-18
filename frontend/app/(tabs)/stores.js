@@ -1,23 +1,37 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Image, Modal, Animated } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    StyleSheet,
+    ScrollView,
+    TextInput,
+    Image,
+    Modal,
+    Animated,
+} from 'react-native'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getServices, getBusiness } from '../../api/business-service'
+import { getUserById } from '../../api/user-service'
 
 export default function StoresScreen() {
     const router = useRouter()
     const [businesses, setBusinesses] = useState([])
+    const [owners, setOwners] = useState([])
     const [activeView, setActiveView] = useState('list') // 'list' o 'map'
     const [userLocation, setUserLocation] = useState('Antonio Varas 666')
     const [selectedFilters, setSelectedFilters] = useState({
         domicilio: false,
         categories: [],
         recoger: false,
+        vendedor: [], // Ya está bien, pero no se usa
     })
     const [showSortModal, setShowSortModal] = useState(false)
     const [showCategoriesModal, setShowCategoriesModal] = useState(false)
+    const [showVendorsModal, setShowVendorsModal] = useState(false)
     const [sortOption, setSortOption] = useState('Recomendados')
     const slideAnim = useRef(new Animated.Value(300)).current
     const fadeAnim = useRef(new Animated.Value(0)).current
@@ -25,6 +39,13 @@ export default function StoresScreen() {
     useEffect(() => {
         fetchData()
     }, [])
+
+    // ✅ CORRECCIÓN: Cargar owners DESPUÉS de que businesses se cargue
+    useEffect(() => {
+        if (businesses.length > 0) {
+            fetchOwners()
+        }
+    }, [businesses])
 
     useEffect(() => {
         if (showSortModal) {
@@ -66,25 +87,61 @@ export default function StoresScreen() {
         }
     }
 
-    const handleSelectBusiness = (business) => {
+    const fetchOwners = async () => {
+        try {
+            console.log('🔍 Fetching owners for businesses:', businesses.length)
+
+            const ownerIds = businesses
+                .map(biz => biz.owner_id)
+                .filter(id => id)
+            console.log('🔍 Owner IDs:', ownerIds)
+
+            const uniqueOwnerIds = [...new Set(ownerIds)]
+            console.log('🔍 Unique Owner IDs:', uniqueOwnerIds)
+
+            const ownerPromises = uniqueOwnerIds.map(id => getUserById(id))
+            const ownersData = await Promise.all(ownerPromises)
+
+            console.log('✅ Owners loaded:', ownersData)
+            setOwners(ownersData)
+        } catch (error) {
+            console.error('❌ Error fetching owners:', error)
+        }
+    }
+
+    const handleVendorToggle = vendorId => {
+        setSelectedFilters(prev => {
+            const currentVendors = prev.vendedor
+            const isSelected = currentVendors.includes(vendorId)
+
+            return {
+                ...prev,
+                vendedor: isSelected
+                    ? currentVendors.filter(v => v !== vendorId)
+                    : [...currentVendors, vendorId],
+            }
+        })
+    }
+
+    const handleSelectBusiness = business => {
         router.push(`/business-profile?id=${business.id || business._id}`)
     }
 
-    const toggleFilter = (filter) => {
+    const toggleFilter = filter => {
         setSelectedFilters(prev => ({
             ...prev,
-            [filter]: !prev[filter]
+            [filter]: !prev[filter],
         }))
     }
 
-    const handleSortSelect = (option) => {
+    const handleSortSelect = option => {
         setSortOption(option)
         setShowSortModal(false)
-        
+
         // Lógica de ordenamiento
         let sortedBusinesses = [...businesses]
-        
-        switch(option) {
+
+        switch (option) {
             case 'Más cercanos':
                 // Ordenar por distancia (simulada con random)
                 sortedBusinesses.sort(() => Math.random() - 0.5)
@@ -110,7 +167,7 @@ export default function StoresScreen() {
                 // Orden original o por algoritmo de recomendación
                 break
         }
-        
+
         setBusinesses(sortedBusinesses)
     }
 
@@ -133,16 +190,16 @@ export default function StoresScreen() {
         { id: 8, label: 'Tecnología', icon: 'phone-portrait-outline' },
     ]
 
-    const handleCategoryToggle = (category) => {
+    const handleCategoryToggle = category => {
         setSelectedFilters(prev => {
             const currentCategories = prev.categories
             const isSelected = currentCategories.includes(category)
-            
+
             return {
                 ...prev,
-                categories: isSelected 
+                categories: isSelected
                     ? currentCategories.filter(c => c !== category)
-                    : [...currentCategories, category]
+                    : [...currentCategories, category],
             }
         })
     }
@@ -153,7 +210,9 @@ export default function StoresScreen() {
 
         // Filtrar por domicilio
         if (selectedFilters.domicilio) {
-            filtered = filtered.filter(business => business.hasDelivery !== false)
+            filtered = filtered.filter(
+                business => business.hasDelivery !== false
+            )
         }
 
         // Filtrar por recoger en tienda
@@ -163,10 +222,17 @@ export default function StoresScreen() {
 
         // Filtrar por categorías
         if (selectedFilters.categories.length > 0) {
-            filtered = filtered.filter(business => 
-                selectedFilters.categories.some(cat => 
+            filtered = filtered.filter(business =>
+                selectedFilters.categories.some(cat =>
                     business.category?.toLowerCase().includes(cat.toLowerCase())
                 )
+            )
+        }
+
+        // ✅ NUEVO: Filtrar por vendedor
+        if (selectedFilters.vendedor.length > 0) {
+            filtered = filtered.filter(business =>
+                selectedFilters.vendedor.includes(business.owner_id)
             )
         }
 
@@ -180,7 +246,12 @@ export default function StoresScreen() {
             {/* Header con ubicación y búsqueda */}
             <View style={styles.header}>
                 {/* Ubicación actual */}
-                <Pressable style={styles.locationContainer} onPress={() => {/* TODO: Abrir selector de ubicación */}}>
+                <Pressable
+                    style={styles.locationContainer}
+                    onPress={() => {
+                        /* TODO: Abrir selector de ubicación */
+                    }}
+                >
                     <View style={styles.locationIcon}>
                         <Ionicons name="location" size={20} color="#9B59B6" />
                     </View>
@@ -190,36 +261,58 @@ export default function StoresScreen() {
                             <Text style={styles.locationText} numberOfLines={1}>
                                 {userLocation}
                             </Text>
-                            <Ionicons name="chevron-down" size={16} color="#333" />
+                            <Ionicons
+                                name="chevron-down"
+                                size={16}
+                                color="#333"
+                            />
                         </View>
                     </View>
                 </Pressable>
 
                 {/* Barra de búsqueda compacta */}
-                <Pressable 
+                <Pressable
                     style={styles.searchBar}
                     onPress={() => router.push('/search')}
                 >
                     <Ionicons name="search-outline" size={20} color="#888" />
-                    <Text style={styles.searchPlaceholder}>Buscar negocios o servicios</Text>
+                    <Text style={styles.searchPlaceholder}>
+                        Buscar negocios o servicios
+                    </Text>
                 </Pressable>
             </View>
 
             {/* Tabs: Mapa / Lista */}
             <View style={styles.tabsContainer}>
-                <Pressable 
-                    style={[styles.tab, activeView === 'map' && styles.tabActive]}
+                <Pressable
+                    style={[
+                        styles.tab,
+                        activeView === 'map' && styles.tabActive,
+                    ]}
                     onPress={() => setActiveView('map')}
                 >
-                    <Text style={[styles.tabText, activeView === 'map' && styles.tabTextActive]}>
+                    <Text
+                        style={[
+                            styles.tabText,
+                            activeView === 'map' && styles.tabTextActive,
+                        ]}
+                    >
                         Mapa
                     </Text>
                 </Pressable>
-                <Pressable 
-                    style={[styles.tab, activeView === 'list' && styles.tabActive]}
+                <Pressable
+                    style={[
+                        styles.tab,
+                        activeView === 'list' && styles.tabActive,
+                    ]}
                     onPress={() => setActiveView('list')}
                 >
-                    <Text style={[styles.tabText, activeView === 'list' && styles.tabTextActive]}>
+                    <Text
+                        style={[
+                            styles.tabText,
+                            activeView === 'list' && styles.tabTextActive,
+                        ]}
+                    >
                         Lista
                     </Text>
                 </Pressable>
@@ -227,130 +320,267 @@ export default function StoresScreen() {
 
             {/* Filtros rápidos */}
             <View style={styles.filtersContainer}>
-                <ScrollView 
-                    horizontal 
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filtersScroll}
                 >
-                    <Pressable 
+                    <Pressable
                         style={styles.filterChip}
                         onPress={() => setShowSortModal(true)}
                     >
-                        <Ionicons name="swap-vertical-outline" size={14} color="#333" />
+                        <Ionicons
+                            name="swap-vertical-outline"
+                            size={14}
+                            color="#333"
+                        />
                         <Text style={styles.filterText}>Ordenar</Text>
                     </Pressable>
 
-                    <Pressable 
-                        style={[styles.filterChip, selectedFilters.categories.length > 0 && styles.filterChipActive]}
+                    <Pressable
+                        style={[
+                            styles.filterChip,
+                            selectedFilters.categories.length > 0 &&
+                                styles.filterChipActive,
+                        ]}
                         onPress={() => setShowCategoriesModal(true)}
                     >
-                        <Ionicons name="grid-outline" size={14} color={selectedFilters.categories.length > 0 ? '#FFF' : '#333'} />
-                        <Text style={[styles.filterText, selectedFilters.categories.length > 0 && styles.filterTextActive]}>
-                            Categorías {selectedFilters.categories.length > 0 && `${selectedFilters.categories.length}`}
+                        <Ionicons
+                            name="grid-outline"
+                            size={14}
+                            color={
+                                selectedFilters.categories.length > 0
+                                    ? '#FFF'
+                                    : '#333'
+                            }
+                        />
+                        <Text
+                            style={[
+                                styles.filterText,
+                                selectedFilters.categories.length > 0 &&
+                                    styles.filterTextActive,
+                            ]}
+                        >
+                            Categorías{' '}
+                            {selectedFilters.categories.length > 0 &&
+                                `${selectedFilters.categories.length}`}
                         </Text>
                     </Pressable>
 
-                    <Pressable 
-                        style={[styles.filterChip, selectedFilters.recoger && styles.filterChipActive]}
+                    <Pressable
+                        style={[
+                            styles.filterChip,
+                            selectedFilters.recoger && styles.filterChipActive,
+                        ]}
                         onPress={() => toggleFilter('recoger')}
                     >
-                        <Ionicons name="bag-handle-outline" size={14} color={selectedFilters.recoger ? '#FFF' : '#333'} />
-                        <Text style={[styles.filterText, selectedFilters.recoger && styles.filterTextActive]}>
+                        <Ionicons
+                            name="bag-handle-outline"
+                            size={14}
+                            color={selectedFilters.recoger ? '#FFF' : '#333'}
+                        />
+                        <Text
+                            style={[
+                                styles.filterText,
+                                selectedFilters.recoger &&
+                                    styles.filterTextActive,
+                            ]}
+                        >
                             Recoger en tienda
                         </Text>
                     </Pressable>
 
-                    <Pressable 
-                        style={[styles.filterChip, selectedFilters.domicilio && styles.filterChipActive]}
+                    <Pressable
+                        style={[
+                            styles.filterChip,
+                            selectedFilters.domicilio &&
+                                styles.filterChipActive,
+                        ]}
                         onPress={() => toggleFilter('domicilio')}
                     >
-                        <Ionicons name="car-outline" size={14} color={selectedFilters.domicilio ? '#FFF' : '#333'} />
-                        <Text style={[styles.filterText, selectedFilters.domicilio && styles.filterTextActive]}>
+                        <Ionicons
+                            name="car-outline"
+                            size={14}
+                            color={selectedFilters.domicilio ? '#FFF' : '#333'}
+                        />
+                        <Text
+                            style={[
+                                styles.filterText,
+                                selectedFilters.domicilio &&
+                                    styles.filterTextActive,
+                            ]}
+                        >
                             Domicilio
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        style={[
+                            styles.filterChip,
+                            selectedFilters.vendedor.length > 0 &&
+                                styles.filterChipActive,
+                        ]}
+                        onPress={() => setShowVendorsModal(true)}
+                    >
+                        <Ionicons
+                            name="storefront-outline"
+                            size={14}
+                            color={
+                                selectedFilters.vendedor.length > 0
+                                    ? '#FFF'
+                                    : '#333'
+                            }
+                        />
+                        <Text
+                            style={[
+                                styles.filterText,
+                                selectedFilters.vendedor.length > 0 &&
+                                    styles.filterTextActive,
+                            ]}
+                        >
+                            Vendido por{' '}
+                            {selectedFilters.vendedor.length > 0 &&
+                                `(${selectedFilters.vendedor.length})`}
                         </Text>
                     </Pressable>
                 </ScrollView>
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {activeView === 'list' ? (
                     <View style={styles.resultsContainer}>
                         {filteredBusinesses.length > 0 ? (
                             filteredBusinesses.map((business, index) => (
-                            <Pressable
-                                key={business.id || business._id || index}
-                                style={styles.businessCard}
-                                onPress={() => handleSelectBusiness(business)}
-                            >
-                                {/* Badge de disponibilidad */}
-                                <View style={styles.stockBadge}>
-                                    <Text style={styles.stockText}>Disponible</Text>
-                                </View>
-
-                                {/* Botón de favoritos */}
-                                <Pressable style={styles.favoriteButton}>
-                                    <Ionicons name="heart-outline" size={20} color="#333" />
-                                </Pressable>
-
-                                {/* Imagen del negocio */}
-                                <View style={styles.businessImage}>
-                                    {business.profile_pic ? (
-                                        <Image
-                                            source={{ uri: business.profile_pic }}
-                                            style={{ width: '100%', height: '100%' }}
-                                            resizeMode="cover"
-                                        />
-                                    ) : (
-                                        <Ionicons name="storefront" size={50} color="#9B59B6" />
-                                    )}
-                                </View>
-
-                                {/* Info del negocio */}
-                                <View style={styles.businessInfo}>
-                                    <Text style={styles.businessName} numberOfLines={1}>
-                                        {business.name}
-                                    </Text>
-                                    <Text style={styles.businessCategory}>
-                                        {business.category || 'Servicios generales'}
-                                    </Text>
-                                    <View style={styles.businessMeta}>
-                                        <View style={styles.rating}>
-                                            <Ionicons name="star" size={14} color="#FFB800" />
-                                            <Text style={styles.ratingText}>4.{5 + (index % 5)}</Text>
-                                            <Text style={styles.reviewsText}>({20 + (index * 5)} reseñas)</Text>
-                                        </View>
-                                    </View>
-                                    <View style={styles.businessFooter}>
-                                        <View style={styles.infoItem}>
-                                            <Ionicons name="time-outline" size={14} color="#9B59B6" />
-                                            <Text style={styles.infoText}>Abierto hoy</Text>
-                                        </View>
-                                        <View style={styles.infoItem}>
-                                            <Ionicons name="location-outline" size={14} color="#9B59B6" />
-                                            <Text style={styles.infoText}>{(Math.random() * 5).toFixed(1)} km</Text>
-                                        </View>
-                                    </View>
-                                </View>
-
-                                {/* Logo circular */}
-                                <View style={styles.businessLogo}>
-                                    <LinearGradient
-                                        colors={['#9B59B6', '#8E44AD']}
-                                        style={styles.logoCircle}
-                                    >
-                                        <Text style={styles.logoText}>
-                                            {business.name.substring(0, 2).toUpperCase()}
+                                <Pressable
+                                    key={business.id || business._id || index}
+                                    style={styles.businessCard}
+                                    onPress={() =>
+                                        handleSelectBusiness(business)
+                                    }
+                                >
+                                    {/* Badge de disponibilidad */}
+                                    <View style={styles.stockBadge}>
+                                        <Text style={styles.stockText}>
+                                            Disponible
                                         </Text>
-                                    </LinearGradient>
-                                </View>
-                            </Pressable>
-                        ))
-                    ) : (
-                        <View style={styles.noResults}>
-                            <Ionicons name="storefront-outline" size={48} color="#CCC" />
-                            <Text style={styles.noResultsText}>No hay tiendas disponibles</Text>
-                        </View>
-                    )}
+                                    </View>
+
+                                    {/* Botón de favoritos */}
+                                    <Pressable style={styles.favoriteButton}>
+                                        <Ionicons
+                                            name="heart-outline"
+                                            size={20}
+                                            color="#333"
+                                        />
+                                    </Pressable>
+
+                                    {/* Imagen del negocio */}
+                                    <View style={styles.businessImage}>
+                                        {business.profile_pic ? (
+                                            <Image
+                                                source={{
+                                                    uri: business.profile_pic,
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                }}
+                                                resizeMode="cover"
+                                            />
+                                        ) : (
+                                            <Ionicons
+                                                name="storefront"
+                                                size={50}
+                                                color="#9B59B6"
+                                            />
+                                        )}
+                                    </View>
+
+                                    {/* Info del negocio */}
+                                    <View style={styles.businessInfo}>
+                                        <Text
+                                            style={styles.businessName}
+                                            numberOfLines={1}
+                                        >
+                                            {business.name}
+                                        </Text>
+                                        <Text style={styles.businessCategory}>
+                                            {business.category ||
+                                                'Servicios generales'}
+                                        </Text>
+                                        <View style={styles.businessMeta}>
+                                            <View style={styles.rating}>
+                                                <Ionicons
+                                                    name="star"
+                                                    size={14}
+                                                    color="#FFB800"
+                                                />
+                                                <Text style={styles.ratingText}>
+                                                    4.{5 + (index % 5)}
+                                                </Text>
+                                                <Text
+                                                    style={styles.reviewsText}
+                                                >
+                                                    ({20 + index * 5} reseñas)
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <View style={styles.businessFooter}>
+                                            <View style={styles.infoItem}>
+                                                <Ionicons
+                                                    name="time-outline"
+                                                    size={14}
+                                                    color="#9B59B6"
+                                                />
+                                                <Text style={styles.infoText}>
+                                                    Abierto hoy
+                                                </Text>
+                                            </View>
+                                            <View style={styles.infoItem}>
+                                                <Ionicons
+                                                    name="location-outline"
+                                                    size={14}
+                                                    color="#9B59B6"
+                                                />
+                                                <Text style={styles.infoText}>
+                                                    {(
+                                                        Math.random() * 5
+                                                    ).toFixed(1)}{' '}
+                                                    km
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </View>
+
+                                    {/* Logo circular */}
+                                    <View style={styles.businessLogo}>
+                                        <LinearGradient
+                                            colors={['#9B59B6', '#8E44AD']}
+                                            style={styles.logoCircle}
+                                        >
+                                            <Text style={styles.logoText}>
+                                                {business.name
+                                                    .substring(0, 2)
+                                                    .toUpperCase()}
+                                            </Text>
+                                        </LinearGradient>
+                                    </View>
+                                </Pressable>
+                            ))
+                        ) : (
+                            <View style={styles.noResults}>
+                                <Ionicons
+                                    name="storefront-outline"
+                                    size={48}
+                                    color="#CCC"
+                                />
+                                <Text style={styles.noResultsText}>
+                                    No hay tiendas disponibles
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 ) : (
                     // Vista de Mapa
@@ -364,55 +594,109 @@ export default function StoresScreen() {
                                 {/* Marcador de ubicación central */}
                                 <View style={styles.centerMarker}>
                                     <View style={styles.markerPulse} />
-                                    <Ionicons name="location" size={40} color="#9B59B6" />
+                                    <Ionicons
+                                        name="location"
+                                        size={40}
+                                        color="#9B59B6"
+                                    />
                                 </View>
-                                
+
                                 {/* Texto informativo */}
                                 <View style={styles.mapInfo}>
-                                    <Text style={styles.mapInfoText}>Vista de mapa (requiere geolocalización)</Text>
+                                    <Text style={styles.mapInfoText}>
+                                        Vista de mapa (requiere geolocalización)
+                                    </Text>
                                 </View>
                             </LinearGradient>
                         </View>
 
                         {/* Cards de negocios en la parte inferior */}
                         <View style={styles.mapCardsContainer}>
-                            <ScrollView 
-                                horizontal 
+                            <ScrollView
+                                horizontal
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.mapCardsScroll}
                             >
-                                {filteredBusinesses.slice(0, 5).map((business, index) => (
-                                    <Pressable
-                                        key={business.id || business._id || index}
-                                        style={styles.mapCard}
-                                        onPress={() => handleSelectBusiness(business)}
-                                    >
-                                        {/* Imagen del negocio */}
-                                        <View style={styles.mapCardImage}>
-                                            <LinearGradient
-                                                colors={['#F5F5F5', '#EBEBEB']}
-                                                style={styles.mapCardImagePlaceholder}
-                                            >
-                                                <Ionicons name="storefront-outline" size={32} color="#9B59B6" />
-                                            </LinearGradient>
-                                        </View>
-
-                                        {/* Info del negocio */}
-                                        <View style={styles.mapCardInfo}>
-                                            <Text style={styles.mapCardName} numberOfLines={1}>
-                                                {business.name}
-                                            </Text>
-                                            <Text style={styles.mapCardCategory} numberOfLines={1}>
-                                                {business.category || 'Servicios generales'}
-                                            </Text>
-                                            <View style={styles.mapCardMeta}>
-                                                <Ionicons name="star" size={12} color="#FFB800" />
-                                                <Text style={styles.mapCardRating}>4.{5 + (index % 5)}</Text>
-                                                <Text style={styles.mapCardDistance}>• {(Math.random() * 5).toFixed(1)} km</Text>
+                                {filteredBusinesses
+                                    .slice(0, 5)
+                                    .map((business, index) => (
+                                        <Pressable
+                                            key={
+                                                business.id ||
+                                                business._id ||
+                                                index
+                                            }
+                                            style={styles.mapCard}
+                                            onPress={() =>
+                                                handleSelectBusiness(business)
+                                            }
+                                        >
+                                            {/* Imagen del negocio */}
+                                            <View style={styles.mapCardImage}>
+                                                <LinearGradient
+                                                    colors={[
+                                                        '#F5F5F5',
+                                                        '#EBEBEB',
+                                                    ]}
+                                                    style={
+                                                        styles.mapCardImagePlaceholder
+                                                    }
+                                                >
+                                                    <Ionicons
+                                                        name="storefront-outline"
+                                                        size={32}
+                                                        color="#9B59B6"
+                                                    />
+                                                </LinearGradient>
                                             </View>
-                                        </View>
-                                    </Pressable>
-                                ))}
+
+                                            {/* Info del negocio */}
+                                            <View style={styles.mapCardInfo}>
+                                                <Text
+                                                    style={styles.mapCardName}
+                                                    numberOfLines={1}
+                                                >
+                                                    {business.name}
+                                                </Text>
+                                                <Text
+                                                    style={
+                                                        styles.mapCardCategory
+                                                    }
+                                                    numberOfLines={1}
+                                                >
+                                                    {business.category ||
+                                                        'Servicios generales'}
+                                                </Text>
+                                                <View
+                                                    style={styles.mapCardMeta}
+                                                >
+                                                    <Ionicons
+                                                        name="star"
+                                                        size={12}
+                                                        color="#FFB800"
+                                                    />
+                                                    <Text
+                                                        style={
+                                                            styles.mapCardRating
+                                                        }
+                                                    >
+                                                        4.{5 + (index % 5)}
+                                                    </Text>
+                                                    <Text
+                                                        style={
+                                                            styles.mapCardDistance
+                                                        }
+                                                    >
+                                                        •{' '}
+                                                        {(
+                                                            Math.random() * 5
+                                                        ).toFixed(1)}{' '}
+                                                        km
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </Pressable>
+                                    ))}
                             </ScrollView>
                         </View>
                     </View>
@@ -426,20 +710,17 @@ export default function StoresScreen() {
                 animationType="none"
                 onRequestClose={() => setShowSortModal(false)}
             >
-                <Animated.View 
-                    style={[
-                        styles.modalOverlay,
-                        { opacity: fadeAnim }
-                    ]}
+                <Animated.View
+                    style={[styles.modalOverlay, { opacity: fadeAnim }]}
                 >
-                    <Pressable 
+                    <Pressable
                         style={styles.modalOverlayTouchable}
                         onPress={() => setShowSortModal(false)}
                     />
-                    <Animated.View 
+                    <Animated.View
                         style={[
                             styles.modalContent,
-                            { transform: [{ translateY: slideAnim }] }
+                            { transform: [{ translateY: slideAnim }] },
                         ]}
                     >
                         <View style={styles.modalHeader}>
@@ -450,30 +731,44 @@ export default function StoresScreen() {
                         </View>
 
                         <View style={styles.sortOptions}>
-                            {sortOptions.map((option) => (
+                            {sortOptions.map(option => (
                                 <Pressable
                                     key={option.id}
                                     style={[
                                         styles.sortOption,
-                                        sortOption === option.label && styles.sortOptionActive
+                                        sortOption === option.label &&
+                                            styles.sortOptionActive,
                                     ]}
-                                    onPress={() => handleSortSelect(option.label)}
+                                    onPress={() =>
+                                        handleSortSelect(option.label)
+                                    }
                                 >
                                     <View style={styles.sortOptionContent}>
-                                        <Ionicons 
-                                            name={option.icon} 
-                                            size={20} 
-                                            color={sortOption === option.label ? '#9B59B6' : '#666'} 
+                                        <Ionicons
+                                            name={option.icon}
+                                            size={20}
+                                            color={
+                                                sortOption === option.label
+                                                    ? '#9B59B6'
+                                                    : '#666'
+                                            }
                                         />
-                                        <Text style={[
-                                            styles.sortOptionText,
-                                            sortOption === option.label && styles.sortOptionTextActive
-                                        ]}>
+                                        <Text
+                                            style={[
+                                                styles.sortOptionText,
+                                                sortOption === option.label &&
+                                                    styles.sortOptionTextActive,
+                                            ]}
+                                        >
                                             {option.label}
                                         </Text>
                                     </View>
                                     {sortOption === option.label && (
-                                        <Ionicons name="checkmark" size={24} color="#9B59B6" />
+                                        <Ionicons
+                                            name="checkmark"
+                                            size={24}
+                                            color="#9B59B6"
+                                        />
                                     )}
                                 </Pressable>
                             ))}
@@ -489,63 +784,229 @@ export default function StoresScreen() {
                 animationType="fade"
                 onRequestClose={() => setShowCategoriesModal(false)}
             >
-                <Pressable 
+                <Pressable
                     style={styles.modalOverlay}
                     onPress={() => setShowCategoriesModal(false)}
                 >
-                    <Pressable 
+                    <Pressable
                         style={styles.modalContent}
-                        onPress={(e) => e.stopPropagation()}
+                        onPress={e => e.stopPropagation()}
                     >
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Categorías</Text>
-                            <Pressable onPress={() => setShowCategoriesModal(false)}>
+                            <Pressable
+                                onPress={() => setShowCategoriesModal(false)}
+                            >
                                 <Ionicons name="close" size={24} color="#333" />
                             </Pressable>
                         </View>
 
                         <ScrollView style={styles.categoryOptions}>
-                            {categoryOptions.map((category) => (
+                            {categoryOptions.map(category => (
                                 <Pressable
                                     key={category.id}
                                     style={[
                                         styles.categoryOption,
-                                        selectedFilters.categories.includes(category.label) && styles.categoryOptionActive
+                                        selectedFilters.categories.includes(
+                                            category.label
+                                        ) && styles.categoryOptionActive,
                                     ]}
-                                    onPress={() => handleCategoryToggle(category.label)}
+                                    onPress={() =>
+                                        handleCategoryToggle(category.label)
+                                    }
                                 >
                                     <View style={styles.categoryOptionContent}>
-                                        <Ionicons 
-                                            name={category.icon} 
-                                            size={20} 
-                                            color={selectedFilters.categories.includes(category.label) ? '#9B59B6' : '#666'} 
+                                        <Ionicons
+                                            name={category.icon}
+                                            size={20}
+                                            color={
+                                                selectedFilters.categories.includes(
+                                                    category.label
+                                                )
+                                                    ? '#9B59B6'
+                                                    : '#666'
+                                            }
                                         />
-                                        <Text style={[
-                                            styles.categoryOptionText,
-                                            selectedFilters.categories.includes(category.label) && styles.categoryOptionTextActive
-                                        ]}>
+                                        <Text
+                                            style={[
+                                                styles.categoryOptionText,
+                                                selectedFilters.categories.includes(
+                                                    category.label
+                                                ) &&
+                                                    styles.categoryOptionTextActive,
+                                            ]}
+                                        >
                                             {category.label}
                                         </Text>
                                     </View>
-                                    {selectedFilters.categories.includes(category.label) && (
-                                        <Ionicons name="checkmark" size={24} color="#9B59B6" />
+                                    {selectedFilters.categories.includes(
+                                        category.label
+                                    ) && (
+                                        <Ionicons
+                                            name="checkmark"
+                                            size={24}
+                                            color="#9B59B6"
+                                        />
                                     )}
                                 </Pressable>
                             ))}
                         </ScrollView>
 
                         <View style={styles.modalFooter}>
-                            <Pressable 
+                            <Pressable
                                 style={styles.clearButton}
-                                onPress={() => setSelectedFilters(prev => ({ ...prev, categories: [] }))}
+                                onPress={() =>
+                                    setSelectedFilters(prev => ({
+                                        ...prev,
+                                        categories: [],
+                                    }))
+                                }
                             >
-                                <Text style={styles.clearButtonText}>Limpiar</Text>
+                                <Text style={styles.clearButtonText}>
+                                    Limpiar
+                                </Text>
                             </Pressable>
-                            <Pressable 
+                            <Pressable
                                 style={styles.applyButton}
                                 onPress={() => setShowCategoriesModal(false)}
                             >
-                                <Text style={styles.applyButtonText}>Aplicar</Text>
+                                <Text style={styles.applyButtonText}>
+                                    Aplicar
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </Pressable>
+                </Pressable>
+            </Modal>
+
+            {/* ✅ NUEVO: Modal de vendedores */}
+            <Modal
+                visible={showVendorsModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowVendorsModal(false)}
+            >
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setShowVendorsModal(false)}
+                >
+                    <Pressable
+                        style={styles.modalContent}
+                        onPress={e => e.stopPropagation()}
+                    >
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Vendedores</Text>
+                            <Pressable
+                                onPress={() => setShowVendorsModal(false)}
+                            >
+                                <Ionicons name="close" size={24} color="#333" />
+                            </Pressable>
+                        </View>
+
+                        <ScrollView style={styles.vendorOptions}>
+                            {owners.length > 0 ? (
+                                owners.map((owner, index) => (
+                                    <Pressable
+                                        key={owner._id || owner.id || index}
+                                        style={[
+                                            styles.vendorOption,
+                                            selectedFilters.vendedor.includes(
+                                                owner._id || owner.id
+                                            ) && styles.vendorOptionActive,
+                                        ]}
+                                        onPress={() =>
+                                            handleVendorToggle(
+                                                owner._id || owner.id
+                                            )
+                                        }
+                                    >
+                                        <View
+                                            style={styles.vendorOptionContent}
+                                        >
+                                            <View style={styles.vendorAvatar}>
+                                                {owner.profile_pic ? (
+                                                    <Image
+                                                        source={{
+                                                            uri: owner.profile_pic,
+                                                        }}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            borderRadius: 20,
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <Text
+                                                        style={
+                                                            styles.vendorAvatarText
+                                                        }
+                                                    >
+                                                        {(
+                                                            owner.name ||
+                                                            owner.email ||
+                                                            'U'
+                                                        )
+                                                            .substring(0, 2)
+                                                            .toUpperCase()}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                            <View style={styles.vendorInfo}>
+                                                <Text
+                                                    style={
+                                                        styles.vendorOptionText
+                                                    }
+                                                >
+                                                    {owner.name || 'Usuario'}
+                                                </Text>
+                                                <Text
+                                                    style={styles.vendorEmail}
+                                                >
+                                                    {owner.email}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        {selectedFilters.vendedor.includes(
+                                            owner._id || owner.id
+                                        ) && (
+                                            <Ionicons
+                                                name="checkmark"
+                                                size={24}
+                                                color="#9B59B6"
+                                            />
+                                        )}
+                                    </Pressable>
+                                ))
+                            ) : (
+                                <View style={styles.noVendors}>
+                                    <Text style={styles.noVendorsText}>
+                                        Cargando vendedores...
+                                    </Text>
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <Pressable
+                                style={styles.clearButton}
+                                onPress={() =>
+                                    setSelectedFilters(prev => ({
+                                        ...prev,
+                                        vendedor: [],
+                                    }))
+                                }
+                            >
+                                <Text style={styles.clearButtonText}>
+                                    Limpiar
+                                </Text>
+                            </Pressable>
+                            <Pressable
+                                style={styles.applyButton}
+                                onPress={() => setShowVendorsModal(false)}
+                            >
+                                <Text style={styles.applyButtonText}>
+                                    Aplicar
+                                </Text>
                             </Pressable>
                         </View>
                     </Pressable>
@@ -554,7 +1015,6 @@ export default function StoresScreen() {
         </SafeAreaView>
     )
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -1147,5 +1607,62 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#888',
     },
-})
 
+    // ✅ NUEVOS estilos para el modal de vendedores
+    vendorOptions: {
+        maxHeight: 400,
+    },
+    vendorOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F5F5F5',
+    },
+    vendorOptionActive: {
+        backgroundColor: '#F9F5FC',
+    },
+    vendorOptionContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        flex: 1,
+    },
+    vendorAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#9B59B6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    vendorAvatarText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#FFF',
+    },
+    vendorInfo: {
+        flex: 1,
+    },
+    vendorOptionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    vendorEmail: {
+        fontSize: 12,
+        color: '#888',
+        marginTop: 2,
+    },
+    noVendors: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    noVendorsText: {
+        fontSize: 14,
+        color: '#999',
+    },
+})
