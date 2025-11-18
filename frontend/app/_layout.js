@@ -5,6 +5,7 @@ import {
 } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import { NotifProvider } from '../context/notif-context'
+import { LocationProvider } from '../context/location-context'
 import ToastManager from 'toastify-react-native'
 
 export default function Layout() {
@@ -13,7 +14,8 @@ export default function Layout() {
             <AuthProvider>
                 <ToastManager />
                 <NotifProvider>
-                    <Stack screenOptions={{ headerShown: true }}>
+                    <LocationProvider>
+                        <Stack screenOptions={{ headerShown: true }}>
                         <Stack.Screen
                             name="(tabs)"
                             options={{ headerShown: false }}
@@ -80,6 +82,7 @@ export default function Layout() {
                             options={{ title: 'Perfil del negocio' }}
                         />
                     </Stack>
+                    </LocationProvider>
                 </NotifProvider>
             </AuthProvider>
         </SafeAreaProvider>
