@@ -26,12 +26,16 @@ import {
     createChat,
     sendMessage,
 } from '../api/chat-service'
+import { calculateDistance, getRoutingDistance, formatDistance, formatDuration } from '../utils/geolocation'
+import { useLocation } from '../context/location-context'
+import GmapsView from '../components/gmaps-view'
 import { getReviewsByBusiness } from '../api/review-service'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
     const router = useRouter()
     const { user } = useAuth()
+    const { userCoords, isLoadingLocation } = useLocation()
     const [error, setError] = React.useState(null)
     const idRaw =
         params?.get('id') ??
@@ -47,6 +51,10 @@ export default function BusinessProfile() {
     )
     const [chat, setChat] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
+    const [distance, setDistance] = React.useState(null)
+    const [routingInfo, setRoutingInfo] = React.useState(null) // { distance, duration } de OSRM
+    const [loadingRouting, setLoadingRouting] = React.useState(false)
+    const [showMap, setShowMap] = React.useState(false)
     const [reviews, setReviews] = React.useState([])
 
     const fetchOwner = async ownerId => {
@@ -137,6 +145,60 @@ export default function BusinessProfile() {
             setMessage(messageData.content)
         }
     }
+
+    // Calcular distancia aproximada cuando tenemos ambas coordenadas desde el contexto
+    React.useEffect(() => {
+        if (userCoords && business?.latitude && business?.longitude) {
+            // Primero calcular distancia aproximada (con factor urbano)
+            const dist = calculateDistance(
+                userCoords.latitude,
+                userCoords.longitude,
+                business.latitude,
+                business.longitude,
+                true // Factor urbano
+            )
+            setDistance(dist)
+            console.log('📏 Distancia aproximada:', dist)
+        }
+    }, [userCoords, business])
+
+    // Obtener distancia real por carretera (OSRM) cuando se muestran los detalles
+    React.useEffect(() => {
+        let mounted = true
+
+        const fetchRoutingDistance = async () => {
+            if (userCoords && business?.latitude && business?.longitude) {
+                setLoadingRouting(true)
+                try {
+                    const routing = await getRoutingDistance(
+                        userCoords.latitude,
+                        userCoords.longitude,
+                        business.latitude,
+                        business.longitude
+                    )
+                    
+                    if (mounted && routing) {
+                        setRoutingInfo(routing)
+                        // Actualizar distancia con la real
+                        setDistance(routing.distance)
+                        console.log('🚗 Distancia real obtenida:', routing)
+                    }
+                } catch (error) {
+                    console.log('⚠️ No se pudo obtener distancia real, usando aproximada')
+                } finally {
+                    if (mounted) setLoadingRouting(false)
+                }
+            }
+        }
+
+        // Esperar un poco antes de hacer la llamada a OSRM
+        const timer = setTimeout(fetchRoutingDistance, 500)
+
+        return () => {
+            mounted = false
+            clearTimeout(timer)
+        }
+    }, [userCoords, business])
 
     React.useEffect(() => {
         let mounted = true
@@ -301,10 +363,151 @@ export default function BusinessProfile() {
                     {business?.description ?? 'Sin descripción'}
                 </Text>
 
+
                 <Text style={globalStyles.subtitle}>Ubicación</Text>
-                <Text style={{ color: '#555', marginBottom: 24 }}>
+                <Text style={{ color: '#555', marginBottom: 8 }}>
                     {business?.address ?? 'Sin ubicación'}
                 </Text>
+
+                {/* Distancia y mapa */}
+                {business?.latitude && business?.longitude && (
+                    <View style={{ marginTop: 8, marginBottom: 16 }}>
+                        {/* Mostrar distancia y tiempo */}
+                        {!isLoadingLocation && distance && (
+                            <View style={{
+                                marginBottom: 12,
+                                backgroundColor: '#F5F0FF',
+                                padding: 12,
+                                borderRadius: 8,
+                            }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: routingInfo ? 6 : 0 }}>
+                                    <Ionicons name="navigate-outline" size={20} color="#9B59B6" />
+                                    <Text style={{
+                                        marginLeft: 8,
+                                        fontSize: 14,
+                                        color: '#6A4C93',
+                                        fontWeight: '600',
+                                    }}>
+                                        {routingInfo 
+                                            ? `${formatDistance(distance)} por carretera`
+                                            : `${formatDistance(distance, true)} de tu ubicación`
+                                        }
+                                    </Text>
+                                    {loadingRouting && (
+                                        <Text style={{ marginLeft: 8, fontSize: 12, color: '#999' }}>
+                                            Calculando ruta...
+                                        </Text>
+                                    )}
+                                </View>
+                                {routingInfo && (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 28 }}>
+                                        <Ionicons name="time-outline" size={16} color="#9B59B6" />
+                                        <Text style={{
+                                            marginLeft: 6,
+                                            fontSize: 13,
+                                            color: '#6A4C93',
+                                        }}>
+                                            Aprox. {formatDuration(routingInfo.duration)} en auto
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        {/* Botón Cómo llegar */}
+                        {userCoords && (
+                            <>
+                                <Pressable
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#9B59B6',
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 8,
+                                        marginBottom: 12,
+                                    }}
+                                    onPress={() => setShowMap(!showMap)}
+                                >
+                                    <Ionicons name="map-outline" size={20} color="#FFF" />
+                                    <Text style={{
+                                        marginLeft: 8,
+                                        color: '#FFF',
+                                        fontSize: 15,
+                                        fontWeight: '600',
+                                    }}>
+                                        {showMap ? 'Ocultar mapa' : 'Cómo llegar'}
+                                    </Text>
+                                </Pressable>
+
+                                {/* Mapa con ruta */}
+                                {showMap && (
+                                    <View style={{ 
+                                        height: 250, 
+                                        width: '100%', 
+                                        borderRadius: 12, 
+                                        overflow: 'hidden',
+                                        marginBottom: 12,
+                                    }}>
+                                        <GmapsView
+                                            latitude={business.latitude}
+                                            longitude={business.longitude}
+                                            userLatitude={userCoords.latitude}
+                                            userLongitude={userCoords.longitude}
+                                            height={250}
+                                        />
+                                    </View>
+                                )}
+                            </>
+                        )}
+
+                        {/* Si no hay ubicación del usuario pero sí del negocio, mostrar solo el pin */}
+                        {!userCoords && !isLoadingLocation && (
+                            <>
+                                <Pressable
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#9B59B6',
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 8,
+                                        marginBottom: 12,
+                                    }}
+                                    onPress={() => setShowMap(!showMap)}
+                                >
+                                    <Ionicons name="location-outline" size={20} color="#FFF" />
+                                    <Text style={{
+                                        marginLeft: 8,
+                                        color: '#FFF',
+                                        fontSize: 15,
+                                        fontWeight: '600',
+                                    }}>
+                                        {showMap ? 'Ocultar mapa' : 'Ver en el mapa'}
+                                    </Text>
+                                </Pressable>
+
+                                {showMap && (
+                                    <View style={{ 
+                                        height: 250, 
+                                        width: '100%', 
+                                        borderRadius: 12, 
+                                        overflow: 'hidden',
+                                        marginBottom: 12,
+                                    }}>
+                                        <GmapsView
+                                            latitude={business.latitude}
+                                            longitude={business.longitude}
+                                            height={250}
+                                        />
+                                    </View>
+                                )}
+                            </>
+                        )}
+                    </View>
+                )}
 
                 <View
                     style={{
@@ -483,27 +686,9 @@ export default function BusinessProfile() {
                                     )}
                                 </View>
                             </View>
-                            <Text style={{ color: '#555', lineHeight: 20 }}>
-                                {review.comment || ''}
+                            <Text style={{ color: '#666', fontSize: 14 }}>
+                                {review.comment || 'Sin comentarios'}
                             </Text>
-                            {review.date && (
-                                <Text
-                                    style={{
-                                        color: '#999',
-                                        fontSize: 12,
-                                        marginTop: 8,
-                                    }}
-                                >
-                                    {new Date(review.date).toLocaleDateString(
-                                        'es-ES',
-                                        {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                        }
-                                    )}
-                                </Text>
-                            )}
                         </View>
                     ))
                 )}

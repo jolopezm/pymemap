@@ -1,5 +1,16 @@
 import * as Location from 'expo-location'
 
+// Caché de ubicación para evitar múltiples solicitudes
+let locationCache = null
+let locationCacheTime = null
+const CACHE_DURATION = 30000 // 30 segundos
+
+// Rate limiting para APIs externas
+let lastNominatimRequest = 0
+let lastOSRMRequest = 0
+const NOMINATIM_DELAY = 1000 // 1 segundo entre requests (límite de Nominatim)
+const OSRM_DELAY = 200 // 200ms entre requests (más permisivo)
+
 /**
  * Solicita permisos de ubicación al usuario
  * @returns {Promise<boolean>} true si se concedieron los permisos, false en caso contrario
@@ -33,11 +44,19 @@ export async function requestLocationPermission() {
 }
 
 /**
- * Obtiene la ubicación actual del usuario
+ * Obtiene la ubicación actual del usuario (con caché)
+ * @param {boolean} forceRefresh - Forzar actualización ignorando caché
  * @returns {Promise<{latitude: number, longitude: number, address: string} | null>}
  */
-export async function getCurrentLocation() {
+export async function getCurrentLocation(forceRefresh = false) {
     try {
+        // Retornar caché si es válida
+        const now = Date.now()
+        if (!forceRefresh && locationCache && locationCacheTime && (now - locationCacheTime < CACHE_DURATION)) {
+            console.log('✅ Usando ubicación en caché')
+            return locationCache
+        }
+
         const hasPermission = await requestLocationPermission()
         
         if (!hasPermission) {
@@ -128,11 +147,17 @@ export async function getCurrentLocation() {
             }
         }
 
-        return {
+        const result = {
             latitude,
             longitude,
             address,
         }
+
+        // Actualizar caché
+        locationCache = result
+        locationCacheTime = Date.now()
+
+        return result
     } catch (error) {
         console.error('Error al obtener ubicación:', error)
         return null
@@ -140,14 +165,15 @@ export async function getCurrentLocation() {
 }
 
 /**
- * Calcula la distancia entre dos puntos usando la fórmula de Haversine
+ * Calcula la distancia en línea recta entre dos puntos usando la fórmula de Haversine
  * @param {number} lat1 - Latitud del punto 1
  * @param {number} lon1 - Longitud del punto 1
  * @param {number} lat2 - Latitud del punto 2
  * @param {number} lon2 - Longitud del punto 2
+ * @param {boolean} applyUrbanFactor - Si true, aplica factor de corrección urbano (1.4x)
  * @returns {number} Distancia en kilómetros
  */
-export function calculateDistance(lat1, lon1, lat2, lon2) {
+export function calculateDistance(lat1, lon1, lat2, lon2, applyUrbanFactor = true) {
     const R = 6371 // Radio de la Tierra en km
     const dLat = toRad(lat2 - lat1)
     const dLon = toRad(lon2 - lon1)
@@ -160,7 +186,13 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
             Math.sin(dLon / 2)
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    const distance = R * c
+    let distance = R * c
+
+    // Aplicar factor de corrección urbano para aproximar distancia real por calles
+    // Factor 1.4 es típico para áreas urbanas (considera calles, giros, etc.)
+    if (applyUrbanFactor) {
+        distance = distance * 1.4
+    }
 
     return distance
 }
@@ -173,41 +205,108 @@ function toRad(degrees) {
 }
 
 /**
- * Formatea la distancia para mostrar
- * @param {number} distance - Distancia en kilómetros
- * @returns {string} Distancia formateada (ej: "1.5 km" o "350 m")
+ * Obtiene la distancia real por carretera usando OSRM (OpenStreetMap Routing)
+ * @param {number} lat1 - Latitud origen
+ * @param {number} lon1 - Longitud origen
+ * @param {number} lat2 - Latitud destino
+ * @param {number} lon2 - Longitud destino
+ * @returns {Promise<{distance: number, duration: number} | null>} Distancia en km y duración en minutos
  */
-export function formatDistance(distance) {
-    if (distance < 1) {
-        return `${Math.round(distance * 1000)} m`
+export async function getRoutingDistance(lat1, lon1, lat2, lon2) {
+    try {
+        // Rate limiting: Esperar si el último request fue muy reciente
+        const now = Date.now()
+        const timeSinceLastRequest = now - lastOSRMRequest
+        if (timeSinceLastRequest < OSRM_DELAY) {
+            const waitTime = OSRM_DELAY - timeSinceLastRequest
+            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de OSRM...`)
+            await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+        lastOSRMRequest = Date.now()
+
+        // OSRM API (gratuito) - formato: lon,lat (¡nota el orden!)
+        const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`
+        
+        console.log('🚗 Obteniendo distancia real por carretera...')
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+            const route = data.routes[0]
+            const distanceKm = route.distance / 1000 // Convertir metros a km
+            const durationMin = route.duration / 60 // Convertir segundos a minutos
+
+            console.log(`✅ Distancia real: ${distanceKm.toFixed(2)} km, Tiempo: ${Math.round(durationMin)} min`)
+            
+            return {
+                distance: distanceKm,
+                duration: durationMin
+            }
+        } else {
+            console.warn('⚠️ OSRM no pudo calcular la ruta:', data.code)
+            return null
+        }
+    } catch (error) {
+        console.error('❌ Error al obtener distancia de OSRM:', error)
+        return null
     }
-    return `${distance.toFixed(1)} km`
 }
 
 /**
- * Calcula distancias para una lista de negocios y los ordena por proximidad
- * @param {Array} businesses - Lista de negocios con coordenadas
- * @param {number} userLat - Latitud del usuario
- * @param {number} userLon - Longitud del usuario
- * @returns {Array} Lista de negocios con distancia calculada y ordenados por proximidad
+ * Formatea la distancia para mostrar
+ * @param {number} distance - Distancia en kilómetros
+ * @param {boolean} showApprox - Mostrar "~" para indicar aproximación
+ * @returns {string} Distancia formateada (ej: "~1.5 km" o "350 m")
  */
-export function calculateBusinessDistances(businesses, userLat, userLon) {
-    if (!userLat || !userLon) return businesses
+export function formatDistance(distance, showApprox = false) {
+    const prefix = showApprox ? '~' : ''
+    if (distance < 1) {
+        return `${prefix}${Math.round(distance * 1000)} m`
+    }
+    return `${prefix}${distance.toFixed(1)} km`
+}
+
+/**
+ * Formatea duración en formato legible
+ * @param {number} minutes - Duración en minutos
+ * @returns {string} Duración formateada (ej: "5 min" o "1h 20min")
+ */
+export function formatDuration(minutes) {
+    if (minutes < 60) {
+        return `${Math.round(minutes)} min`
+    }
+    const hours = Math.floor(minutes / 60)
+    const mins = Math.round(minutes % 60)
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`
+}
+
+/**
+ * Calcula distancias para una lista de negocios (usa distancia aproximada con factor urbano)
+ * @param {Array} businesses - Lista de negocios con coordenadas
+ * @param {Object} userCoords - Objeto con {latitude, longitude} del usuario
+ * @returns {Array} Lista de negocios con distancia calculada
+ */
+export function calculateBusinessDistances(businesses, userCoords) {
+    if (!userCoords || !userCoords.latitude || !userCoords.longitude) return businesses
+    
+    const userLat = userCoords.latitude
+    const userLon = userCoords.longitude
 
     return businesses
         .map(business => {
-            // Si el negocio tiene coordenadas, calcular distancia
+            // Si el negocio tiene coordenadas, calcular distancia aproximada (con factor urbano)
             if (business.latitude && business.longitude) {
                 const distance = calculateDistance(
                     userLat,
                     userLon,
                     business.latitude,
-                    business.longitude
+                    business.longitude,
+                    true // Aplicar factor urbano 1.4x para aproximar distancia real
                 )
                 return {
                     ...business,
                     distance,
-                    distanceText: formatDistance(distance),
+                    distanceText: formatDistance(distance, true), // Mostrar "~" para indicar aproximación
                 }
             }
             // Si no tiene coordenadas, poner al final
@@ -228,6 +327,16 @@ export function calculateBusinessDistances(businesses, userLat, userLon) {
  */
 async function reverseGeocodeWithNominatim(latitude, longitude) {
     try {
+        // Rate limiting: Nominatim requiere máximo 1 request/segundo
+        const now = Date.now()
+        const timeSinceLastRequest = now - lastNominatimRequest
+        if (timeSinceLastRequest < NOMINATIM_DELAY) {
+            const waitTime = NOMINATIM_DELAY - timeSinceLastRequest
+            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de Nominatim...`)
+            await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+        lastNominatimRequest = Date.now()
+
         // Nominatim es el servicio de geocoding de OpenStreetMap - completamente gratuito
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=es`
         
@@ -298,6 +407,16 @@ async function reverseGeocodeWithNominatim(latitude, longitude) {
  */
 export async function geocodeAddress(address) {
     try {
+        // Rate limiting: Nominatim requiere máximo 1 request/segundo
+        const now = Date.now()
+        const timeSinceLastRequest = now - lastNominatimRequest
+        if (timeSinceLastRequest < NOMINATIM_DELAY) {
+            const waitTime = NOMINATIM_DELAY - timeSinceLastRequest
+            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de Nominatim...`)
+            await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
+        lastNominatimRequest = Date.now()
+
         // Usar Nominatim (OpenStreetMap) - gratuito
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=cl&addressdetails=1&accept-language=es`
         

@@ -9,6 +9,7 @@ import {
     Alert,
 } from 'react-native'
 import { useAuth } from '../../context/auth-context'
+import { useLocation } from '../../context/location-context'
 import { getServices, getBusiness } from '../../api/business-service'
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
@@ -16,10 +17,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
-import {
-    getCurrentLocation,
-    calculateBusinessDistances,
-} from '../../utils/geolocation'
+import { calculateBusinessDistances } from '../../utils/geolocation'
 import LocationPickerModal from '../../components/location-picker-modal'
 
 // Categorías de negocios PyME (más diversas y profesionales)
@@ -36,12 +34,10 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
     const { user } = useAuth()
+    const { userLocation, userCoords, isLoadingLocation, updateLocation } = useLocation()
     const [services, setServices] = useState([])
     const [businesses, setBusinesses] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
-    const [userLocation, setUserLocation] = useState('Obteniendo ubicación...')
-    const [userCoords, setUserCoords] = useState(null)
-    const [isLoadingLocation, setIsLoadingLocation] = useState(true)
     const [showLocationPicker, setShowLocationPicker] = useState(false)
     const router = useRouter()
     const scrollViewRef = useRef(null)
@@ -66,12 +62,11 @@ export default function HomeScreen() {
             if (userCoords) {
                 const businessesWithDistance = calculateBusinessDistances(
                     businessData,
-                    userCoords.latitude,
-                    userCoords.longitude
+                    userCoords // Pasar el objeto completo
                 )
                 console.log('📏 Distancias calculadas:', businessesWithDistance.slice(0, 3).map(b => ({
                     name: b.name,
-                    distance: b.distanceText
+                    distance: b.distanceText || 'sin distancia'
                 })))
                 setBusinesses(businessesWithDistance)
             } else {
@@ -82,53 +77,9 @@ export default function HomeScreen() {
         }
     }
 
-    const fetchUserLocation = async () => {
-        try {
-            setIsLoadingLocation(true)
-            console.log('🔄 Iniciando obtención de ubicación...')
-            
-            const location = await getCurrentLocation()
-            
-            if (location) {
-                console.log('✅ Ubicación obtenida exitosamente:', location.address)
-                setUserLocation(location.address)
-                setUserCoords({
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                })
-            } else {
-                console.warn('⚠️ No se pudo obtener ubicación')
-                setUserLocation('Toca aquí para activar ubicación')
-                Alert.alert(
-                    'Ubicación no disponible',
-                    'No pudimos obtener tu ubicación. Asegúrate de:\n\n• Tener GPS/ubicación activado\n• Dar permisos a la app\n• Estar en un lugar con buena señal',
-                    [
-                        { text: 'Reintentar', onPress: fetchUserLocation },
-                        { text: 'Cancelar', style: 'cancel' }
-                    ]
-                )
-            }
-        } catch (error) {
-            console.error('❌ Error obteniendo ubicación:', error)
-            setUserLocation('Error - Toca para reintentar')
-            Alert.alert(
-                'Error de ubicación',
-                `No pudimos obtener tu ubicación: ${error.message || 'Error desconocido'}`,
-                [
-                    { text: 'Reintentar', onPress: fetchUserLocation },
-                    { text: 'Cancelar', style: 'cancel' }
-                ]
-            )
-        } finally {
-            setIsLoadingLocation(false)
-        }
-    }
-
     useEffect(() => {
-        fetchUserLocation()
-    }, [])
-
-    useEffect(() => {
+        // Cargar datos al iniciar la pantalla
+        // Si no hay coordenadas, se mostrarán sin distancias
         fetchData()
     }, [userCoords])
 
@@ -571,13 +522,15 @@ export default function HomeScreen() {
     }
 
     const handleLocationSelected = location => {
-        setUserLocation(location.address)
-        setUserCoords({
-            latitude: location.latitude,
-            longitude: location.longitude,
-        })
-        // Recalcular distancias con la nueva ubicación
-        fetchData()
+        // Actualizar ubicación en el contexto global
+        updateLocation(
+            {
+                latitude: location.latitude,
+                longitude: location.longitude,
+            },
+            location.address
+        )
+        // fetchData() se ejecutará automáticamente por el useEffect cuando userCoords cambie
     }
 
     return (
