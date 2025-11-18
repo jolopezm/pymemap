@@ -158,6 +158,8 @@ class Review(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: str = Field(...)
     date: str = Field(...)
+    bookingId: Optional[str] = Field(default=None, description="ID de la reserva asociada")
+    source: Optional[str] = Field(default=None, description="Origen de la reseña (booking, direct, etc.)")
     
     @field_validator('businessId', mode='before')
     @classmethod

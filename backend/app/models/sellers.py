@@ -83,7 +83,10 @@ class BookingRequest(BaseModel):
     start_time: str = Field(..., description="Hora inicio (HH:MM)")
     end_time: str = Field(..., description="Hora fin (HH:MM)")
     service_description: Optional[str] = None
-    status: str = Field(default="pending", description="pending, confirmed, cancelled")
+    status: str = Field(default="pending", description="pending, confirmed, cancelled, payment_requested, completed")
+    price: Optional[float] = Field(default=None, description="Precio base del servicio")
+    requested_price: Optional[float] = Field(default=None, description="Precio solicitado por el vendedor")
+    paid_at: Optional[str] = Field(default=None, description="Fecha y hora del pago")
     created_at: datetime = Field(default_factory=datetime.now)
 
 class BookingResponse(BaseModel):
@@ -95,6 +98,9 @@ class BookingResponse(BaseModel):
     end_time: str
     service_description: Optional[str] = None
     status: str
+    price: Optional[float] = None
+    requested_price: Optional[float] = None
+    paid_at: Optional[str] = None
     created_at: datetime
     
     class Config:

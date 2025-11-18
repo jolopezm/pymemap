@@ -20,7 +20,7 @@ import DefaultModal from '../components/default-modal'
 import { createReview } from '../api/review-service'
 
 export default function RateBusiness() {
-    const { businessId } = useLocalSearchParams()
+    const { businessId, id, bookingId, businessName } = useLocalSearchParams()
     const router = useRouter()
     const { user } = useAuth()
 
@@ -32,13 +32,15 @@ export default function RateBusiness() {
 
     React.useEffect(() => {
         const fetchBusiness = async () => {
-            if (!businessId) {
+            // Usar businessId o id como fallback
+            const actualBusinessId = businessId || id
+            if (!actualBusinessId) {
                 setLoading(false)
                 return
             }
 
             try {
-                const foundBusiness = await getBusiness(businessId)
+                const foundBusiness = await getBusiness(actualBusinessId)
                 setBusiness(foundBusiness)
             } catch (error) {
                 console.error('Error fetching business:', error)
@@ -85,14 +87,22 @@ export default function RateBusiness() {
 
     const saveReview = async () => {
         try {
-            await createReview({
-                businessId: businessId,
+            const reviewData = {
+                businessId: businessId || id,
                 userId: user?.id || user?._id,
                 userName: user?.name || 'Usuario anónimo',
                 rating: rating,
                 comment: comment.trim(),
                 date: new Date().toISOString(),
-            })
+            }
+            
+            // Si viene de una reserva, agregar esa información
+            if (bookingId) {
+                reviewData.bookingId = bookingId
+                reviewData.source = 'booking' // Indica que la reseña viene de una reserva pagada
+            }
+            
+            await createReview(reviewData)
         } catch (error) {
             console.error('Error saving review:', error)
         }
@@ -150,17 +160,28 @@ export default function RateBusiness() {
                     />
 
                     <Text style={[globalStyles.title, { textAlign: 'center' }]}>
-                        Califica tu experiencia
+                        {bookingId ? 'Califica tu reserva' : 'Califica tu experiencia'}
                     </Text>
 
                     <Text
                         style={[
                             globalStyles.subtitle,
-                            { textAlign: 'center', marginBottom: 24 },
+                            { textAlign: 'center', marginBottom: 8 },
                         ]}
                     >
-                        {business.name}
+                        {businessName || business?.name || 'Negocio'}
                     </Text>
+                    
+                    {bookingId && (
+                        <Text
+                            style={[
+                                styles.bookingInfo,
+                                { textAlign: 'center', marginBottom: 24 },
+                            ]}
+                        >
+                            ✅ ¡Tu reserva fue completada! Comparte tu experiencia
+                        </Text>
+                    )}
 
                     {/* Rating Stars */}
                     <View style={styles.starsContainer}>
@@ -332,5 +353,15 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 16,
         fontWeight: '600',
+    },
+    bookingInfo: {
+        fontSize: 14,
+        color: '#27ae60',
+        fontWeight: '500',
+        backgroundColor: '#d5f4e6',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'center',
     },
 })

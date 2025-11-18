@@ -137,30 +137,35 @@ async def create_booking(
     # Obtener el user_id
     user_id = await get_user_id_from_token(current_user)
     
-    # Verificar disponibilidad
-    availability = await db.availability.find_one({
-        "business_id": booking.business_id,
-        "date": booking.date
-    })
+    # NOTA: Validaciones de disponibilidad desactivadas en el flujo simplificado
+    # El vendedor revisará y aprobará/rechazará cada solicitud manualmente
+    # Este código se mantiene comentado para uso futuro si se desea habilitar validaciones
     
-    if not availability:
-        raise HTTPException(status_code=400, detail="Fecha no disponible")
-    
-    # Verificar que el slot esté libre
-    overlapping_booking = await db.bookings.find_one({
-        "business_id": booking.business_id,
-        "date": booking.date,
-        "status": {"$in": ["pending", "confirmed"]},
-        "start_time": {"$lt": booking.end_time},
-        "end_time": {"$gt": booking.start_time}
-    })
-    
-    if overlapping_booking:
-        raise HTTPException(status_code=400, detail="Horario no disponible")
+    # # Verificar disponibilidad
+    # availability = await db.availability.find_one({
+    #     "business_id": booking.business_id,
+    #     "date": booking.date
+    # })
+    # 
+    # if not availability:
+    #     raise HTTPException(status_code=400, detail="Fecha no disponible")
+    # 
+    # # Verificar que el slot esté libre
+    # overlapping_booking = await db.bookings.find_one({
+    #     "business_id": booking.business_id,
+    #     "date": booking.date,
+    #     "status": {"$in": ["pending", "confirmed"]},
+    #     "start_time": {"$lt": booking.end_time},
+    #     "end_time": {"$gt": booking.start_time}
+    # })
+    # 
+    # if overlapping_booking:
+    #     raise HTTPException(status_code=400, detail="Horario no disponible")
     
     booking_dict = booking.dict()
     booking_dict["client_id"] = user_id
     booking_dict["created_at"] = datetime.now()
+    booking_dict["status"] = "pending"  # Todas las nuevas solicitudes inician como pending
     
     result = await db.bookings.insert_one(booking_dict)
     created_booking = await db.bookings.find_one({"_id": result.inserted_id})
@@ -179,7 +184,12 @@ async def confirm_booking(
     current_user: TokenData = Depends(get_current_user)
 ):
     """Dueño de negocio confirma reserva"""
-    booking = await db.bookings.find_one({"_id": booking_id})
+    # Convertir booking_id a ObjectId si es necesario
+    try:
+        booking_object_id = ObjectId(booking_id)
+        booking = await db.bookings.find_one({"_id": booking_object_id})
+    except Exception:
+        booking = await db.bookings.find_one({"_id": booking_id})
     
     if not booking:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
@@ -201,8 +211,10 @@ async def confirm_booking(
     if owner_id != user_id:
         raise HTTPException(status_code=403, detail="No autorizado")
     
+    # Usar el mismo ID que funcionó para la consulta
+    booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
     await db.bookings.update_one(
-        {"_id": booking_id},
+        {"_id": booking_id_for_update},
         {"$set": {"status": "confirmed"}}
     )
     
@@ -216,7 +228,12 @@ async def reject_booking(
     current_user: TokenData = Depends(get_current_user)
 ):
     """Dueño de negocio rechaza reserva"""
-    booking = await db.bookings.find_one({"_id": booking_id})
+    # Convertir booking_id a ObjectId si es necesario
+    try:
+        booking_object_id = ObjectId(booking_id)
+        booking = await db.bookings.find_one({"_id": booking_object_id})
+    except Exception:
+        booking = await db.bookings.find_one({"_id": booking_id})
     
     if not booking:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
@@ -238,8 +255,10 @@ async def reject_booking(
     if owner_id != user_id:
         raise HTTPException(status_code=403, detail="No autorizado")
     
+    # Usar el mismo ID que funcionó para la consulta
+    booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
     await db.bookings.update_one(
-        {"_id": booking_id},
+        {"_id": booking_id_for_update},
         {"$set": {"status": "cancelled"}}
     )
     
@@ -287,3 +306,114 @@ async def get_business_bookings(
         booking["_id"] = str(booking["_id"])
         bookings.append(booking)
     return bookings
+
+@router.get("/my-business-bookings")
+async def get_all_my_business_bookings(current_user: TokenData = Depends(get_current_user)):
+    """Obtener todas las reservas de todos los negocios del usuario"""
+    user_id = await get_user_id_from_token(current_user)
+    
+    # Primero obtener todos los negocios del usuario
+    businesses_cursor = db.business.find({"owner_id": user_id})
+    business_ids = []
+    business_names = {}
+    
+    async for business in businesses_cursor:
+        business_id = str(business["_id"])
+        business_ids.append(business_id)
+        business_names[business_id] = business.get("name", "Sin nombre")
+    
+    if not business_ids:
+        return []
+    
+    # Obtener todas las reservas de esos negocios
+    cursor = db.bookings.find({"business_id": {"$in": business_ids}})
+    bookings = []
+    
+    async for booking in cursor:
+        booking["_id"] = str(booking["_id"])
+        # Agregar el nombre del negocio a la reserva
+        booking["business_name"] = business_names.get(booking.get("business_id"), "Negocio desconocido")
+        bookings.append(booking)
+    
+    return bookings
+
+@router.patch("/{booking_id}/request-payment")
+async def request_booking_payment(
+    booking_id: str,
+    payment_data: dict,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """Vendedor solicita cobrar un precio por la reserva"""
+    # Convertir booking_id a ObjectId si es necesario
+    try:
+        booking_object_id = ObjectId(booking_id)
+        booking = await db.bookings.find_one({"_id": booking_object_id})
+    except Exception:
+        booking = await db.bookings.find_one({"_id": booking_id})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    
+    # Verificar que el usuario sea dueño del negocio
+    user_id = await get_user_id_from_token(current_user)
+    
+    try:
+        business = await db.business.find_one({"_id": ObjectId(booking["business_id"])})
+    except Exception:
+        business = await db.business.find_one({"_id": booking["business_id"]})
+    
+    if not business:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+    
+    # Comparar IDs como strings
+    owner_id = str(business.get("owner_id", ""))
+    
+    if owner_id != user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    requested_price = payment_data.get("requested_price")
+    if requested_price is None:
+        raise HTTPException(status_code=400, detail="requested_price is required")
+    
+    # Usar el mismo ID que funcionó para la consulta
+    booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
+    await db.bookings.update_one(
+        {"_id": booking_id_for_update},
+        {"$set": {"requested_price": requested_price, "status": "payment_requested"}}
+    )
+    
+    return {"message": "Solicitud de pago enviada"}
+
+@router.post("/{booking_id}/pay")
+async def pay_booking(
+    booking_id: str,
+    current_user: TokenData = Depends(get_current_user)
+):
+    """Cliente paga la reserva solicitada"""
+    # Convertir booking_id a ObjectId si es necesario
+    try:
+        booking_object_id = ObjectId(booking_id)
+        booking = await db.bookings.find_one({"_id": booking_object_id})
+    except Exception:
+        booking = await db.bookings.find_one({"_id": booking_id})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    
+    # Verificar que el usuario sea el cliente
+    user_id = await get_user_id_from_token(current_user)
+    
+    if str(booking.get("client_id", "")) != user_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    
+    from datetime import datetime
+    paid_at = datetime.utcnow().isoformat()
+    
+    # Usar el mismo ID que funcionó para la consulta
+    booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
+    await db.bookings.update_one(
+        {"_id": booking_id_for_update},
+        {"$set": {"status": "completed", "paid_at": paid_at}}
+    )
+    
+    return {"message": "Pago realizado con éxito"}

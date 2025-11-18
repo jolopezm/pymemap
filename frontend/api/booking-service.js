@@ -133,6 +133,29 @@ export async function getBusinessBookings(businessId) {
 }
 
 /**
+ * Obtener todas las reservas de todos los negocios del usuario (dueño)
+ */
+export async function getAllMyBusinessBookings() {
+    try {
+        const headers = await getAuthHeaders()
+        console.log('🏢 Fetching all business bookings for user')
+        
+        const response = await axios.get(
+            `${API_URL}/bookings/my-business-bookings`,
+            { headers }
+        )
+        console.log('✅ All business bookings fetched:', response.data.length, 'items')
+        return response.data
+    } catch (error) {
+        console.error(
+            '❌ Error getting all business bookings:',
+            error.response?.data || error.message
+        )
+        return []
+    }
+}
+
+/**
  * Configurar disponibilidad de negocio (dueño)
  */
 export async function setBusinessAvailability(businessId, availabilityData) {
@@ -149,6 +172,54 @@ export async function setBusinessAvailability(businessId, availabilityData) {
     } catch (error) {
         console.error(
             'Error setting availability:',
+            error.response?.data || error.message
+        )
+        throw error
+    }
+}
+
+/**
+ * Solicitar pago por una reserva (vendedor)
+ */
+export async function requestBookingPayment(bookingId, requestedPrice) {
+    try {
+        const headers = await getAuthHeaders()
+        console.log('🏷️ Requesting payment for booking:', bookingId, 'Price:', requestedPrice)
+        
+        const response = await axios.patch(
+            `${API_URL}/bookings/${bookingId}/request-payment`,
+            { requested_price: requestedPrice },
+            { headers }
+        )
+        console.log('✅ Payment request sent:', response.data)
+        return response.data
+    } catch (error) {
+        console.error(
+            '❌ Error requesting booking payment:',
+            error.response?.data || error.message
+        )
+        throw error
+    }
+}
+
+/**
+ * Pagar una reserva (cliente)
+ */
+export async function payBooking(bookingId) {
+    try {
+        const headers = await getAuthHeaders()
+        console.log('💳 Paying booking:', bookingId)
+        
+        const response = await axios.post(
+            `${API_URL}/bookings/${bookingId}/pay`,
+            {},
+            { headers }
+        )
+        console.log('✅ Booking payment completed:', response.data)
+        return response.data
+    } catch (error) {
+        console.error(
+            '❌ Error paying booking:',
             error.response?.data || error.message
         )
         throw error

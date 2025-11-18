@@ -1,6 +1,7 @@
 // Configuración de API
 const API_URLS = {
     local: 'http://localhost:8000',
+    //production: 'http://localhost:8000',
     production: 'https://pymemap-production-306f.up.railway.app',
 }
 
