@@ -11,7 +11,7 @@ import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/global'
 import { useAuth } from '../context/auth-context'
 import {
     getServices,
@@ -20,7 +20,9 @@ import {
     payService,
 } from '../api/business-service'
 import { createChat } from '../api/chat-service'
+import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
+import Screen from '../components/screen'
 
 export default function ServiceDetail() {
     const params = useSearchParams()
@@ -129,10 +131,65 @@ export default function ServiceDetail() {
                 s => (s.id || s._id) === serviceId
             )
             setService(updated)
+            sendNotificationToOwner(
+                'Servicio pagado',
+                `El servicio "${updated.name}" ha sido pagado por el cliente.`
+            )
+            const foundBusiness = businessData.find(
+                b => (b.id || b._id) === updated.business_id
+            )
+            setBusiness(foundBusiness)
+
+            sendNotificacionToClient(
+                'Danos tu opinión',
+                `Por favor, califica y deja una reseña para el servicio "${updated.name}".`
+            )
             alert('Pago realizado con éxito')
         } catch (error) {
             console.error('Error paying service:', error)
             alert('Error al realizar el pago')
+        }
+    }
+
+    const sendNotificationToOwner = async (title, message) => {
+        if (!business) return
+        const notificationData = {
+            targetUserId: business.owner_id,
+            type: 'service_payment',
+            message: message,
+            date: new Date().toISOString(),
+            read: false,
+            reference: {
+                serviceId: serviceId,
+                businessId: business.id || business._id,
+                title: title,
+            },
+        }
+        try {
+            await createNotification(notificationData)
+        } catch (error) {
+            console.error('Error creating notification:', error)
+        }
+    }
+
+    const sendNotificacionToClient = async (title, message) => {
+        if (!service) return
+        const notificationData = {
+            targetUserId: service.client_id,
+            type: 'service_review',
+            message: message,
+            date: new Date().toISOString(),
+            read: false,
+            reference: {
+                serviceId: serviceId,
+                businessId: business?.id || business?._id,
+                title: title,
+            },
+        }
+        try {
+            await createNotification(notificationData)
+        } catch (error) {
+            console.error('Error creating notification:', error)
         }
     }
 
@@ -191,131 +248,111 @@ export default function ServiceDetail() {
     }
 
     return (
-        <LinearGradient
-            colors={['#9B59B6', '#F8BBD9']}
-            style={{ flex: 1 }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-        >
-            <ScrollView
-                contentContainerStyle={[
-                    globalStyles.gradientContainer,
-                    { alignItems: 'stretch' },
-                ]}
-            >
-                <Pressable
-                    onPress={() => router.back()}
-                    style={styles.backButton}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-                    <Text style={styles.backText}>Volver</Text>
-                </Pressable>
+        <Screen>
+            <View>
+                <Ionicons
+                    name="clipboard"
+                    size={48}
+                    color="#6A4C93"
+                    style={{ alignSelf: 'center', marginBottom: 16 }}
+                />
 
-                <View style={globalStyles.card}>
-                    <Ionicons
-                        name="clipboard"
-                        size={48}
-                        color="#6A4C93"
-                        style={{ alignSelf: 'center', marginBottom: 16 }}
-                    />
+                <Text style={globalStyles.title}>{service.name}</Text>
 
-                    <Text style={globalStyles.title}>{service.name}</Text>
+                <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
+                    Estado: {service.state}
+                </Text>
 
-                    <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
-                        Estado: {service.state}
-                    </Text>
+                <Text style={globalStyles.subtitle}>Descripción</Text>
+                <Text style={styles.infoText}>{service.description}</Text>
 
-                    <Text style={globalStyles.subtitle}>Descripción</Text>
-                    <Text style={styles.infoText}>{service.description}</Text>
+                {business && (
+                    <>
+                        <Text style={globalStyles.subtitle}>Negocio</Text>
+                        <Text style={styles.infoText}>{business.name}</Text>
+                    </>
+                )}
 
-                    {business && (
-                        <>
-                            <Text style={globalStyles.subtitle}>Negocio</Text>
-                            <Text style={styles.infoText}>{business.name}</Text>
-                        </>
-                    )}
+                <Text style={globalStyles.subtitle}>Precio Actual</Text>
+                <Text style={styles.priceText}>${service.price}</Text>
 
-                    <Text style={globalStyles.subtitle}>Precio Actual</Text>
-                    <Text style={styles.priceText}>${service.price}</Text>
+                {service.requested_price != null && (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Precio solicitado
+                        </Text>
+                        <Text style={styles.priceText}>
+                            ${service.requested_price}
+                        </Text>
+                    </>
+                )}
 
-                    {service.requested_price != null && (
-                        <>
-                            <Text style={globalStyles.subtitle}>
-                                Precio solicitado
+                {isOwner && service.state === 'in progress' && (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Establecer Precio del Servicio
+                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Ingrese el precio"
+                            keyboardType="numeric"
+                            value={price}
+                            onChangeText={setPrice}
+                        />
+
+                        <Pressable
+                            style={styles.submitButton}
+                            onPress={handleSendPaymentRequest}
+                            disabled={!price || parseFloat(price) <= 0}
+                        >
+                            <Text style={styles.submitButtonText}>
+                                Enviar Solicitud de Cobro
                             </Text>
-                            <Text style={styles.priceText}>
-                                ${service.requested_price}
-                            </Text>
-                        </>
-                    )}
+                        </Pressable>
+                    </>
+                )}
 
-                    {isOwner && service.state === 'in progress' && (
-                        <>
-                            <Text style={globalStyles.subtitle}>
-                                Establecer Precio del Servicio
-                            </Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Ingrese el precio"
-                                keyboardType="numeric"
-                                value={price}
-                                onChangeText={setPrice}
-                            />
-
-                            <Pressable
-                                style={styles.submitButton}
-                                onPress={handleSendPaymentRequest}
-                                disabled={!price || parseFloat(price) <= 0}
-                            >
-                                <Text style={styles.submitButtonText}>
-                                    Enviar Solicitud de Cobro
+                {!isOwner && (
+                    <>
+                        {service.state === 'payment_requested' ? (
+                            <View style={styles.clientInfo}>
+                                <Text style={styles.priceText}>
+                                    Precio solicitado: $
+                                    {service.requested_price}
                                 </Text>
-                            </Pressable>
-                        </>
-                    )}
-
-                    {!isOwner && (
-                        <>
-                            {service.state === 'payment_requested' ? (
-                                <View style={styles.clientInfo}>
-                                    <Text style={styles.priceText}>
-                                        Precio solicitado: $
-                                        {service.requested_price}
+                                <Pressable
+                                    style={styles.submitButton}
+                                    onPress={handlePay}
+                                >
+                                    <Text style={styles.submitButtonText}>
+                                        Pagar
                                     </Text>
-                                    <Pressable
-                                        style={styles.submitButton}
-                                        onPress={handlePay}
-                                    >
-                                        <Text style={styles.submitButtonText}>
-                                            Pagar
-                                        </Text>
-                                    </Pressable>
-                                </View>
-                            ) : (
-                                <View style={styles.clientInfo}>
-                                    <Ionicons
-                                        name="information-circle"
-                                        size={24}
-                                        color="#6A4C93"
-                                    />
-                                    <Text style={styles.clientInfoText}>
-                                        Solo el vendedor puede establecer el
-                                        precio del servicio
-                                    </Text>
-                                </View>
-                            )}
-                        </>
-                    )}
+                                </Pressable>
+                            </View>
+                        ) : (
+                            <View style={styles.clientInfo}>
+                                <Ionicons
+                                    name="information-circle"
+                                    size={24}
+                                    color="#6A4C93"
+                                />
+                                <Text style={styles.clientInfoText}>
+                                    Solo el vendedor puede establecer el precio
+                                    del servicio
+                                </Text>
+                            </View>
+                        )}
+                    </>
+                )}
 
-                    <Pressable
-                        onPress={handleChatPress}
-                        style={globalStyles.button}
-                    >
-                        <Text style={[{ color: 'white' }]}>Ir al chat</Text>
-                    </Pressable>
-                </View>
-            </ScrollView>
-        </LinearGradient>
+                <Pressable
+                    onPress={handleChatPress}
+                    style={globalStyles.button}
+                >
+                    <Text style={[{ color: 'white' }]}>Ir al chat</Text>
+                </Pressable>
+            </View>
+        </Screen>
     )
 }
 

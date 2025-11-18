@@ -7,6 +7,7 @@ import {
     Button,
     TextInput,
     Alert,
+    Image,
 } from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
@@ -28,6 +29,7 @@ import {
 import { calculateDistance, getRoutingDistance, formatDistance, formatDuration } from '../utils/geolocation'
 import { useLocation } from '../context/location-context'
 import GmapsView from '../components/gmaps-view'
+import { getReviewsByBusiness } from '../api/review-service'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
@@ -53,6 +55,7 @@ export default function BusinessProfile() {
     const [routingInfo, setRoutingInfo] = React.useState(null) // { distance, duration } de OSRM
     const [loadingRouting, setLoadingRouting] = React.useState(false)
     const [showMap, setShowMap] = React.useState(false)
+    const [reviews, setReviews] = React.useState([])
 
     const fetchOwner = async ownerId => {
         try {
@@ -68,6 +71,16 @@ export default function BusinessProfile() {
             } else {
                 setError({ message: String(error) })
             }
+        }
+    }
+
+    const fetchReviews = async businessId => {
+        try {
+            const reviewsData = await getReviewsByBusiness(businessId)
+            console.log('Reviews for business:', reviewsData)
+            setReviews(reviewsData)
+        } catch (error) {
+            console.error('Error fetching reviews:', error)
         }
     }
 
@@ -201,6 +214,11 @@ export default function BusinessProfile() {
                 if (foundBusiness && foundBusiness.owner_id) {
                     await fetchOwner(foundBusiness.owner_id)
                 }
+
+                // Cargar reseñas del negocio
+                if (foundBusiness && (foundBusiness._id || foundBusiness.id)) {
+                    await fetchReviews(foundBusiness._id || foundBusiness.id)
+                }
             } catch (error) {
                 if (error && error.response) {
                     setError({
@@ -227,34 +245,33 @@ export default function BusinessProfile() {
         }
     }, [id])
 
-    const handleRequestService = async () => {
+    const handleRequestService = () => {
         if (!user) {
-            alert('You must be logged in to request a service.')
-            router.push('/login')
+            Alert.alert(
+                'Inicio de sesión requerido',
+                'Debes iniciar sesión para reservar un servicio.',
+                [
+                    {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Iniciar sesión',
+                        onPress: () => router.push('/login'),
+                    },
+                ]
+            )
             return
         }
 
-        const serviceData = {
-            name: 'Service Request',
-            description: 'Requesting a service from ' + (business?.name ?? ''),
-            price: 0.0,
-            state: 'pending',
-            business_id: business?._id,
-            client_id: user?._id,
-        }
-
-        await requestService(serviceData)
-        await createNotification({
-            targetUserId: business?.owner_id,
-            type: 'service_request',
-            message: `Nueva solicitud de servicio de ${user?.name}`,
-            date: new Date().toISOString(),
-            read: false,
-            reference: {
-                originUserId: user?._id,
+        // Redirigir a la pantalla de reservas
+        router.push({
+            pathname: '/book-a-service',
+            params: {
+                businessId: business?._id || business?.id,
+                businessName: business?.name || 'Negocio',
             },
         })
-        alert('Service requested successfully!')
     }
 
     if (loading) {
@@ -299,11 +316,19 @@ export default function BusinessProfile() {
     return (
         <Screen>
             <View>
-                <Ionicons
-                    name="business"
-                    size={48}
-                    color="#6A4C93"
-                    style={{ alignSelf: 'center', marginBottom: 16 }}
+                <Image
+                    source={
+                        business?.profile_pic
+                            ? { uri: business.profile_pic }
+                            : require('../assets/default-profile-pic.svg')
+                    }
+                    style={{
+                        width: '100%',
+                        height: 200,
+                        borderRadius: 8,
+                        marginBottom: 16,
+                    }}
+                    resizeMode="cover"
                 />
 
                 <Text
@@ -337,6 +362,7 @@ export default function BusinessProfile() {
                 <Text style={{ color: '#555', marginBottom: 16 }}>
                     {business?.description ?? 'Sin descripción'}
                 </Text>
+
 
                 <Text style={globalStyles.subtitle}>Ubicación</Text>
                 <Text style={{ color: '#555', marginBottom: 8 }}>
@@ -483,6 +509,198 @@ export default function BusinessProfile() {
                     </View>
                 )}
 
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                {/* Mostrar botón de gestión si es el dueño del negocio */}
+                {String(business?.owner_id) === String(user?._id) ? (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Gestión del negocio
+                        </Text>
+                        <Text
+                            style={{
+                                color: '#666',
+                                marginBottom: 12,
+                                fontSize: 14,
+                            }}
+                        >
+                            Configura la disponibilidad y gestiona las reservas
+                            de tu negocio.
+                        </Text>
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    marginBottom: 20,
+                                    backgroundColor: '#FF6B6B',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/bookings-panel',
+                                    params: {
+                                        businessId:
+                                            business?._id || business?.id,
+                                        businessName:
+                                            business?.name || 'Negocio',
+                                    },
+                                })
+                            }
+                        >
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Ver Solicitudes
+                            </Text>
+                        </Pressable>
+
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    flexDirection: 'row',
+                                    backgroundColor: '#666',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: 12,
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/manage-availavility',
+                                    params: {
+                                        businessId:
+                                            business?._id || business?.id,
+                                    },
+                                })
+                            }
+                        >
+                            <Ionicons
+                                name="settings-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Configurar Disponibilidad
+                            </Text>
+                        </Pressable>
+                    </>
+                ) : (
+                    <>
+                        <Text style={globalStyles.subtitle}>
+                            Reservar servicio
+                        </Text>
+                        <Text
+                            style={{
+                                color: '#666',
+                                marginBottom: 12,
+                                fontSize: 14,
+                            }}
+                        >
+                            ¿Te interesa este negocio? Reserva una fecha y
+                            horario para recibir el servicio.
+                        </Text>
+                        <Pressable
+                            style={[
+                                globalStyles.button,
+                                {
+                                    marginBottom: 20,
+                                    backgroundColor: '#4CAF50',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                },
+                            ]}
+                            onPress={handleRequestService}
+                        >
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={globalStyles.buttonText}>
+                                Reservar servicio
+                            </Text>
+                        </Pressable>
+                    </>
+                )}
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
+                <Text style={globalStyles.subtitle}>Reseñas</Text>
+                {reviews.length === 0 ? (
+                    <Text style={{ color: '#666', marginBottom: 16 }}>
+                        No hay reseñas aún.
+                    </Text>
+                ) : (
+                    reviews.map((review, index) => (
+                        <View key={index} style={globalStyles.card}>
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: 8,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontWeight: '600',
+                                        fontSize: 16,
+                                        color: colors.textSecondary,
+                                    }}
+                                >
+                                    {review.userName || 'Anónimo'}
+                                </Text>
+                                <View style={{ flexDirection: 'row' }}>
+                                    {[...Array(review.rating || 5)].map(
+                                        (_, i) => (
+                                            <Ionicons
+                                                key={i}
+                                                name="star"
+                                                size={16}
+                                                color="#FFD700"
+                                            />
+                                        )
+                                    )}
+                                </View>
+                            </View>
+                            <Text style={{ color: '#666', fontSize: 14 }}>
+                                {review.comment || 'Sin comentarios'}
+                            </Text>
+                        </View>
+                    ))
+                )}
+
+                <View
+                    style={{
+                        borderTopWidth: 1,
+                        borderTopColor: '#E0E0E0',
+                        marginVertical: 20,
+                    }}
+                />
+
                 <Text style={globalStyles.subtitle}>¿Tienes preguntas?</Text>
                 <TextInput
                     style={globalStyles.textField}
@@ -494,17 +712,35 @@ export default function BusinessProfile() {
                 <Pressable
                     style={[
                         globalStyles.button,
-                        { opacity: message.trim() === '' ? 0.5 : 1 },
+                        {
+                            opacity: message.trim() === '' ? 0.5 : 1,
+                            backgroundColor: '#9B59B6',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
                     ]}
                     onPress={message.trim() === '' ? null : handleChatPress}
                     disabled={message.trim() === ''}
                 >
+                    <Ionicons
+                        name={
+                            message.trim() === ''
+                                ? 'chatbubble-outline'
+                                : 'send'
+                        }
+                        size={20}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                    />
                     {message.trim() === '' ? (
                         <Text style={globalStyles.buttonText}>
                             Escribe un mensaje
                         </Text>
                     ) : (
-                        <Text style={globalStyles.buttonText}>Enviar</Text>
+                        <Text style={globalStyles.buttonText}>
+                            Enviar mensaje
+                        </Text>
                     )}
                 </Pressable>
             </View>

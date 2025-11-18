@@ -17,28 +17,12 @@ import { Ionicons } from '@expo/vector-icons'
 import ProfileNoUser from '../../plantillas/profile-no-user'
 
 export default function ProfileScreen() {
-    const { isAuthenticated, logout } = useAuth()
-    const { user } = useAuth()
-    const [name, setName] = React.useState('')
-    const [email, setEmail] = React.useState('')
+    const { user, logout } = useAuth()
     const router = useRouter()
 
-    React.useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await AsyncStorage.getItem('user')
-                if (userData) {
-                    const parsedUser = JSON.parse(userData)
-                    setName(parsedUser.name || '')
-                    setEmail(parsedUser.email || '')
-                }
-            } catch (error) {
-                console.error('Error fetching user data:', error)
-            }
-        }
-
-        fetchUserData()
-    }, [])
+    // Usar directamente los datos del user del contexto
+    const name = user?.name || ''
+    const email = user?.email || ''
 
     const handleLogout = async () => {
         await logout()
@@ -55,7 +39,7 @@ export default function ProfileScreen() {
         }
     }
 
-    return isAuthenticated ? (
+    return user ? (
         <Screen>
             <ScrollView style={{ flex: 1 }}>
                 <View
@@ -67,7 +51,7 @@ export default function ProfileScreen() {
                 >
                     <View style={styles.profilePictureContainer}>
                         <View style={styles.profilePicWrapper}>
-                            {user.profile_pic ? (
+                            {user?.profile_pic ? (
                                 <Image
                                     source={{ uri: user.profile_pic }}
                                     style={styles.profile_pic}

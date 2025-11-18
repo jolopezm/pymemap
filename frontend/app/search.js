@@ -1,4 +1,13 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Keyboard } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    StyleSheet,
+    ScrollView,
+    TextInput,
+    Keyboard,
+    Image,
+} from 'react-native'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -67,16 +76,20 @@ export default function SearchScreen() {
         }
         
         if (!searchQuery.trim()) return []
-        
+
         const query = searchQuery.toLowerCase()
         let results = []
         
         // Buscar en negocios
         businesses.forEach(business => {
             const matchesName = business.name?.toLowerCase().includes(query)
-            const matchesCategory = business.category?.toLowerCase().includes(query)
-            const matchesDescription = business.description?.toLowerCase().includes(query)
-            
+            const matchesCategory = business.category
+                ?.toLowerCase()
+                .includes(query)
+            const matchesDescription = business.description
+                ?.toLowerCase()
+                .includes(query)
+
             if (matchesName || matchesCategory || matchesDescription) {
                 results.push({
                     type: 'business',
@@ -169,13 +182,15 @@ export default function SearchScreen() {
         }
         
         if (result.type === 'business') {
-            router.push(`/business-profile?id=${result.data.id || result.data._id}`)
+            router.push(
+                `/business-profile?id=${result.data.id || result.data._id}`
+            )
         } else {
             setSearchQuery(result.data.name)
         }
     }
 
-    const handleRecentSearch = (search) => {
+    const handleRecentSearch = search => {
         setSearchQuery(search)
     }
 
@@ -194,10 +209,6 @@ export default function SearchScreen() {
             <StatusBar style="dark" backgroundColor="#9B59B6" />
             {/* Header con búsqueda */}
             <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
-                </Pressable>
-                
                 <View style={styles.searchBar}>
                     <Ionicons name="search-outline" size={20} color="#888" />
                     <TextInput
@@ -222,7 +233,11 @@ export default function SearchScreen() {
                     />
                     {searchQuery.length > 0 && (
                         <Pressable onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={20} color="#888" />
+                            <Ionicons
+                                name="close-circle"
+                                size={20}
+                                color="#888"
+                            />
                         </Pressable>
                     )}
                 </View>
@@ -253,14 +268,29 @@ export default function SearchScreen() {
                                     onPress={() => handleSelectResult(result)}
                                 >
                                     <View style={styles.resultIcon}>
-                                        <Ionicons 
-                                            name={result.type === 'business' ? 'business' : 'construct-outline'} 
-                                            size={20} 
-                                            color="#9B59B6" 
+                                        <Image
+                                            source={
+                                                result.type === 'business'
+                                                    ? result.data.profile_pic
+                                                        ? {
+                                                              uri: result.data
+                                                                  .profile_pic,
+                                                          }
+                                                        : require('../assets/default-profile-pic.svg')
+                                                    : require('../assets/default-profile-pic.svg')
+                                            }
+                                            style={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: 24,
+                                            }}
                                         />
                                     </View>
                                     <View style={styles.resultInfo}>
-                                        <Text style={styles.resultName} numberOfLines={1}>
+                                        <Text
+                                            style={styles.resultName}
+                                            numberOfLines={1}
+                                        >
                                             {result.data.name}
                                         </Text>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -291,14 +321,24 @@ export default function SearchScreen() {
                                             )}
                                         </View>
                                     </View>
-                                    <Ionicons name="arrow-forward" size={16} color="#CCC" />
+                                    <Ionicons
+                                        name="arrow-forward"
+                                        size={16}
+                                        color="#CCC"
+                                    />
                                 </Pressable>
                             ))}
                         </View>
                     ) : (
                         <View style={styles.noResults}>
-                            <Ionicons name="search-outline" size={48} color="#CCC" />
-                            <Text style={styles.noResultsText}>No se encontraron resultados</Text>
+                            <Ionicons
+                                name="search-outline"
+                                size={48}
+                                color="#CCC"
+                            />
+                            <Text style={styles.noResultsText}>
+                                No se encontraron resultados
+                            </Text>
                             <Text style={styles.noResultsSubtext}>
                                 Intenta con otro término de búsqueda
                             </Text>
@@ -343,7 +383,7 @@ export default function SearchScreen() {
                                 <Text style={styles.sectionTitle}>Explorar</Text>
                             </View>
                             <View style={styles.quickGrid}>
-                                {quickClicks.map((item) => (
+                                {quickClicks.map(item => (
                                     <Pressable
                                         key={item.id}
                                         style={({ pressed }) => [

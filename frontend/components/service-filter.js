@@ -1,87 +1,86 @@
 import React from 'react'
-import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { useService } from '../context/service-context'
+import { View, Text, StyleSheet } from 'react-native'
+import DropDownPicker from 'react-native-dropdown-picker'
 import { colors } from '../styles/global'
 
-function ServiceFilter({ onFilterChange }) {
-    const [filter, setFilter] = React.useState('all')
-    const { services } = useService()
+function ServiceFilter({ onFilterChange, services }) {
+    const [open, setOpen] = React.useState(false)
+    const [value, setValue] = React.useState('all')
 
-    const handleFilterChange = (newFilter) => {
-        setFilter(newFilter)
-        onFilterChange(newFilter)
+    // Contar servicios por estado
+    const pendingCount = services.filter(
+        s => s.state === 'pending' || s.state === 'payment_requested'
+    ).length
+    const inProgressCount = services.filter(
+        s => s.state === 'in progress'
+    ).length
+    const completedCount = services.filter(s => s.state === 'completed').length
+
+    const [items, setItems] = React.useState([
+        { label: 'Todos los servicios', value: 'all' },
+        { label: `Pendientes (${pendingCount})`, value: 'pending' },
+        { label: `En Progreso (${inProgressCount})`, value: 'in progress' },
+        { label: `Completados (${completedCount})`, value: 'completed' },
+    ])
+
+    // Actualizar las etiquetas cuando cambien los contadores
+    React.useEffect(() => {
+        setItems([
+            { label: 'Todos los servicios', value: 'all' },
+            { label: `Pendientes (${pendingCount})`, value: 'pending' },
+            { label: `En Progreso (${inProgressCount})`, value: 'in progress' },
+            { label: `Completados (${completedCount})`, value: 'completed' },
+        ])
+    }, [pendingCount, inProgressCount, completedCount])
+
+    const handleValueChange = newValue => {
+        setValue(newValue)
+        onFilterChange(newValue)
     }
 
     return (
         <View style={styles.container}>
-                <Pressable
-                    onPress={() => handleFilterChange('all')}
-                    style={[styles.button, { 
-                        borderBottomWidth: filter === 'all' ? 3 : 1,
-                        borderBottomColor: filter === 'all' ? colors.primary : colors.gray, 
-                    }]}
-                >
-                    <Text style={[styles.buttonText, { color: filter === 'all' ? colors.textSecondary : colors.gray }]}>Todas</Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => handleFilterChange('in-progress')}
-                    style={[styles.button, {
-                        borderBottomWidth: filter === 'in-progress' ? 3 : 1,
-                        borderBottomColor: filter === 'in-progress' ? colors.primary : colors.gray,
-                    }]}
-                >
-                    <Text style={[styles.buttonText, { color: filter === 'in-progress' ? colors.textSecondary : colors.gray }]}>En progreso ({notifications.filter(n => n.status === 'in-progress').length})</Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => handleFilterChange('paid')}
-                    style={[styles.button, {
-                        borderBottomWidth: filter === 'paid' ? 3 : 1,
-                        borderBottomColor: filter === 'paid' ? colors.primary : colors.gray,
-                    }]}
-                >
-                    <Text style={[styles.buttonText, { color: filter === 'paid' ? colors.textSecondary : colors.gray }]}>Pagadas</Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => handleFilterChange('canceled')}
-                    style={[styles.button, {
-                        borderBottomWidth: filter === 'canceled' ? 3 : 1,
-                        borderBottomColor: filter === 'canceled' ? colors.primary : colors.gray,
-                    }]}
-                >
-                    <Text style={[styles.buttonText, { color: filter === 'canceled' ? colors.textSecondary : colors.gray }]}>Canceladas</Text>
-                </Pressable>
+            <Text style={styles.label}>Filtrar por estado:</Text>
+            <DropDownPicker
+                open={open}
+                value={value}
+                items={items}
+                setOpen={setOpen}
+                setValue={setValue}
+                setItems={setItems}
+                onChangeValue={handleValueChange}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+                placeholder="Selecciona un estado"
+                listMode="SCROLLVIEW"
+            />
         </View>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingBottom: 8,
-        paddingTop: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         marginBottom: 16,
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        backgroundColor: colors.lightGray,
+        backgroundColor: colors.white,
+        zIndex: 1000,
     },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
+    label: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
+        color: colors.textSecondary,
     },
-    button: {
-        paddingBottom: 12,
-        flex: 1,
-        width: '100%',
-        borderBottomWidth: 1,
+    dropdown: {
+        borderColor: colors.gray,
+        borderRadius: 8,
+        minHeight: 45,
     },
-    buttonText: {
-        fontWeight: 'bold',
-        textAlign: 'center',
+    dropdownContainer: {
+        borderColor: colors.gray,
+        borderRadius: 8,
     },
-});
+})
 
 export default ServiceFilter

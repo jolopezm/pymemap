@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { login as loginService, getCurrentUser } from '../api/auth-service'
 
 const AuthContext = createContext()
 
@@ -24,26 +25,50 @@ export const AuthProvider = ({ children }) => {
         loadUser()
     }, [])
 
-    const login = async userData => {
+    const login = async ({ email, password }) => {
         try {
+            // Llamar al servicio de login que hace la petición al backend
+            await loginService({ email, password })
+            
+            // Obtener los datos completos del usuario
+            const userData = await getCurrentUser()
+            
+            // Guardar usuario en el estado y AsyncStorage
             await AsyncStorage.setItem('user', JSON.stringify(userData))
             setUser(userData)
+            
+            return userData
         } catch (error) {
-            console.error('Error saving user to storage:', error)
+            console.error('Error during login:', error)
+            throw error
         }
     }
 
     const logout = async () => {
         try {
             await AsyncStorage.removeItem('user')
+            await AsyncStorage.removeItem('token')
+            await AsyncStorage.removeItem('authData')
             setUser(null)
         } catch (error) {
-            console.error('Error removing user from storage:', error)
+            console.error('Error during logout:', error)
+        }
+    }
+
+    const refreshUser = async () => {
+        try {
+            const userData = await getCurrentUser()
+            await AsyncStorage.setItem('user', JSON.stringify(userData))
+            setUser(userData)
+            return userData
+        } catch (error) {
+            console.error('Error refreshing user:', error)
+            throw error
         }
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     )
