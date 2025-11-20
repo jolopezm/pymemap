@@ -7,6 +7,7 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
 } from 'react-native'
 import { useAuth } from '../context/auth-context'
 import { useChat } from '../context/chat-context'
@@ -21,6 +22,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Screen from '../components/screen'
 import LoadingSpinner from '../components/loading-spinner'
+import { useRefresh } from '../hooks/useRefresh'
 
 export default function ChatView() {
     const { user } = useAuth()
@@ -32,6 +34,16 @@ export default function ChatView() {
     const [error, setError] = React.useState(null)
     const { chatId } = useLocalSearchParams()
     const scrollViewRef = React.useRef(null)
+    const { refreshing, onRefresh } = useRefresh(async () => {
+        if (!validChatId) return
+
+        try {
+            const messageData = await getMessages(validChatId)
+            setMessages(messageData)
+        } catch (error) {
+            console.error('❌ Error fetching messages on refresh:', error)
+        }
+    })
 
     // Validar chatId
     const validChatId = React.useMemo(() => {
@@ -301,6 +313,14 @@ export default function ChatView() {
                             paddingTop: 10,
                             paddingBottom: 20,
                         }}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={['#888']}
+                                tintColor="#ae0e0eff"
+                            />
+                        }
                     >
                         {messages.length === 0 ? (
                             <View style={styles.emptyContainer}>

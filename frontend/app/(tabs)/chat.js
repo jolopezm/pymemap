@@ -1,4 +1,12 @@
-import { View, Text, Pressable, StyleSheet, Image } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    StyleSheet,
+    Image,
+    RefreshControl,
+    ScrollView,
+} from 'react-native'
 import { useChat } from '../../context/chat-context'
 import React from 'react'
 import { globalStyles } from '../../styles/global'
@@ -6,6 +14,7 @@ import { router } from 'expo-router'
 import Screen from '../../components/screen'
 import LoadingSpinner from '../../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons'
+import { useRefresh } from '../../hooks/useRefresh'
 
 const ChatScreen = () => {
     const {
@@ -17,6 +26,8 @@ const ChatScreen = () => {
         isFromCache,
         refreshChats,
     } = useChat()
+
+    const { refreshing, onRefresh } = useRefresh(refreshChats)
 
     const handleChatPress = chat => {
         const chatId = chat.id || chat._id
@@ -54,167 +65,183 @@ const ChatScreen = () => {
 
     return (
         <Screen>
-            <View>
-                {/* Indicador de caché */}
-                {isFromCache && (
-                    <View style={styles.cacheIndicator}>
-                        <Ionicons
-                            name="cloud-offline"
-                            size={16}
-                            color="#856404"
-                        />
-                        <Text style={styles.cacheText}>
-                            Mostrando datos guardados
-                        </Text>
-                        <Pressable onPress={refreshChats}>
-                            <Text style={styles.refreshText}>Actualizar</Text>
-                        </Pressable>
-                    </View>
-                )}
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
+            >
+                <View>
+                    {isFromCache && (
+                        <View style={styles.cacheIndicator}>
+                            <Ionicons
+                                name="cloud-offline"
+                                size={16}
+                                color="#856404"
+                            />
+                            <Text style={styles.cacheText}>
+                                Mostrando datos guardados
+                            </Text>
+                            <Pressable onPress={refreshChats}>
+                                <Text style={styles.refreshText}>
+                                    Actualizar
+                                </Text>
+                            </Pressable>
+                        </View>
+                    )}
 
-                {/* Badge de mensajes no leídos */}
-                {unreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                        <Text style={styles.unreadText}>
-                            {unreadCount} mensaje{unreadCount > 1 ? 's' : ''}{' '}
-                            sin leer
-                        </Text>
-                    </View>
-                )}
+                    {/* Badge de mensajes no leídos */}
+                    {unreadCount > 0 && (
+                        <View style={styles.unreadBadge}>
+                            <Text style={styles.unreadText}>
+                                {unreadCount} mensaje
+                                {unreadCount > 1 ? 's' : ''} sin leer
+                            </Text>
+                        </View>
+                    )}
 
-                {chats.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons
-                            name="chatbubbles-outline"
-                            size={64}
-                            color="#CCC"
-                        />
-                        <Text style={styles.emptyText}>
-                            No hay chats disponibles
-                        </Text>
-                        <Text style={styles.emptySubtext}>
-                            Inicia una conversación desde el perfil de un
-                            negocio
-                        </Text>
-                    </View>
-                ) : (
-                    chats.map(chat => {
-                        const chatId = chat.id || chat._id
-                        const otherUser = otherUsers[chatId]
+                    {chats.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons
+                                name="chatbubbles-outline"
+                                size={64}
+                                color="#CCC"
+                            />
+                            <Text style={styles.emptyText}>
+                                No hay chats disponibles
+                            </Text>
+                            <Text style={styles.emptySubtext}>
+                                Inicia una conversación desde el perfil de un
+                                negocio
+                            </Text>
+                        </View>
+                    ) : (
+                        chats.map(chat => {
+                            const chatId = chat.id || chat._id
+                            const otherUser = otherUsers[chatId]
 
-                        // ✅ CORRECCIÓN: Extraer el contenido del último mensaje
-                        const lastMessageText =
-                            chat.last_message?.content ||
-                            chat.lastMessage?.content ||
-                            'No hay mensajes aún'
+                            // ✅ CORRECCIÓN: Extraer el contenido del último mensaje
+                            const lastMessageText =
+                                chat.last_message?.content ||
+                                chat.lastMessage?.content ||
+                                'No hay mensajes aún'
 
-                        return (
-                            <Pressable
-                                key={chatId}
-                                onPress={() => handleChatPress(chat)}
-                                style={({ pressed }) => [
-                                    globalStyles.card,
-                                    {
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: 10,
-                                        opacity: pressed ? 0.7 : 1,
-                                        backgroundColor: chat.hasUnreadMessages
-                                            ? '#F8F4FF'
-                                            : '#FFF',
-                                    },
-                                ]}
-                            >
-                                {/* Avatar */}
-                                {otherUser?.profile_pic ? (
-                                    <Image
-                                        source={{
-                                            uri: otherUser.profile_pic,
-                                        }}
-                                        style={{
-                                            width: 50,
-                                            height: 50,
-                                            borderRadius: 25,
-                                            backgroundColor: '#f0f0f0',
-                                        }}
-                                    />
-                                ) : (
-                                    <View
-                                        style={{
-                                            width: 50,
-                                            height: 50,
-                                            borderRadius: 25,
-                                            backgroundColor: '#9B59B6',
-                                            justifyContent: 'center',
+                            return (
+                                <Pressable
+                                    key={chatId}
+                                    onPress={() => handleChatPress(chat)}
+                                    style={({ pressed }) => [
+                                        globalStyles.card,
+                                        {
+                                            flexDirection: 'row',
                                             alignItems: 'center',
-                                        }}
-                                    >
-                                        <Text
+                                            gap: 10,
+                                            opacity: pressed ? 0.7 : 1,
+                                            backgroundColor:
+                                                chat.hasUnreadMessages
+                                                    ? '#F8F4FF'
+                                                    : '#FFF',
+                                        },
+                                    ]}
+                                >
+                                    {/* Avatar */}
+                                    {otherUser?.profile_pic ? (
+                                        <Image
+                                            source={{
+                                                uri: otherUser.profile_pic,
+                                            }}
                                             style={{
-                                                fontSize: 20,
-                                                color: '#FFF',
-                                                fontWeight: '600',
+                                                width: 50,
+                                                height: 50,
+                                                borderRadius: 25,
+                                                backgroundColor: '#f0f0f0',
+                                            }}
+                                        />
+                                    ) : (
+                                        <View
+                                            style={{
+                                                width: 50,
+                                                height: 50,
+                                                borderRadius: 25,
+                                                backgroundColor: '#9B59B6',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
                                             }}
                                         >
-                                            {otherUser?.name?.[0]?.toUpperCase() ||
-                                                '?'}
-                                        </Text>
-                                    </View>
-                                )}
-
-                                {/* Contenido del chat */}
-                                <View style={{ flex: 1 }}>
-                                    <Text
-                                        style={{
-                                            fontWeight: '600',
-                                            fontSize: 16,
-                                            color: '#333',
-                                        }}
-                                    >
-                                        {otherUser?.name || 'Usuario'}
-                                    </Text>
-                                    <Text
-                                        style={{
-                                            color: chat.hasUnreadMessages
-                                                ? '#000'
-                                                : '#666',
-                                            fontSize: 14,
-                                            fontWeight: chat.hasUnreadMessages
-                                                ? '600'
-                                                : 'normal',
-                                            marginTop: 4,
-                                        }}
-                                        numberOfLines={1}
-                                    >
-                                        {lastMessageText}
-                                    </Text>
-                                </View>
-
-                                {/* Indicador de mensajes no leídos */}
-                                {chat.hasUnreadMessages &&
-                                    chat.unreadMessageCount > 0 && (
-                                        <View style={styles.unreadCountBadge}>
                                             <Text
-                                                style={styles.unreadCountText}
+                                                style={{
+                                                    fontSize: 20,
+                                                    color: '#FFF',
+                                                    fontWeight: '600',
+                                                }}
                                             >
-                                                {chat.unreadMessageCount > 9
-                                                    ? '9+'
-                                                    : chat.unreadMessageCount}
+                                                {otherUser?.name?.[0]?.toUpperCase() ||
+                                                    '?'}
                                             </Text>
                                         </View>
                                     )}
 
-                                {/* Flecha */}
-                                <Ionicons
-                                    name="chevron-forward"
-                                    size={20}
-                                    color="#999"
-                                />
-                            </Pressable>
-                        )
-                    })
-                )}
-            </View>
+                                    {/* Contenido del chat */}
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={{
+                                                fontWeight: '600',
+                                                fontSize: 16,
+                                                color: '#333',
+                                            }}
+                                        >
+                                            {otherUser?.name || 'Usuario'}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                color: chat.hasUnreadMessages
+                                                    ? '#000'
+                                                    : '#666',
+                                                fontSize: 14,
+                                                fontWeight:
+                                                    chat.hasUnreadMessages
+                                                        ? '600'
+                                                        : 'normal',
+                                                marginTop: 4,
+                                            }}
+                                            numberOfLines={1}
+                                        >
+                                            {lastMessageText}
+                                        </Text>
+                                    </View>
+
+                                    {/* Indicador de mensajes no leídos */}
+                                    {chat.hasUnreadMessages &&
+                                        chat.unreadMessageCount > 0 && (
+                                            <View
+                                                style={styles.unreadCountBadge}
+                                            >
+                                                <Text
+                                                    style={
+                                                        styles.unreadCountText
+                                                    }
+                                                >
+                                                    {chat.unreadMessageCount > 9
+                                                        ? '9+'
+                                                        : chat.unreadMessageCount}
+                                                </Text>
+                                            </View>
+                                        )}
+
+                                    {/* Flecha */}
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color="#999"
+                                    />
+                                </Pressable>
+                            )
+                        })
+                    )}
+                </View>
+            </ScrollView>
         </Screen>
     )
 }
