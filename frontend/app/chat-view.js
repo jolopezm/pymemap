@@ -5,6 +5,8 @@ import {
     Pressable,
     StyleSheet,
     TextInput,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native'
 import { useAuth } from '../context/auth-context'
 import { useChat } from '../context/chat-context'
@@ -274,117 +276,137 @@ export default function ChatView() {
 
     return (
         <Screen>
-            <View style={{ flex: 1, position: 'relative' }}>
-                {/* Mostrar error temporal si hay pero no bloquear UI */}
-                {error && (
-                    <View style={styles.errorBanner}>
-                        <Ionicons name="warning" size={16} color="#856404" />
-                        <Text style={styles.errorText}>{error}</Text>
-                    </View>
-                )}
-
-                <ScrollView
-                    ref={scrollViewRef}
-                    style={{ flex: 1, marginBottom: 70 }}
-                    contentContainerStyle={{
-                        paddingTop: 10,
-                        paddingBottom: 20,
-                    }}
-                >
-                    {messages.length === 0 ? (
-                        <View style={styles.emptyContainer}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            >
+                <View style={{ flex: 1, position: 'relative' }}>
+                    {/* Mostrar error temporal si hay pero no bloquear UI */}
+                    {error && (
+                        <View style={styles.errorBanner}>
                             <Ionicons
-                                name="chatbubbles-outline"
-                                size={64}
-                                color="#CCC"
+                                name="warning"
+                                size={16}
+                                color="#856404"
                             />
-                            <Text style={styles.emptyText}>
-                                No hay mensajes aún
-                            </Text>
-                            <Text style={styles.emptySubtext}>
-                                Envía el primer mensaje
-                            </Text>
+                            <Text style={styles.errorText}>{error}</Text>
                         </View>
-                    ) : (
-                        messages.map((msg, index) => {
-                            if (!msg) return null
+                    )}
 
-                            const isMyMessage =
-                                msg.sender_id === (user.id || user._id)
-                            const previousMessage = messages[index - 1]
-                            const isSameSender =
-                                previousMessage?.sender_id === msg.sender_id
-                            const isTemporary = msg.id
-                                ?.toString()
-                                .startsWith('temp-')
+                    <ScrollView
+                        ref={scrollViewRef}
+                        style={{ flex: 1, marginBottom: 70 }}
+                        contentContainerStyle={{
+                            paddingTop: 10,
+                            paddingBottom: 20,
+                        }}
+                    >
+                        {messages.length === 0 ? (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons
+                                    name="chatbubbles-outline"
+                                    size={64}
+                                    color="#CCC"
+                                />
+                                <Text style={styles.emptyText}>
+                                    No hay mensajes aún
+                                </Text>
+                                <Text style={styles.emptySubtext}>
+                                    Envía el primer mensaje
+                                </Text>
+                            </View>
+                        ) : (
+                            messages.map((msg, index) => {
+                                if (!msg) return null
 
-                            return (
-                                <View
-                                    key={msg.id || msg._id}
-                                    style={[
-                                        styles.messageContainer,
-                                        isMyMessage
-                                            ? styles.myMessage
-                                            : styles.theirMessage,
-                                        {
-                                            marginLeft: isMyMessage ? 50 : 0,
-                                            marginRight: isMyMessage ? 0 : 50,
-                                            marginTop: isSameSender ? 2 : 12,
-                                            opacity: isTemporary ? 0.6 : 1,
-                                        },
-                                    ]}
-                                >
-                                    <Text
+                                const isMyMessage =
+                                    msg.sender_id === (user.id || user._id)
+                                const previousMessage = messages[index - 1]
+                                const isSameSender =
+                                    previousMessage?.sender_id === msg.sender_id
+                                const isTemporary = msg.id
+                                    ?.toString()
+                                    .startsWith('temp-')
+
+                                return (
+                                    <View
+                                        key={msg.id || msg._id}
                                         style={[
+                                            styles.messageContainer,
                                             isMyMessage
-                                                ? styles.myMessageText
-                                                : styles.theirMessageText,
+                                                ? styles.myMessage
+                                                : styles.theirMessage,
+                                            {
+                                                marginLeft: isMyMessage
+                                                    ? 50
+                                                    : 0,
+                                                marginRight: isMyMessage
+                                                    ? 0
+                                                    : 50,
+                                                marginTop: isSameSender
+                                                    ? 2
+                                                    : 12,
+                                                opacity: isTemporary ? 0.6 : 1,
+                                            },
                                         ]}
                                     >
-                                        {msg.content}
-                                    </Text>
-                                    {isTemporary && (
-                                        <Ionicons
-                                            name="time-outline"
-                                            size={12}
-                                            color={
+                                        <Text
+                                            style={[
                                                 isMyMessage
-                                                    ? colors.textPrimary
-                                                    : colors.textSecondary
-                                            }
-                                            style={{ marginLeft: 4 }}
-                                        />
-                                    )}
-                                </View>
-                            )
-                        })
-                    )}
-                </ScrollView>
+                                                    ? styles.myMessageText
+                                                    : styles.theirMessageText,
+                                            ]}
+                                        >
+                                            {msg.content}
+                                        </Text>
+                                        {isTemporary && (
+                                            <Ionicons
+                                                name="time-outline"
+                                                size={12}
+                                                color={
+                                                    isMyMessage
+                                                        ? colors.textPrimary
+                                                        : colors.textSecondary
+                                                }
+                                                style={{ marginLeft: 4 }}
+                                            />
+                                        )}
+                                    </View>
+                                )
+                            })
+                        )}
+                    </ScrollView>
 
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={[
-                            globalStyles.textField,
-                            { fontSize: 14, flex: 1, marginBottom: 0 },
-                        ]}
-                        placeholder="Mensaje"
-                        value={messageText}
-                        onChangeText={setMessageText}
-                        multiline
-                        maxLength={500}
-                    />
-                    <Pressable
-                        onPress={newMessage}
-                        disabled={!messageText.trim()}
-                        style={[
-                            styles.button,
-                            { opacity: messageText.trim() ? 1 : 0.5 },
-                        ]}
-                    >
-                        <Ionicons name="send" size={24} color={colors.white} />
-                    </Pressable>
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={[
+                                globalStyles.textField,
+                                { fontSize: 14, flex: 1, marginBottom: 0 },
+                            ]}
+                            placeholder="Mensaje"
+                            value={messageText}
+                            onChangeText={setMessageText}
+                            multiline
+                            maxLength={500}
+                        />
+                        <Pressable
+                            onPress={newMessage}
+                            disabled={!messageText.trim()}
+                            style={[
+                                styles.button,
+                                { opacity: messageText.trim() ? 1 : 0.5 },
+                            ]}
+                        >
+                            <Ionicons
+                                name="send"
+                                size={24}
+                                color={colors.white}
+                            />
+                        </Pressable>
+                    </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Screen>
     )
 }
@@ -420,13 +442,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         position: 'absolute',
-        bottom: 0,
+        bottom: 70,
         left: 0,
         right: 0,
         width: '100%',
         borderTopWidth: 1,
         borderTopColor: colors.lightGray || '#ddd',
-        backgroundColor: '#FFF',
         paddingVertical: 8,
     },
     button: {

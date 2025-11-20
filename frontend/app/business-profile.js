@@ -100,26 +100,37 @@ export default function BusinessProfile() {
                 return
             }
 
-            let chatData
-            try {
-                // Intentar obtener chat existente
-                chatData = await getChatByParticipants(currentUserId, ownerId)
-            } catch (error) {
-                if (error.response?.status === 404) {
-                    // Crear nuevo chat si no existe
-                    chatData = await createChat({
-                        participants: [currentUserId, ownerId],
-                        lastMessage: null,
-                        lastMessageTimestamp: new Date().toISOString(),
-                    })
-                } else {
-                    throw error
-                }
+            let chatData = null
+
+            // Intentar obtener chat existente
+            chatData = await getChatByParticipants(currentUserId, ownerId)
+
+            // Si no existe, crear uno nuevo
+            if (!chatData) {
+                console.log('📝 Creando nuevo chat...')
+                chatData = await createChat({
+                    participants: [currentUserId, ownerId],
+                    lastMessage: null,
+                    lastMessageTimestamp: new Date().toISOString(),
+                })
+                console.log(
+                    '✅ Nuevo chat creado:',
+                    chatData._id || chatData.id
+                )
+            } else {
+                console.log(
+                    '✅ Chat existente encontrado:',
+                    chatData._id || chatData.id
+                )
+            }
+
+            if (!chatData) {
+                throw new Error('No se pudo crear o encontrar el chat')
             }
 
             setChat(chatData)
 
-            // Enviar mensaje
+            // Enviar el mensaje
             await newMessage(chatData)
 
             setModalVisible(true)
