@@ -58,17 +58,23 @@ export async function getAvailableSlots(businessId, date) {
 export async function createBooking(bookingData) {
     try {
         const headers = await getAuthHeaders()
-        console.log('Creating booking:', bookingData)
-        const response = await axios.post(`${API_URL}/bookings`, bookingData, {
-            headers,
-        })
-        console.log('Booking created:', response.data)
+        console.log('📤 Creating booking:', bookingData)
+        console.log('🔗 URL:', `${API_URL}/bookings/`)
+
+        const response = await axios.post(
+            `${API_URL}/bookings/`, // ✅ Ruta correcta con / al final
+            bookingData,
+            { headers }
+        )
+        console.log('✅ Booking created:', response.data)
         return response.data
     } catch (error) {
         console.error(
-            'Error creating booking:',
+            '❌ Error creating booking:',
             error.response?.data || error.message
         )
+        console.error('❌ Status:', error.response?.status)
+        console.error('❌ URL intentada:', error.config?.url)
         throw error
     }
 }
@@ -77,37 +83,61 @@ export async function createBooking(bookingData) {
  * Confirmar reserva (dueño de negocio)
  */
 export async function confirmBooking(bookingId) {
-    const headers = await getAuthHeaders()
-    const response = await axios.patch(
-        `${API_URL}/bookings/${bookingId}/confirm`,
-        {},
-        { headers }
-    )
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.patch(
+            `${API_URL}/bookings/${bookingId}/confirm`,
+            {},
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error(
+            'Error confirming booking:',
+            error.response?.data || error.message
+        )
+        throw error
+    }
 }
 
 /**
  * Rechazar reserva (dueño de negocio)
  */
 export async function rejectBooking(bookingId) {
-    const headers = await getAuthHeaders()
-    const response = await axios.patch(
-        `${API_URL}/bookings/${bookingId}/reject`,
-        {},
-        { headers }
-    )
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.patch(
+            `${API_URL}/bookings/${bookingId}/reject`,
+            {},
+            { headers }
+        )
+        return response.data
+    } catch (error) {
+        console.error(
+            'Error rejecting booking:',
+            error.response?.data || error.message
+        )
+        throw error
+    }
 }
 
 /**
  * Obtener mis reservas (cliente)
  */
 export async function getMyBookings() {
-    const headers = await getAuthHeaders()
-    const response = await axios.get(`${API_URL}/bookings/my-bookings`, {
-        headers,
-    })
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.get(`${API_URL}/bookings/my-bookings`, {
+            headers,
+        })
+        return response.data
+    } catch (error) {
+        console.error(
+            'Error getting my bookings:',
+            error.response?.data || error.message
+        )
+        return []
+    }
 }
 
 /**
@@ -139,12 +169,16 @@ export async function getAllMyBusinessBookings() {
     try {
         const headers = await getAuthHeaders()
         console.log('🏢 Fetching all business bookings for user')
-        
+
         const response = await axios.get(
             `${API_URL}/bookings/my-business-bookings`,
             { headers }
         )
-        console.log('✅ All business bookings fetched:', response.data.length, 'items')
+        console.log(
+            '✅ All business bookings fetched:',
+            response.data.length,
+            'items'
+        )
         return response.data
     } catch (error) {
         console.error(
@@ -184,8 +218,13 @@ export async function setBusinessAvailability(businessId, availabilityData) {
 export async function requestBookingPayment(bookingId, requestedPrice) {
     try {
         const headers = await getAuthHeaders()
-        console.log('🏷️ Requesting payment for booking:', bookingId, 'Price:', requestedPrice)
-        
+        console.log(
+            '🏷️ Requesting payment for booking:',
+            bookingId,
+            'Price:',
+            requestedPrice
+        )
+
         const response = await axios.patch(
             `${API_URL}/bookings/${bookingId}/request-payment`,
             { requested_price: requestedPrice },
@@ -209,7 +248,7 @@ export async function payBooking(bookingId) {
     try {
         const headers = await getAuthHeaders()
         console.log('💳 Paying booking:', bookingId)
-        
+
         const response = await axios.post(
             `${API_URL}/bookings/${bookingId}/pay`,
             {},
