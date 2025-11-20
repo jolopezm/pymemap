@@ -1,86 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedidos</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Pedidos</h1>
-        <div class="filters">
-            <input type="date" placeholder="Fecha">
-            <select>
-                <option value="">Estado</option>
-                <option value="solicitado">Solicitado</option>
-                <option value="confirmado">Confirmado</option>
-                <option value="completado">Completado</option>
-                <option value="cancelado">Cancelado</option>
-            </select>
-            <input type="text" placeholder="Servicio">
-            <input type="text" placeholder="Cliente">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Pedidos</title>
+        <link rel="stylesheet" href="css/estilo.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Pedidos</h1>
+            <div class="filters">
+                <input type="date" placeholder="Fecha" />
+                <select>
+                    <option value="">Estado</option>
+                    <option value="solicitado">Solicitado</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="completado">Completado</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+                <input type="text" placeholder="Servicio" />
+                <input type="text" placeholder="Cliente" />
+            </div>
+        </header>
+
+        <main>
+            <section class="kanban">
+                <div class="column" id="solicitado">
+                    <h2>Solicitado</h2>
+                    <!-- Tarjetas de pedidos -->
+                </div>
+                <div class="column" id="confirmado">
+                    <h2>Confirmado</h2>
+                    <!-- Tarjetas de pedidos -->
+                </div>
+                <div class="column" id="completado">
+                    <h2>Completado</h2>
+                    <!-- Tarjetas de pedidos -->
+                </div>
+                <div class="column" id="cancelado">
+                    <h2>Cancelado</h2>
+                    <!-- Tarjetas de pedidos -->
+                </div>
+            </section>
+
+            <section class="table-view">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>ID Orden</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas de pedidos -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+
+        <footer>
+            <div class="pagination">
+                <!-- Paginación -->
+            </div>
+            <input type="text" placeholder="Buscar por cliente/ID" />
+        </footer>
+
+        <div class="modal" id="detalle-pedido">
+            <h2>Detalle de Pedido</h2>
+            <p>Datos del Cliente: <span id="cliente-info"></span></p>
+            <p>Servicio: <span id="servicio-info"></span></p>
+            <p>Historial de Cambios: <span id="historial-info"></span></p>
+            <p>Estado de Pago: <span id="estado-pago"></span></p>
+            <button id="marcar-completado">Marcar Completado</button>
+            <a href="#" id="ver-comprobante">Ver Comprobante</a>
+            <a href="#" id="enlace-tickets">Tickets</a>
         </div>
-    </header>
 
-    <main>
-        <section class="kanban">
-            <div class="column" id="solicitado">
-                <h2>Solicitado</h2>
-                <!-- Tarjetas de pedidos -->
-            </div>
-            <div class="column" id="confirmado">
-                <h2>Confirmado</h2>
-                <!-- Tarjetas de pedidos -->
-            </div>
-            <div class="column" id="completado">
-                <h2>Completado</h2>
-                <!-- Tarjetas de pedidos -->
-            </div>
-            <div class="column" id="cancelado">
-                <h2>Cancelado</h2>
-                <!-- Tarjetas de pedidos -->
-            </div>
-        </section>
-
-        <section class="table-view">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha/Hora</th>
-                        <th>ID Orden</th>
-                        <th>Cliente</th>
-                        <th>Servicio</th>
-                        <th>Precio</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Filas de pedidos -->
-                </tbody>
-            </table>
-        </section>
-    </main>
-
-    <footer>
-        <div class="pagination">
-            <!-- Paginación -->
-        </div>
-        <input type="text" placeholder="Buscar por cliente/ID">
-    </footer>
-
-    <div class="modal" id="detalle-pedido">
-        <h2>Detalle de Pedido</h2>
-        <p>Datos del Cliente: <span id="cliente-info"></span></p>
-        <p>Servicio: <span id="servicio-info"></span></p>
-        <p>Historial de Cambios: <span id="historial-info"></span></p>
-        <p>Estado de Pago: <span id="estado-pago"></span></p>
-        <button id="marcar-completado">Marcar Completado</button>
-        <a href="#" id="ver-comprobante">Ver Comprobante</a>
-        <a href="#" id="enlace-tickets">Tickets</a>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+        <script src="script.js"></script>
+    </body>
 </html>
