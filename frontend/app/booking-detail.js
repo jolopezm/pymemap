@@ -351,7 +351,7 @@ export default function BookingDetail() {
                         </Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Ingrese el código del cliente"
+                            placeholder="código"
                             keyboardType="numeric"
                             maxLength={4}
                             value={verificationCode}
@@ -397,6 +397,17 @@ export default function BookingDetail() {
                     style={globalStyles.button}
                 >
                     <Text style={[{ color: 'white' }]}>Ir al chat</Text>
+                </Pressable>
+
+                <Pressable
+                    onPress={() =>
+                        router.push('report-feedback', {
+                            serviceId: booking.service_id,
+                        })
+                    }
+                    style={[globalStyles.button, { marginTop: 16 }]}
+                >
+                    <Text style={[{ color: 'white' }]}>Reportar Feedback</Text>
                 </Pressable>
             </View>
         </Screen>

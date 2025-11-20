@@ -293,7 +293,7 @@ export default function ServiceDetail() {
                             Establecer Precio del Servicio
                         </Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { fontSize: 14 }]}
                             placeholder="Ingrese el precio"
                             keyboardType="numeric"
                             value={price}

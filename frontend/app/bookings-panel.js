@@ -252,23 +252,6 @@ export default function BookingsPanel() {
                             📋 Ver Detalle
                         </Text>
                     </Pressable>
-
-                    {/* Botón para solicitar pago cuando está confirmada */}
-                    {item.status === 'confirmed' && (
-                        <Pressable
-                            style={styles.paymentButton}
-                            onPress={() =>
-                                router.push({
-                                    pathname: '/booking-detail',
-                                    params: { id: item._id },
-                                })
-                            }
-                        >
-                            <Text style={styles.paymentButtonText}>
-                                💰 Solicitar Pago
-                            </Text>
-                        </Pressable>
-                    )}
                 </View>
             </View>
         )
