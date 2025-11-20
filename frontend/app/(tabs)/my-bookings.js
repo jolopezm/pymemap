@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, FlatList, RefreshControl, Pressable } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
+import DropDownPicker from 'react-native-dropdown-picker'
 import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
@@ -11,6 +12,8 @@ export default function MyBookings() {
     const [bookings, setBookings] = useState([])
     const [loading, setLoading] = useState(false)
     const [refreshing, setRefreshing] = useState(false)
+    const [filterStatus, setFilterStatus] = useState('all') // 'all' = mostrar todos
+    const [dropdownOpen, setDropdownOpen] = useState(false)
 
     useEffect(() => {
         fetchBookings()
@@ -249,54 +252,74 @@ export default function MyBookings() {
 
     const pendingCount = bookings.filter(b => b.status === 'pending').length
     const confirmedCount = bookings.filter(b => b.status === 'confirmed').length
+    const completedCount = bookings.filter(b => b.status === 'completed').length
+    const cancelledCount = bookings.filter(b => b.status === 'cancelled').length
+
+    const dropdownItems = [
+        { label: `Todas (${bookings.length})`, value: 'all' },
+        { label: `⏳ Pendientes (${pendingCount})`, value: 'pending' },
+        { label: `✅ Confirmadas (${confirmedCount})`, value: 'confirmed' },
+        { label: `✅ Completadas (${completedCount})`, value: 'completed' },
+        { label: `❌ Canceladas (${cancelledCount})`, value: 'cancelled' },
+    ]
+
+    // Filtrar bookings según el estado seleccionado
+    const filteredBookings =
+        filterStatus === 'all'
+            ? bookings
+            : bookings.filter(b => b.status === filterStatus)
 
     return (
         <Screen>
             <View style={styles.container}>
                 <Text style={globalStyles.title}>Mis Reservas</Text>
 
-                {/* Resumen */}
-                <View style={styles.summaryContainer}>
-                    <View style={styles.summaryCard}>
-                        <Text style={styles.summaryNumber}>
-                            {bookings.length}
-                        </Text>
-                        <Text style={styles.summaryLabel}>Total</Text>
-                    </View>
-                    <View style={styles.summaryCard}>
-                        <Text
-                            style={[styles.summaryNumber, { color: '#ffc107' }]}
-                        >
-                            {pendingCount}
-                        </Text>
-                        <Text style={styles.summaryLabel}>Pendientes</Text>
-                    </View>
-                    <View style={styles.summaryCard}>
-                        <Text
-                            style={[styles.summaryNumber, { color: '#28a745' }]}
-                        >
-                            {confirmedCount}
-                        </Text>
-                        <Text style={styles.summaryLabel}>Confirmadas</Text>
-                    </View>
+                {/* Filtro con dropdown */}
+                <View style={styles.filterContainer}>
+                    <Text style={styles.filterLabel}>Filtrar por estado:</Text>
+                    <DropDownPicker
+                        open={dropdownOpen}
+                        value={filterStatus}
+                        items={dropdownItems}
+                        setOpen={setDropdownOpen}
+                        setValue={setFilterStatus}
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                        placeholder="Selecciona un estado"
+                        listMode="SCROLLVIEW"
+                        zIndex={3000}
+                        zIndexInverse={1000}
+                    />
                 </View>
 
                 {/* Lista de reservas */}
                 {loading && bookings.length === 0 ? (
                     <Text style={styles.loadingText}>Cargando reservas...</Text>
-                ) : bookings.length === 0 ? (
+                ) : filteredBookings.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📅</Text>
                         <Text style={styles.emptyText}>
-                            No tienes reservas aún
+                            {filterStatus !== 'all'
+                                ? `No tienes reservas ${
+                                      filterStatus === 'pending'
+                                          ? 'pendientes'
+                                          : filterStatus === 'confirmed'
+                                            ? 'confirmadas'
+                                            : filterStatus === 'completed'
+                                              ? 'completadas'
+                                              : 'canceladas'
+                                  }`
+                                : 'No tienes reservas aún'}
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            Busca un negocio y solicita un servicio
+                            {filterStatus !== 'all'
+                                ? 'Selecciona "Todas" para ver todas las reservas'
+                                : 'Busca un negocio y solicita un servicio'}
                         </Text>
                     </View>
                 ) : (
                     <FlatList
-                        data={bookings}
+                        data={filteredBookings}
                         renderItem={renderBookingCard}
                         keyExtractor={item => item._id}
                         contentContainerStyle={styles.listContainer}
@@ -318,6 +341,25 @@ const styles = {
         flex: 1,
         padding: 16,
     },
+    filterContainer: {
+        marginBottom: 20,
+        zIndex: 3000,
+    },
+    filterLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
+        color: '#666',
+    },
+    dropdown: {
+        borderColor: '#ddd',
+        borderRadius: 8,
+        minHeight: 45,
+    },
+    dropdownContainer: {
+        borderColor: '#ddd',
+        borderRadius: 8,
+    },
     summaryContainer: {
         flexDirection: 'row',
         gap: 12,
@@ -329,6 +371,16 @@ const styles = {
         padding: 12,
         borderRadius: 12,
         alignItems: 'center',
+    },
+    summaryCardActive: {
+        backgroundColor: '#e0e7ff',
+        borderWidth: 2,
+        borderColor: '#6366f1',
+        shadowColor: '#6366f1',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     },
     summaryNumber: {
         fontSize: 24,

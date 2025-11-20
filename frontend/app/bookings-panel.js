@@ -8,6 +8,7 @@ import {
     RefreshControl,
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import DropDownPicker from 'react-native-dropdown-picker'
 import Screen from '../components/screen'
 import {
     getBusinessBookings,
@@ -25,6 +26,8 @@ export default function BookingsPanel() {
     const [bookings, setBookings] = useState([])
     const [loading, setLoading] = useState(false)
     const [refreshing, setRefreshing] = useState(false)
+    const [filterStatus, setFilterStatus] = useState('all') // 'all' = mostrar todos
+    const [dropdownOpen, setDropdownOpen] = useState(false)
 
     useEffect(() => {
         fetchBookings()
@@ -148,6 +151,11 @@ export default function BookingsPanel() {
                 color: '#28a745',
                 textColor: '#fff',
             },
+            completed: {
+                text: '✅ Completada',
+                color: '#6f42c1',
+                textColor: '#fff',
+            },
             cancelled: {
                 text: '❌ Cancelada',
                 color: '#dc3545',
@@ -267,55 +275,77 @@ export default function BookingsPanel() {
     }
 
     const pendingCount = bookings.filter(b => b.status === 'pending').length
+    const confirmedCount = bookings.filter(b => b.status === 'confirmed').length
+    const completedCount = bookings.filter(b => b.status === 'completed').length
+    const cancelledCount = bookings.filter(b => b.status === 'cancelled').length
+
+    const dropdownItems = [
+        { label: `Todas (${bookings.length})`, value: 'all' },
+        { label: `⏳ Pendientes (${pendingCount})`, value: 'pending' },
+        { label: `✅ Confirmadas (${confirmedCount})`, value: 'confirmed' },
+        { label: `✅ Completadas (${completedCount})`, value: 'completed' },
+        { label: `❌ Canceladas (${cancelledCount})`, value: 'cancelled' },
+    ]
+
+    // Filtrar bookings según el estado seleccionado
+    const filteredBookings =
+        filterStatus === 'all'
+            ? bookings
+            : bookings.filter(b => b.status === filterStatus)
 
     return (
         <Screen>
             <View style={styles.container}>
-                <Text style={globalStyles.title}>📋 Mis Reservas</Text>
                 <Text style={styles.subtitle}>
                     Todas las reservas de tus negocios
                 </Text>
 
-                {/* Resumen */}
-                <View style={styles.summaryContainer}>
-                    <View style={styles.summaryCard}>
-                        <Text style={styles.summaryNumber}>
-                            {bookings.length}
-                        </Text>
-                        <Text style={styles.summaryLabel}>Total</Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.summaryCard,
-                            styles.summaryCardHighlight,
-                        ]}
-                    >
-                        <Text
-                            style={[styles.summaryNumber, { color: '#ffc107' }]}
-                        >
-                            {pendingCount}
-                        </Text>
-                        <Text style={styles.summaryLabel}>Pendientes</Text>
-                    </View>
+                {/* Filtro con dropdown */}
+                <View style={styles.filterContainer}>
+                    <Text style={styles.filterLabel}>Filtrar por estado:</Text>
+                    <DropDownPicker
+                        open={dropdownOpen}
+                        value={filterStatus}
+                        items={dropdownItems}
+                        setOpen={setDropdownOpen}
+                        setValue={setFilterStatus}
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                        placeholder="Selecciona un estado"
+                        listMode="SCROLLVIEW"
+                        zIndex={3000}
+                        zIndexInverse={1000}
+                    />
                 </View>
 
                 {/* Lista de reservas */}
                 {loading && bookings.length === 0 ? (
                     <Text style={styles.loadingText}>Cargando reservas...</Text>
-                ) : bookings.length === 0 ? (
+                ) : filteredBookings.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📭</Text>
                         <Text style={styles.emptyText}>
-                            No tienes reservas aún
+                            {filterStatus !== 'all'
+                                ? `No tienes reservas ${
+                                      filterStatus === 'pending'
+                                          ? 'pendientes'
+                                          : filterStatus === 'confirmed'
+                                            ? 'confirmadas'
+                                            : filterStatus === 'completed'
+                                              ? 'completadas'
+                                              : 'canceladas'
+                                  }`
+                                : 'No tienes reservas aún'}
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            Aquí aparecerán todas las solicitudes de reserva de
-                            tus negocios
+                            {filterStatus !== 'all'
+                                ? 'Selecciona "Todas" para ver todas las reservas'
+                                : 'Aquí aparecerán todas las solicitudes de reserva de tus negocios'}
                         </Text>
                     </View>
                 ) : (
                     <FlatList
-                        data={bookings}
+                        data={filteredBookings}
                         renderItem={renderBookingCard}
                         keyExtractor={item => item._id}
                         contentContainerStyle={styles.listContainer}
@@ -343,31 +373,24 @@ const styles = {
         textAlign: 'center',
         marginBottom: 20,
     },
-    summaryContainer: {
-        flexDirection: 'row',
-        gap: 12,
+    filterContainer: {
         marginBottom: 20,
+        zIndex: 3000,
     },
-    summaryCard: {
-        flex: 1,
-        backgroundColor: '#f8f9fa',
-        padding: 16,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    summaryCardHighlight: {
-        borderWidth: 2,
-        borderColor: '#ffc107',
-    },
-    summaryNumber: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    summaryLabel: {
-        fontSize: 12,
+    filterLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
         color: '#666',
-        marginTop: 4,
+    },
+    dropdown: {
+        borderColor: '#ddd',
+        borderRadius: 8,
+        minHeight: 45,
+    },
+    dropdownContainer: {
+        borderColor: '#ddd',
+        borderRadius: 8,
     },
     listContainer: {
         paddingBottom: 20,
