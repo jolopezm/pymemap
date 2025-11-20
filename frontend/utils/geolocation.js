@@ -18,20 +18,17 @@ const OSRM_DELAY = 200 // 200ms entre requests (más permisivo)
 export async function requestLocationPermission() {
     try {
         // Primero verificar si ya tenemos permisos
-        const { status: existingStatus } = await Location.getForegroundPermissionsAsync()
-        
+        const { status: existingStatus } =
+            await Location.getForegroundPermissionsAsync()
+
         if (existingStatus === 'granted') {
-            console.log('✅ Permisos de ubicación ya concedidos')
             return true
         }
 
-        console.log('📱 Solicitando permisos de ubicación...')
-        
         // Solicitar permisos
         const { status } = await Location.requestForegroundPermissionsAsync()
-        
+
         if (status === 'granted') {
-            console.log('✅ Permisos de ubicación concedidos')
             return true
         } else {
             console.warn('⚠️ Permisos de ubicación denegados. Estado:', status)
@@ -52,19 +49,21 @@ export async function getCurrentLocation(forceRefresh = false) {
     try {
         // Retornar caché si es válida
         const now = Date.now()
-        if (!forceRefresh && locationCache && locationCacheTime && (now - locationCacheTime < CACHE_DURATION)) {
-            console.log('✅ Usando ubicación en caché')
+        if (
+            !forceRefresh &&
+            locationCache &&
+            locationCacheTime &&
+            now - locationCacheTime < CACHE_DURATION
+        ) {
             return locationCache
         }
 
         const hasPermission = await requestLocationPermission()
-        
+
         if (!hasPermission) {
             console.warn('⚠️ No se concedieron permisos de ubicación')
             return null
         }
-
-        console.log('📍 Solicitando ubicación actual...')
 
         // Intentar primero con alta precisión
         let location = null
@@ -74,10 +73,12 @@ export async function getCurrentLocation(forceRefresh = false) {
                 maximumAge: 10000,
                 timeout: 15000,
             })
-            console.log('✅ Ubicación obtenida con alta precisión')
         } catch (highAccuracyError) {
-            console.warn('⚠️ Error con alta precisión, intentando con precisión balanceada...', highAccuracyError.message)
-            
+            console.warn(
+                '⚠️ Error con alta precisión, intentando con precisión balanceada...',
+                highAccuracyError.message
+            )
+
             // Fallback a precisión balanceada (más confiable en Android)
             try {
                 location = await Location.getCurrentPositionAsync({
@@ -85,9 +86,11 @@ export async function getCurrentLocation(forceRefresh = false) {
                     maximumAge: 30000,
                     timeout: 20000,
                 })
-                console.log('✅ Ubicación obtenida con precisión balanceada')
             } catch (balancedError) {
-                console.error('❌ Error obteniendo ubicación:', balancedError.message)
+                console.error(
+                    '❌ Error obteniendo ubicación:',
+                    balancedError.message
+                )
                 throw balancedError
             }
         }
@@ -98,14 +101,16 @@ export async function getCurrentLocation(forceRefresh = false) {
         }
 
         const { latitude, longitude } = location.coords
-        console.log('📍 Coordenadas obtenidas:', { latitude, longitude })
 
         // Obtener dirección legible usando Nominatim (OpenStreetMap) - Gratuito
         let address = 'Ubicación actual'
         try {
             address = await reverseGeocodeWithNominatim(latitude, longitude)
         } catch (geocodeError) {
-            console.warn('Error al obtener dirección con Nominatim, usando fallback:', geocodeError)
+            console.warn(
+                'Error al obtener dirección con Nominatim, usando fallback:',
+                geocodeError
+            )
             // Fallback al geocoder nativo
             try {
                 const [result] = await Location.reverseGeocodeAsync({
@@ -115,17 +120,19 @@ export async function getCurrentLocation(forceRefresh = false) {
 
                 if (result) {
                     const parts = []
-                    
+
                     if (result.street) {
                         if (result.streetNumber) {
-                            parts.push(`${result.street} ${result.streetNumber}`)
+                            parts.push(
+                                `${result.street} ${result.streetNumber}`
+                            )
                         } else {
                             parts.push(result.street)
                         }
                     } else if (result.name) {
                         parts.push(result.name)
                     }
-                    
+
                     if (result.district) {
                         parts.push(result.district)
                     } else if (result.subregion) {
@@ -133,17 +140,20 @@ export async function getCurrentLocation(forceRefresh = false) {
                     } else if (result.city) {
                         parts.push(result.city)
                     }
-                    
+
                     if (result.city && result.city !== result.district) {
                         if (parts.length > 0 && !parts.includes(result.city)) {
                             parts.push(result.city)
                         }
                     }
-                    
+
                     address = parts.join(', ') || 'Ubicación actual'
                 }
             } catch (fallbackError) {
-                console.warn('Error en geocodificación fallback:', fallbackError)
+                console.warn(
+                    'Error en geocodificación fallback:',
+                    fallbackError
+                )
             }
         }
 
@@ -173,7 +183,13 @@ export async function getCurrentLocation(forceRefresh = false) {
  * @param {boolean} applyUrbanFactor - Si true, aplica factor de corrección urbano (1.4x)
  * @returns {number} Distancia en kilómetros
  */
-export function calculateDistance(lat1, lon1, lat2, lon2, applyUrbanFactor = true) {
+export function calculateDistance(
+    lat1,
+    lon1,
+    lat2,
+    lon2,
+    applyUrbanFactor = true
+) {
     const R = 6371 // Radio de la Tierra en km
     const dLat = toRad(lat2 - lat1)
     const dLon = toRad(lon2 - lon1)
@@ -219,15 +235,13 @@ export async function getRoutingDistance(lat1, lon1, lat2, lon2) {
         const timeSinceLastRequest = now - lastOSRMRequest
         if (timeSinceLastRequest < OSRM_DELAY) {
             const waitTime = OSRM_DELAY - timeSinceLastRequest
-            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de OSRM...`)
             await new Promise(resolve => setTimeout(resolve, waitTime))
         }
         lastOSRMRequest = Date.now()
 
         // OSRM API (gratuito) - formato: lon,lat (¡nota el orden!)
         const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`
-        
-        console.log('🚗 Obteniendo distancia real por carretera...')
+
         const response = await fetch(url)
         const data = await response.json()
 
@@ -236,11 +250,9 @@ export async function getRoutingDistance(lat1, lon1, lat2, lon2) {
             const distanceKm = route.distance / 1000 // Convertir metros a km
             const durationMin = route.duration / 60 // Convertir segundos a minutos
 
-            console.log(`✅ Distancia real: ${distanceKm.toFixed(2)} km, Tiempo: ${Math.round(durationMin)} min`)
-            
             return {
                 distance: distanceKm,
-                duration: durationMin
+                duration: durationMin,
             }
         } else {
             console.warn('⚠️ OSRM no pudo calcular la ruta:', data.code)
@@ -287,8 +299,9 @@ export function formatDuration(minutes) {
  * @returns {Array} Lista de negocios con distancia calculada
  */
 export function calculateBusinessDistances(businesses, userCoords) {
-    if (!userCoords || !userCoords.latitude || !userCoords.longitude) return businesses
-    
+    if (!userCoords || !userCoords.latitude || !userCoords.longitude)
+        return businesses
+
     const userLat = userCoords.latitude
     const userLon = userCoords.longitude
 
@@ -332,26 +345,25 @@ async function reverseGeocodeWithNominatim(latitude, longitude) {
         const timeSinceLastRequest = now - lastNominatimRequest
         if (timeSinceLastRequest < NOMINATIM_DELAY) {
             const waitTime = NOMINATIM_DELAY - timeSinceLastRequest
-            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de Nominatim...`)
             await new Promise(resolve => setTimeout(resolve, waitTime))
         }
         lastNominatimRequest = Date.now()
 
         // Nominatim es el servicio de geocoding de OpenStreetMap - completamente gratuito
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=es`
-        
+
         const response = await fetch(url, {
             headers: {
                 'User-Agent': 'PymeMap/1.0', // Nominatim requiere un User-Agent
             },
         })
-        
+
         const data = await response.json()
 
         if (data && data.address) {
             const addr = data.address
             const parts = []
-            
+
             // Construir dirección desde los componentes de Nominatim
             if (addr.road) {
                 if (addr.house_number) {
@@ -364,14 +376,17 @@ async function reverseGeocodeWithNominatim(latitude, longitude) {
             } else if (addr.neighbourhood) {
                 parts.push(addr.neighbourhood)
             }
-            
+
             // Agregar comuna/barrio
             if (addr.suburb) {
                 parts.push(addr.suburb)
-            } else if (addr.neighbourhood && !parts.includes(addr.neighbourhood)) {
+            } else if (
+                addr.neighbourhood &&
+                !parts.includes(addr.neighbourhood)
+            ) {
                 parts.push(addr.neighbourhood)
             }
-            
+
             // Agregar ciudad
             if (addr.city) {
                 parts.push(addr.city)
@@ -381,14 +396,8 @@ async function reverseGeocodeWithNominatim(latitude, longitude) {
                 parts.push(addr.municipality)
             }
 
-            const address = parts.length > 0 ? parts.join(', ') : data.display_name
-
-            console.log('📍 Nominatim Geocoding:', {
-                coords: { latitude, longitude },
-                address_components: addr,
-                formatted_address: address,
-                full_display: data.display_name
-            })
+            const address =
+                parts.length > 0 ? parts.join(', ') : data.display_name
 
             return address
         }
@@ -412,48 +421,42 @@ export async function geocodeAddress(address) {
         const timeSinceLastRequest = now - lastNominatimRequest
         if (timeSinceLastRequest < NOMINATIM_DELAY) {
             const waitTime = NOMINATIM_DELAY - timeSinceLastRequest
-            console.log(`⏱️ Esperando ${waitTime}ms por rate limiting de Nominatim...`)
             await new Promise(resolve => setTimeout(resolve, waitTime))
         }
         lastNominatimRequest = Date.now()
 
         // Usar Nominatim (OpenStreetMap) - gratuito
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=cl&addressdetails=1&accept-language=es`
-        
+
         const response = await fetch(url, {
             headers: {
                 'User-Agent': 'PymeMap/1.0',
             },
         })
-        
+
         const data = await response.json()
 
         if (data && data.length > 0) {
             const result = data[0]
-            console.log('📍 Nominatim Geocoding forward:', {
-                address,
-                coords: { lat: parseFloat(result.lat), lon: parseFloat(result.lon) },
-                fullAddress: result.display_name
-            })
+
             return {
                 latitude: parseFloat(result.lat),
-                longitude: parseFloat(result.lon)
+                longitude: parseFloat(result.lon),
             }
         }
 
         // Fallback al geocoder nativo
-        console.log('⚠️ Nominatim no encontró resultados, usando geocoder nativo')
         const results = await Location.geocodeAsync(address)
-        
+
         if (results && results.length > 0) {
             const { latitude, longitude } = results[0]
             return { latitude, longitude }
         }
-        
+
         return null
     } catch (error) {
         console.error('Error al geocodificar dirección:', error)
-        
+
         // Intentar fallback nativo
         try {
             const results = await Location.geocodeAsync(address)
@@ -462,9 +465,12 @@ export async function geocodeAddress(address) {
                 return { latitude, longitude }
             }
         } catch (fallbackError) {
-            console.error('Error en fallback de geocodificación:', fallbackError)
+            console.error(
+                'Error en fallback de geocodificación:',
+                fallbackError
+            )
         }
-        
+
         return null
     }
 }

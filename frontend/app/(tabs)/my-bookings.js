@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, FlatList, RefreshControl, Pressable } from 'react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
@@ -15,6 +15,13 @@ export default function MyBookings() {
     useEffect(() => {
         fetchBookings()
     }, [])
+
+    // Refrescar cuando la pantalla recibe foco
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchBookings()
+        }, [])
+    )
 
     const fetchBookings = async () => {
         setLoading(true)
@@ -174,50 +181,64 @@ export default function MyBookings() {
                                     { color: '#0066cc' },
                                 ]}
                             >
-                                ✅ ¡Reserva completada! ¿Qué tal fue tu experiencia?
+                                ✅ ¡Reserva completada! ¿Qué tal fue tu
+                                experiencia?
                             </Text>
                         </View>
                     )}
-                    
+
                     {/* Botón para ver detalle */}
                     <View style={styles.detailSection}>
                         <Pressable
                             style={styles.detailButton}
-                            onPress={() => router.push({
-                                pathname: '/booking-detail',
-                                params: { id: item._id }
-                            })}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/booking-detail',
+                                    params: { id: item._id },
+                                })
+                            }
                         >
-                            <Text style={styles.detailButtonText}>📋 Ver Detalle</Text>
+                            <Text style={styles.detailButtonText}>
+                                📋 Ver Detalle
+                            </Text>
                         </Pressable>
-                        
+
                         {/* Mostrar estado de pago si aplica */}
                         {item.status === 'payment_requested' && (
                             <Pressable
                                 style={styles.payButton}
-                                onPress={() => router.push({
-                                    pathname: '/booking-detail',
-                                    params: { id: item._id }
-                                })}
+                                onPress={() =>
+                                    router.push({
+                                        pathname: '/booking-detail',
+                                        params: { id: item._id },
+                                    })
+                                }
                             >
-                                <Text style={styles.payButtonText}>💳 Pagar</Text>
+                                <Text style={styles.payButtonText}>
+                                    💳 Pagar
+                                </Text>
                             </Pressable>
                         )}
-                        
+
                         {/* Botón para calificar si está completada */}
                         {item.status === 'completed' && (
                             <Pressable
                                 style={styles.rateButton}
-                                onPress={() => router.push({
-                                    pathname: '/rate-business',
-                                    params: { 
-                                        id: item.business_id,
-                                        bookingId: item._id,
-                                        businessName: item.business_name || 'Negocio'
-                                    }
-                                })}
+                                onPress={() =>
+                                    router.push({
+                                        pathname: '/rate-business',
+                                        params: {
+                                            id: item.business_id,
+                                            bookingId: item._id,
+                                            businessName:
+                                                item.business_name || 'Negocio',
+                                        },
+                                    })
+                                }
                             >
-                                <Text style={styles.rateButtonText}>⭐ Calificar</Text>
+                                <Text style={styles.rateButtonText}>
+                                    ⭐ Calificar
+                                </Text>
                             </Pressable>
                         )}
                     </View>

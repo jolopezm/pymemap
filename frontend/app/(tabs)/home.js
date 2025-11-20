@@ -34,7 +34,8 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
     const { user } = useAuth()
-    const { userLocation, userCoords, isLoadingLocation, updateLocation } = useLocation()
+    const { userLocation, userCoords, isLoadingLocation, updateLocation } =
+        useLocation()
     const [services, setServices] = useState([])
     const [businesses, setBusinesses] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
@@ -50,24 +51,19 @@ export default function HomeScreen() {
                 getBusiness(),
             ])
             setServices(servicesData)
-            
-            console.log('📊 Negocios recibidos:', businessData.length)
-            console.log('📍 Coordenadas de usuario:', userCoords)
-            
+
             // Verificar cuántos negocios tienen coordenadas
-            const withCoords = businessData.filter(b => b.latitude && b.longitude).length
-            console.log(`✅ Negocios con coordenadas: ${withCoords}/${businessData.length}`)
-            
+            const withCoords = businessData.filter(
+                b => b.latitude && b.longitude
+            ).length
+
             // Si tenemos coordenadas del usuario, calcular distancias
             if (userCoords) {
                 const businessesWithDistance = calculateBusinessDistances(
                     businessData,
                     userCoords // Pasar el objeto completo
                 )
-                console.log('📏 Distancias calculadas:', businessesWithDistance.slice(0, 3).map(b => ({
-                    name: b.name,
-                    distance: b.distanceText || 'sin distancia'
-                })))
+
                 setBusinesses(businessesWithDistance)
             } else {
                 setBusinesses(businessData)

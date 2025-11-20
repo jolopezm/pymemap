@@ -10,11 +10,9 @@ export async function createChat(chatData) {
           }
         : {}
     try {
-        console.log('📝 Creating chat:', chatData)
         const response = await axios.post(`${API_URL}/chat/`, chatData, {
             headers,
         })
-        console.log('✅ Chat created:', response.data)
         return response.data
     } catch (error) {
         console.error('❌ Error creating chat:', {
@@ -37,12 +35,10 @@ export async function getChats(userId) {
         : {}
 
     try {
-        console.log('📥 Fetching chats for user:', userId)
         const response = await axios.get(
             `${API_URL}/chat/?user_id=${encodeURIComponent(userId)}`,
             { headers }
         )
-        console.log(`✅ ${response.data.length} chats fetched`)
         return response.data
     } catch (error) {
         console.error('❌ Error fetching chats:', {
@@ -58,13 +54,6 @@ export async function getChatByParticipants(user1Id, user2Id) {
     if (!user1Id || !user2Id)
         throw new Error('Both user IDs are required to get chat')
 
-    console.log('🔍 Buscando chat entre:', {
-        user1Id,
-        user2Id,
-        user1Type: typeof user1Id,
-        user2Type: typeof user2Id,
-    })
-
     const token = await AsyncStorage.getItem('token')
     const headers = token
         ? {
@@ -77,11 +66,9 @@ export async function getChatByParticipants(user1Id, user2Id) {
             `${API_URL}/chat/participants?user1_id=${encodeURIComponent(user1Id)}&user2_id=${encodeURIComponent(user2Id)}`,
             { headers }
         )
-        console.log('✅ Chat encontrado:', response.data)
         return response.data
     } catch (error) {
         if (error.response?.status === 404) {
-            console.log('ℹ️ Chat no existe, necesita ser creado')
             return null
         }
         console.error('❌ Error buscando chat:', {
@@ -102,13 +89,11 @@ export async function sendMessage(messageData) {
         : {}
 
     try {
-        console.log('📤 Sending message:', messageData)
         const response = await axios.post(
             `${API_URL}/chat/message`,
             messageData,
             { headers }
         )
-        console.log('✅ Message sent:', response.data)
         return response.data
     } catch (error) {
         console.error('❌ Error sending message:', {
@@ -130,12 +115,10 @@ export async function getMessages(chatId) {
           }
         : {}
     try {
-        console.log('📥 Fetching messages for chat:', chatId)
         const response = await axios.get(
             `${API_URL}/chat/messages?chat_id=${encodeURIComponent(chatId)}`,
             { headers }
         )
-        console.log(`✅ ${response.data.length} messages fetched`)
         return response.data
     } catch (error) {
         console.error('❌ Error fetching messages:', {
@@ -174,18 +157,7 @@ export async function markChatAsRead(chatId, userId) {
         : {}
 
     try {
-        console.log('📖 Marcando chat como leído:', {
-            chatId: cleanChatId,
-            userId: cleanUserId,
-            chatIdType: typeof cleanChatId,
-            userIdType: typeof cleanUserId,
-            chatIdLength: cleanChatId.length,
-            userIdLength: cleanUserId.length,
-        })
-
         const url = `${API_URL}/chat/chat/${encodeURIComponent(cleanChatId)}/mark-as-read?user_id=${encodeURIComponent(cleanUserId)}`
-        console.log('🔗 URL completa:', url)
-
         const response = await axios.put(
             url,
             {},
@@ -195,7 +167,6 @@ export async function markChatAsRead(chatId, userId) {
             }
         )
 
-        console.log('✅ Respuesta del servidor:', response.data)
         return response.data
     } catch (error) {
         console.error('❌ Error marking chat as read:', {
@@ -219,7 +190,7 @@ export async function markChatAsRead(chatId, userId) {
 
         // Si el error es 404 o 500, no es crítico
         if (error.response?.status === 404 || error.response?.status === 500) {
-            console.log('⚠️ Error no crítico, continuando...')
+            console.warn('Error no crítico, continuando...')
             return null
         }
 

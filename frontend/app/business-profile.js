@@ -66,7 +66,6 @@ export default function BusinessProfile() {
         try {
             const foundOwner = await getUserById(ownerId)
             setOwner(foundOwner)
-            console.log('Owner:', foundOwner)
         } catch (error) {
             if (error && error.response) {
                 setError({
@@ -82,7 +81,6 @@ export default function BusinessProfile() {
     const fetchReviews = async businessId => {
         try {
             const reviewsData = await getReviewsByBusiness(businessId)
-            console.log('Reviews for business:', reviewsData)
             setReviews(reviewsData)
         } catch (error) {
             console.error('Error fetching reviews:', error)
@@ -91,11 +89,6 @@ export default function BusinessProfile() {
 
     const handleChatPress = async () => {
         try {
-            console.log('🚀 Iniciando chat:', {
-                currentUser: user?._id || user?.id,
-                owner: owner?._id || owner?.id,
-            })
-
             const currentUserId = user?._id || user?.id
             const ownerId = owner?._id || owner?.id
 
@@ -111,23 +104,14 @@ export default function BusinessProfile() {
             try {
                 // Intentar obtener chat existente
                 chatData = await getChatByParticipants(currentUserId, ownerId)
-                console.log(
-                    '✅ Chat existente encontrado:',
-                    chatData._id || chatData.id
-                )
             } catch (error) {
                 if (error.response?.status === 404) {
                     // Crear nuevo chat si no existe
-                    console.log('📝 Creando nuevo chat...')
                     chatData = await createChat({
                         participants: [currentUserId, ownerId],
                         lastMessage: null,
                         lastMessageTimestamp: new Date().toISOString(),
                     })
-                    console.log(
-                        '✅ Nuevo chat creado:',
-                        chatData._id || chatData.id
-                    )
                 } else {
                     throw error
                 }
@@ -165,10 +149,8 @@ export default function BusinessProfile() {
         }
 
         try {
-            console.log('📤 Sending message:', messageData)
             setMessage('')
             await sendMessage(messageData)
-            console.log('✅ Mensaje enviado correctamente')
         } catch (error) {
             console.error('❌ Error sending message:', error)
             setMessage(messageData.content)
@@ -188,7 +170,6 @@ export default function BusinessProfile() {
                 true // Factor urbano
             )
             setDistance(dist)
-            console.log('📏 Distancia aproximada:', dist)
         }
     }, [userCoords, business])
 
@@ -211,11 +192,10 @@ export default function BusinessProfile() {
                         setRoutingInfo(routing)
                         // Actualizar distancia con la real
                         setDistance(routing.distance)
-                        console.log('🚗 Distancia real obtenida:', routing)
                     }
                 } catch (error) {
                     console.log(
-                        '⚠️ No se pudo obtener distancia real, usando aproximada'
+                        'No se pudo obtener distancia real, usando aproximada'
                     )
                 } finally {
                     if (mounted) setLoadingRouting(false)
@@ -846,7 +826,6 @@ export default function BusinessProfile() {
                             setModalVisible(false)
                             // ✅ CORRECCIÓN: Pasar el chatId correctamente
                             const chatId = chat?._id || chat?.id
-                            console.log('🔗 Navegando al chat:', chatId)
 
                             if (chatId) {
                                 router.push(`/chat-view?chatId=${chatId}`)

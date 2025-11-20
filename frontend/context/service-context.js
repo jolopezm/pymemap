@@ -24,7 +24,6 @@ export const ServiceProvider = ({ children }) => {
                 [STORAGE_KEYS.SERVICES, JSON.stringify(servicesData)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
-            console.log('✅ Servicios guardados en caché')
         } catch (error) {
             console.error('Error guardando servicios:', error)
         }
@@ -65,9 +64,6 @@ export const ServiceProvider = ({ children }) => {
                 const cached = await loadFromCache()
 
                 if (cached && !cached.isStale) {
-                    console.log(
-                        `📦 Usando servicios del caché (${cached.cacheAge}s antiguo)`
-                    )
                     setServices(cached.services)
                     setIsFromCache(true)
                     setLoading(false)
@@ -79,14 +75,12 @@ export const ServiceProvider = ({ children }) => {
 
                 // Si hay caché obsoleto, úsalo mientras cargas
                 if (cached) {
-                    console.log('⚠️ Usando caché obsoleto de servicios...')
                     setServices(cached.services)
                     setIsFromCache(true)
                 }
             }
 
             // 2️⃣ Obtener datos frescos
-            console.log('🌐 Obteniendo servicios frescos del servidor')
             const servicesData = await getServices()
             setServices(servicesData)
             setIsFromCache(false)
@@ -98,7 +92,6 @@ export const ServiceProvider = ({ children }) => {
             // 3️⃣ Fallback a caché en caso de error
             const cached = await loadFromCache()
             if (cached) {
-                console.log('🆘 Error de red, usando caché de servicios')
                 setServices(cached.services)
                 setIsFromCache(true)
             } else {

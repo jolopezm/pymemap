@@ -58,23 +58,18 @@ export async function getAvailableSlots(businessId, date) {
 export async function createBooking(bookingData) {
     try {
         const headers = await getAuthHeaders()
-        console.log('📤 Creating booking:', bookingData)
-        console.log('🔗 URL:', `${API_URL}/bookings/`)
-
         const response = await axios.post(
             `${API_URL}/bookings/`, // ✅ Ruta correcta con / al final
             bookingData,
             { headers }
         )
-        console.log('✅ Booking created:', response.data)
         return response.data
     } catch (error) {
         console.error(
             '❌ Error creating booking:',
             error.response?.data || error.message
         )
-        console.error('❌ Status:', error.response?.status)
-        console.error('❌ URL intentada:', error.config?.url)
+
         throw error
     }
 }
@@ -146,12 +141,10 @@ export async function getMyBookings() {
 export async function getBusinessBookings(businessId) {
     try {
         const headers = await getAuthHeaders()
-        console.log('Fetching bookings for business:', businessId)
         const response = await axios.get(
             `${API_URL}/bookings/business/${businessId}/bookings`,
             { headers }
         )
-        console.log('Bookings fetched:', response.data)
         return response.data
     } catch (error) {
         console.error(
@@ -168,17 +161,12 @@ export async function getBusinessBookings(businessId) {
 export async function getAllMyBusinessBookings() {
     try {
         const headers = await getAuthHeaders()
-        console.log('🏢 Fetching all business bookings for user')
 
         const response = await axios.get(
             `${API_URL}/bookings/my-business-bookings`,
             { headers }
         )
-        console.log(
-            '✅ All business bookings fetched:',
-            response.data.length,
-            'items'
-        )
+
         return response.data
     } catch (error) {
         console.error(
@@ -195,13 +183,11 @@ export async function getAllMyBusinessBookings() {
 export async function setBusinessAvailability(businessId, availabilityData) {
     try {
         const headers = await getAuthHeaders()
-        console.log('Setting availability:', availabilityData)
         const response = await axios.post(
             `${API_URL}/bookings/business/${businessId}/availability`,
             availabilityData,
             { headers }
         )
-        console.log('Availability set:', response.data)
         return response.data
     } catch (error) {
         console.error(
@@ -218,14 +204,12 @@ export async function setBusinessAvailability(businessId, availabilityData) {
 export async function verifyBookingCode(bookingId, code) {
     try {
         const headers = await getAuthHeaders()
-        console.log('🔐 Verifying code for booking:', bookingId, 'Code:', code)
 
         const response = await axios.patch(
             `${API_URL}/bookings/${bookingId}/verify-code`,
             { code: code },
             { headers }
         )
-        console.log('✅ Code verified:', response.data)
         return response.data
     } catch (error) {
         console.error(

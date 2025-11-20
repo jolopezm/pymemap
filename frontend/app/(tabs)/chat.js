@@ -20,7 +20,6 @@ const ChatScreen = () => {
 
     const handleChatPress = chat => {
         const chatId = chat.id || chat._id
-        console.log('🔗 Navegando al chat:', chatId)
         router.push(`/chat-view?chatId=${chatId}`)
     }
 

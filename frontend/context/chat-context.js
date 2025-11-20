@@ -32,7 +32,6 @@ export const ChatProvider = ({ children }) => {
                 [STORAGE_KEYS.OTHER_USERS, JSON.stringify(usersData)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
-            console.log('✅ Chats guardados en caché')
         } catch (error) {
             console.error('Error guardando chats en caché:', error)
         }
@@ -73,7 +72,6 @@ export const ChatProvider = ({ children }) => {
                 STORAGE_KEYS.OTHER_USERS,
                 STORAGE_KEYS.CACHE_TIMESTAMP,
             ])
-            console.log('🗑️ Caché de chats limpiado')
         } catch (error) {
             console.error('Error limpiando caché:', error)
         }
@@ -137,9 +135,6 @@ export const ChatProvider = ({ children }) => {
                     const cached = await loadFromCache()
 
                     if (cached && !cached.isStale) {
-                        console.log(
-                            `📦 Usando chats del caché (${cached.cacheAge}s antiguo)`
-                        )
                         setChats(cached.chats)
                         setOtherUsers(cached.otherUsers)
                         calculateUnreadCount(cached.chats)
@@ -153,9 +148,6 @@ export const ChatProvider = ({ children }) => {
 
                     // Si hay caché obsoleto, úsalo mientras cargas datos frescos
                     if (cached) {
-                        console.log(
-                            '⚠️ Usando caché obsoleto mientras se actualiza...'
-                        )
                         setChats(cached.chats)
                         setOtherUsers(cached.otherUsers)
                         calculateUnreadCount(cached.chats)
@@ -164,7 +156,6 @@ export const ChatProvider = ({ children }) => {
                 }
 
                 // 2️⃣ OBTENER DATOS FRESCOS DEL SERVIDOR
-                console.log('🌐 Obteniendo chats frescos del servidor')
                 const chatData = await getChats(user.id || user._id)
                 const usersData = await fetchOtherUsers(chatData)
 
@@ -181,7 +172,6 @@ export const ChatProvider = ({ children }) => {
                 // 4️⃣ FALLBACK: Si falla, intentar usar caché aunque esté obsoleto
                 const cached = await loadFromCache()
                 if (cached) {
-                    console.log('🆘 Error de red, usando caché de respaldo')
                     setChats(cached.chats)
                     setOtherUsers(cached.otherUsers)
                     calculateUnreadCount(cached.chats)

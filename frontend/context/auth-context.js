@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
                     const userData = JSON.parse(storedUser)
                     setUser(userData)
                     setIsFromCache(true)
-                    console.log('📦 Usuario cargado desde caché')
 
                     // Intentar refrescar en segundo plano
                     try {
@@ -39,7 +38,6 @@ export const AuthProvider = ({ children }) => {
                             )
                             setUser(freshData)
                             setIsFromCache(false)
-                            console.log('🔄 Usuario actualizado desde servidor')
                         }
                     } catch (error) {
                         console.log(
@@ -67,7 +65,6 @@ export const AuthProvider = ({ children }) => {
             )
             setUser(userData)
             setIsFromCache(false)
-            console.log('✅ Login exitoso, usuario guardado')
 
             return userData
         } catch (error) {
@@ -82,7 +79,6 @@ export const AuthProvider = ({ children }) => {
             await clearAllCache()
             setUser(null)
             setIsFromCache(false)
-            console.log('🚪 Logout exitoso, caché completamente limpiado')
         } catch (error) {
             console.error('Error during logout:', error)
         }
@@ -97,7 +93,6 @@ export const AuthProvider = ({ children }) => {
             )
             setUser(userData)
             setIsFromCache(false)
-            console.log('🔄 Usuario refrescado')
             return userData
         } catch (error) {
             console.error('Error refreshing user:', error)

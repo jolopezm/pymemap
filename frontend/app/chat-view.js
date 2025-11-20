@@ -50,7 +50,6 @@ export default function ChatView() {
             return null
         }
 
-        console.log('✅ chatId válido:', cleanId)
         return cleanId
     }, [chatId])
 
@@ -83,29 +82,18 @@ export default function ChatView() {
             }
 
             try {
-                console.log('📥 Fetching messages for chat:', validChatId)
-
                 // 1. Obtener mensajes
                 const messageData = await getMessages(validChatId)
-                console.log(`✅ ${messageData.length} mensajes obtenidos`)
                 setMessages(messageData)
 
                 // 2. Intentar marcar como leído (con manejo de errores)
                 try {
                     const userId = user.id || user._id
-                    console.log('📖 Intentando marcar chat como leído:', {
-                        chatId: validChatId,
-                        userId,
-                        userIdType: typeof userId,
-                        chatIdType: typeof validChatId,
-                    })
 
                     await markChatAsReadAPI(validChatId, userId)
-                    console.log('✅ Chat marcado como leído en el backend')
 
                     // Marcar el chat como leído en el contexto local
                     markChatAsRead(validChatId)
-                    console.log('✅ Chat marcado como leído en el contexto')
                 } catch (markError) {
                     // No bloquear la carga de mensajes si falla marcar como leído
                     console.error('⚠️ Error marcando chat como leído:', {
@@ -167,15 +155,12 @@ export default function ChatView() {
         }
 
         try {
-            console.log('📤 Enviando mensaje:', messageData)
-
             // Agregar mensaje temporalmente
             setMessages(prev => [...prev, tempMessage])
             setMessageText('')
 
             // Enviar al servidor
             const sentMessage = await sendMessage(messageData)
-            console.log('✅ Mensaje enviado:', sentMessage)
 
             // Reemplazar mensaje temporal con el real
             setMessages(prev =>

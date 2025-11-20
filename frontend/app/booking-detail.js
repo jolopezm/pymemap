@@ -216,33 +216,19 @@ export default function BookingDetail() {
                 return
             }
 
-            console.log('🔍 Buscando chat existente entre:', {
-                currentUserId,
-                otherUserId,
-                isOwner,
-            })
-
             // Buscar chat existente
             let chat = await getChatByParticipants(currentUserId, otherUserId)
 
             // Si no existe, crear uno nuevo
             if (!chat) {
-                console.log('📝 Creando nuevo chat...')
                 const chatData = {
                     participants: [currentUserId, otherUserId],
                 }
                 chat = await createChat(chatData)
-                console.log('✅ Nuevo chat creado:', chat._id || chat.id)
-            } else {
-                console.log(
-                    '✅ Chat existente encontrado:',
-                    chat._id || chat.id
-                )
             }
 
             // Navegar al chat con el ID correcto
             const chatId = chat._id || chat.id
-            console.log('🔗 Navegando al chat:', chatId)
             router.push(`/chat-view?chatId=${chatId}`)
         } catch (error) {
             console.error('❌ Error al abrir chat:', error)
@@ -337,13 +323,15 @@ export default function BookingDetail() {
                     </>
                 )}
 
-                {booking.price != null && !isOwner && (
+                {booking.requested_price != null && !isOwner && (
                     <>
                         <Text style={globalStyles.subtitle}>
                             Tu Código de Verificación
                         </Text>
                         <View style={styles.codeContainer}>
-                            <Text style={styles.codeText}>{booking.price}</Text>
+                            <Text style={styles.codeText}>
+                                {booking.requested_price}
+                            </Text>
                             <Text style={styles.codeHint}>
                                 Muestra este código al vendedor cuando completes
                                 el servicio

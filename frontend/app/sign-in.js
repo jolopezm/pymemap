@@ -303,13 +303,6 @@ export default function SignIn() {
                                     updateUser('password', value)
                                 }
                                 showRequirements={true}
-                                onValidationChange={(isValid, requirements) => {
-                                    console.log(
-                                        'Contraseña válida:',
-                                        isValid,
-                                        requirements
-                                    )
-                                }}
                             />
 
                             {/* Campo Confirmar Contraseña */}
@@ -320,13 +313,6 @@ export default function SignIn() {
                                 confirmValue={user.password}
                                 isConfirmField={true}
                                 showToggle={true}
-                                onValidationChange={(matches, data) => {
-                                    console.log(
-                                        'Contraseñas coinciden:',
-                                        matches,
-                                        data
-                                    )
-                                }}
                             />
 
                             {/* Campo Fecha de Nacimiento */}

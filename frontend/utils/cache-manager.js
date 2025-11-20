@@ -42,9 +42,7 @@ const ALL_CACHE_KEYS = [
  */
 export const clearAllCache = async () => {
     try {
-        console.log('🗑️ Limpiando TODO el caché de la aplicación...')
         await AsyncStorage.multiRemove(ALL_CACHE_KEYS)
-        console.log('✅ Caché completamente limpiado')
         return true
     } catch (error) {
         console.error('❌ Error limpiando caché:', error)
@@ -65,7 +63,6 @@ export const clearAuthCache = async () => {
             'token',
             'authData',
         ])
-        console.log('🗑️ Caché de autenticación limpiado')
         return true
     } catch (error) {
         console.error('Error limpiando caché de auth:', error)
@@ -89,7 +86,6 @@ export const clearDataCache = async () => {
             '@notifications_cache_timestamp',
             'notifications',
         ])
-        console.log('🗑️ Caché de datos limpiado')
         return true
     } catch (error) {
         console.error('Error limpiando caché de datos:', error)

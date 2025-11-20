@@ -146,19 +146,13 @@ export default function StoresScreen() {
 
         // Filtrar por distancia (solo si el negocio tiene coordenadas Y distancia calculada)
         if (selectedFilters.distance && userCoords) {
-            console.log(`🔍 Filtrando por distancia: < ${selectedFilters.distance} km`)
             const before = filtered.length
             filtered = filtered.filter(business => {
                 const hasDistance = business.distance !== undefined && business.distance !== null
                 const withinRange = hasDistance && business.distance <= selectedFilters.distance
                 
-                if (hasDistance && !withinRange) {
-                    console.log(`❌ ${business.name}: ${business.distance.toFixed(2)} km (fuera de rango)`)
-                }
-                
                 return withinRange
             })
-            console.log(`📊 Filtrados: ${before} → ${filtered.length} negocios dentro de ${selectedFilters.distance} km`)
         }
 
         return filtered
@@ -411,7 +405,6 @@ export default function StoresScreen() {
                                 style={[styles.filterChip, selectedFilters.distance === 1 && styles.filterChipActive]}
                                 onPress={() => {
                                     const newDistance = selectedFilters.distance === 1 ? null : 1
-                                    console.log('🔘 Filtro distancia: < 1 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
                                     setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
                                 }}
                             >
@@ -425,7 +418,6 @@ export default function StoresScreen() {
                                 style={[styles.filterChip, selectedFilters.distance === 3 && styles.filterChipActive]}
                                 onPress={() => {
                                     const newDistance = selectedFilters.distance === 3 ? null : 3
-                                    console.log('🔘 Filtro distancia: < 3 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
                                     setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
                                 }}
                             >
@@ -439,7 +431,6 @@ export default function StoresScreen() {
                                 style={[styles.filterChip, selectedFilters.distance === 5 && styles.filterChipActive]}
                                 onPress={() => {
                                     const newDistance = selectedFilters.distance === 5 ? null : 5
-                                    console.log('🔘 Filtro distancia: < 5 km', newDistance ? 'ACTIVADO' : 'DESACTIVADO')
                                     setSelectedFilters(prev => ({ ...prev, distance: newDistance }))
                                 }}
                             >

@@ -41,7 +41,6 @@ export const NotifProvider = ({ children }) => {
                 [STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifData)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
-            console.log('✅ Notificaciones guardadas en caché')
         } catch (error) {
             console.error('Error guardando notificaciones:', error)
         }
@@ -81,9 +80,6 @@ export const NotifProvider = ({ children }) => {
                     const cached = await loadFromCache()
 
                     if (cached && !cached.isStale) {
-                        console.log(
-                            `📦 Usando notificaciones del caché (${cached.cacheAge}s antiguo)`
-                        )
                         setNotifications(cached.notifications)
                         setUnreadCount(computeUnread(cached.notifications))
                         setIsFromCache(true)
@@ -98,9 +94,6 @@ export const NotifProvider = ({ children }) => {
 
                     // Si hay caché obsoleto, úsalo mientras cargas
                     if (cached) {
-                        console.log(
-                            '⚠️ Usando caché obsoleto de notificaciones...'
-                        )
                         setNotifications(cached.notifications)
                         setUnreadCount(computeUnread(cached.notifications))
                         setIsFromCache(true)
@@ -109,9 +102,6 @@ export const NotifProvider = ({ children }) => {
 
                 // 2️⃣ Obtener datos frescos del servidor
                 if (safeGetNotifications && user) {
-                    console.log(
-                        '🌐 Obteniendo notificaciones frescas del servidor'
-                    )
                     const fresh = await safeGetNotifications(
                         user?.id || user?._id
                     )
@@ -143,9 +133,6 @@ export const NotifProvider = ({ children }) => {
                 // 3️⃣ Fallback a caché en caso de error
                 const cached = await loadFromCache()
                 if (cached) {
-                    console.log(
-                        '🆘 Error de red, usando caché de notificaciones'
-                    )
                     setNotifications(cached.notifications)
                     setUnreadCount(computeUnread(cached.notifications))
                     setIsFromCache(true)

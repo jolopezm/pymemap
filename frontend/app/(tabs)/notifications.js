@@ -47,21 +47,21 @@ export default function NotificationsScreen() {
     const [selectedNotification, setSelectedNotification] = React.useState(null)
     const router = useRouter()
 
-    const handleNotificationAction = async (notification) => {
+    const handleNotificationAction = async notification => {
         const action = notification.reference?.action
         const businessId = notification.reference?.businessId
-        
+
         if (action === 'rate_business' && businessId) {
             // Navegar a la pantalla de calificación
             router.push({
                 pathname: '/rate-business',
-                params: { 
+                params: {
                     id: businessId,
                     bookingId: notification.reference?.bookingId,
-                    businessName: notification.reference?.businessName
-                }
+                    businessName: notification.reference?.businessName,
+                },
             })
-            
+
             // Marcar notificación como leída
             if (markNotificationAsRead && notification.id) {
                 try {
@@ -82,10 +82,6 @@ export default function NotificationsScreen() {
     const openNotification = async notification => {
         setSelectedNotification(notification)
         setModalVisible(true)
-        console.log(
-            'Opening notification',
-            notification?._id || notification?.id
-        )
 
         if (!notification?.read) {
             const notificationId = notification?._id || notification?.id
@@ -400,19 +396,28 @@ export default function NotificationsScreen() {
                                     )}
 
                                 {/* Botón de calificar para notificaciones de reseñas */}
-                                {selectedNotification?.reference?.action === 'rate_business' && (
+                                {selectedNotification?.reference?.action ===
+                                    'rate_business' && (
                                     <Pressable
                                         onPress={() => {
                                             closeModal()
-                                            handleNotificationAction(selectedNotification)
+                                            handleNotificationAction(
+                                                selectedNotification
+                                            )
                                         }}
                                         style={[
                                             globalStyles.button,
-                                            { marginTop: 16, backgroundColor: '#FFD700' },
+                                            {
+                                                marginTop: 16,
+                                                backgroundColor: '#FFD700',
+                                            },
                                         ]}
                                     >
                                         <Text
-                                            style={{ color: '#000', fontWeight: 'bold' }}
+                                            style={{
+                                                color: '#000',
+                                                fontWeight: 'bold',
+                                            }}
                                         >
                                             ⭐ Calificar Reserva
                                         </Text>
@@ -449,5 +454,3 @@ export default function NotificationsScreen() {
         </Screen>
     )
 }
-
-

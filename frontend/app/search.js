@@ -15,7 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { getBusiness } from '../api/business-service'
 import { StatusBar } from 'expo-status-bar'
-import { calculateBusinessDistances, formatDistance } from '../utils/geolocation'
+import {
+    calculateBusinessDistances,
+    formatDistance,
+} from '../utils/geolocation'
 import { useLocation } from '../context/location-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -53,7 +56,10 @@ export default function SearchScreen() {
     // Calcular distancias cuando cambia userCoords
     useEffect(() => {
         if (userCoords && businesses.length > 0) {
-            const withDistances = calculateBusinessDistances(businesses, userCoords)
+            const withDistances = calculateBusinessDistances(
+                businesses,
+                userCoords
+            )
             setBusinesses(withDistances)
         }
     }, [userCoords])
@@ -64,22 +70,25 @@ export default function SearchScreen() {
         if (nearbyFilter && !searchQuery.trim() && userCoords) {
             const nearbyDistance = 3 // 3 km se considera "cerca"
             const nearbyBusinesses = businesses
-                .filter(business => business.distance !== undefined && business.distance <= nearbyDistance)
+                .filter(
+                    business =>
+                        business.distance !== undefined &&
+                        business.distance <= nearbyDistance
+                )
                 .map(business => ({
                     type: 'business',
                     data: business,
                 }))
                 .sort((a, b) => a.data.distance - b.data.distance)
-            
-            console.log(`📍 Mostrando ${nearbyBusinesses.length} negocios cerca de ti (< ${nearbyDistance} km)`)
+
             return nearbyBusinesses
         }
-        
+
         if (!searchQuery.trim()) return []
 
         const query = searchQuery.toLowerCase()
         let results = []
-        
+
         // Buscar en negocios
         businesses.forEach(business => {
             const matchesName = business.name?.toLowerCase().includes(query)
@@ -97,19 +106,21 @@ export default function SearchScreen() {
                 })
             }
         })
-        
+
         // Aplicar filtro de cercanía si está activo (3 km - "Cerca de mí")
         if (nearbyFilter && userCoords) {
             const nearbyDistance = 3 // 3 km se considera "cerca"
             results = results.filter(result => {
-                if (result.type === 'business' && result.data.distance !== undefined) {
+                if (
+                    result.type === 'business' &&
+                    result.data.distance !== undefined
+                ) {
                     return result.data.distance <= nearbyDistance
                 }
                 return true // Mantener servicios sin distancia
             })
-            console.log(`📍 Filtro "Cerca de mí": ${results.length} resultados dentro de ${nearbyDistance} km`)
         }
-        
+
         // Ordenar por distancia si hay coordenadas
         if (userCoords) {
             results.sort((a, b) => {
@@ -118,7 +129,7 @@ export default function SearchScreen() {
                 return distA - distB
             })
         }
-        
+
         return results.slice(0, 10)
     }
 
@@ -126,13 +137,39 @@ export default function SearchScreen() {
 
     // Clicks rápidos relevantes para PyMEs
     const quickClicks = [
-        { id: 0, label: 'Cerca de mí', icon: 'location-outline', isNearby: true, maxDistance: 3 },
-        { id: 1, label: 'Servicios', icon: 'construct-outline', searchQuery: 'servicios' },
-        { id: 2, label: 'Belleza', icon: 'cut-outline', searchQuery: 'belleza' },
+        {
+            id: 0,
+            label: 'Cerca de mí',
+            icon: 'location-outline',
+            isNearby: true,
+            maxDistance: 3,
+        },
+        {
+            id: 1,
+            label: 'Servicios',
+            icon: 'construct-outline',
+            searchQuery: 'servicios',
+        },
+        {
+            id: 2,
+            label: 'Belleza',
+            icon: 'cut-outline',
+            searchQuery: 'belleza',
+        },
         { id: 3, label: 'Salud', icon: 'medkit-outline', searchQuery: 'salud' },
-        { id: 4, label: 'Comida', icon: 'restaurant-outline', searchQuery: 'comida' },
+        {
+            id: 4,
+            label: 'Comida',
+            icon: 'restaurant-outline',
+            searchQuery: 'comida',
+        },
         { id: 5, label: 'Retail', icon: 'bag-outline', searchQuery: 'retail' },
-        { id: 6, label: 'Educación', icon: 'school-outline', searchQuery: 'educación' },
+        {
+            id: 6,
+            label: 'Educación',
+            icon: 'school-outline',
+            searchQuery: 'educación',
+        },
     ]
 
     // Cargar búsquedas recientes desde AsyncStorage
@@ -148,39 +185,42 @@ export default function SearchScreen() {
     }
 
     // Guardar una nueva búsqueda
-    const saveRecentSearch = async (query) => {
+    const saveRecentSearch = async query => {
         try {
             const trimmedQuery = query.trim()
             if (!trimmedQuery) return
 
             // Obtener búsquedas actuales
             let searches = [...recentSearches]
-            
+
             // Eliminar duplicados (si ya existe, la movemos al inicio)
-            searches = searches.filter(s => s.toLowerCase() !== trimmedQuery.toLowerCase())
-            
+            searches = searches.filter(
+                s => s.toLowerCase() !== trimmedQuery.toLowerCase()
+            )
+
             // Agregar al inicio
             searches.unshift(trimmedQuery)
-            
+
             // Limitar a MAX_RECENT_SEARCHES
             searches = searches.slice(0, MAX_RECENT_SEARCHES)
-            
+
             // Guardar en estado y AsyncStorage
             setRecentSearches(searches)
-            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches))
-            
-            console.log('✅ Búsqueda guardada:', trimmedQuery)
+            await AsyncStorage.setItem(
+                RECENT_SEARCHES_KEY,
+                JSON.stringify(searches)
+            )
         } catch (error) {
             console.error('Error guardando búsqueda reciente:', error)
         }
     }
 
-    const handleSelectResult = (result) => {
+    const handleSelectResult = result => {
         // Guardar la búsqueda antes de navegar
         if (searchQuery.trim()) {
             saveRecentSearch(searchQuery)
         }
-        
+
         if (result.type === 'business') {
             router.push(
                 `/business-profile?id=${result.data.id || result.data._id}`
@@ -198,7 +238,6 @@ export default function SearchScreen() {
         try {
             setRecentSearches([])
             await AsyncStorage.removeItem(RECENT_SEARCHES_KEY)
-            console.log('🗑️ Búsquedas recientes eliminadas')
         } catch (error) {
             console.error('Error eliminando búsquedas recientes:', error)
         }
@@ -243,24 +282,51 @@ export default function SearchScreen() {
                 </View>
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 {searchQuery.trim().length > 0 || nearbyFilter ? (
                     // Resultados de búsqueda
                     searchResults.length > 0 ? (
                         <View style={styles.resultsSection}>
                             {/* Contador de resultados */}
-                            <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-                                <Text style={{ fontSize: 14, color: '#666', fontWeight: '500' }}>
-                                    {searchResults.length} {searchResults.length === 1 ? 'resultado' : 'resultados'}
+                            <View
+                                style={{
+                                    paddingHorizontal: 16,
+                                    paddingBottom: 12,
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        color: '#666',
+                                        fontWeight: '500',
+                                    }}
+                                >
+                                    {searchResults.length}{' '}
+                                    {searchResults.length === 1
+                                        ? 'resultado'
+                                        : 'resultados'}
                                     {nearbyFilter && ` cerca de ti (< 3 km)`}
                                 </Text>
-                                {userCoords && searchResults.some(r => r.data.distance) && (
-                                    <Text style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                                        Las distancias son aproximadas por calles
-                                    </Text>
-                                )}
+                                {userCoords &&
+                                    searchResults.some(
+                                        r => r.data.distance
+                                    ) && (
+                                        <Text
+                                            style={{
+                                                fontSize: 11,
+                                                color: '#999',
+                                                marginTop: 4,
+                                            }}
+                                        >
+                                            Las distancias son aproximadas por
+                                            calles
+                                        </Text>
+                                    )}
                             </View>
-                            
+
                             {searchResults.map((result, index) => (
                                 <Pressable
                                     key={`${result.type}-${result.data.id || result.data._id || index}`}
@@ -293,28 +359,78 @@ export default function SearchScreen() {
                                         >
                                             {result.data.name}
                                         </Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                            <Text style={styles.resultCategory} numberOfLines={1}>
-                                                {result.type === 'business' 
-                                                    ? result.data.category 
-                                                    : result.data.description || 'Servicio'}
+                                        <View
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                            }}
+                                        >
+                                            <Text
+                                                style={styles.resultCategory}
+                                                numberOfLines={1}
+                                            >
+                                                {result.type === 'business'
+                                                    ? result.data.category
+                                                    : result.data.description ||
+                                                      'Servicio'}
                                             </Text>
                                             {result.data.distance && (
                                                 <>
-                                                    <Text style={styles.resultCategory}>•</Text>
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                        <Ionicons 
-                                                            name="location" 
-                                                            size={12} 
-                                                            color={result.data.distance < 1 ? '#4CAF50' : result.data.distance < 5 ? '#FF9800' : '#888'} 
+                                                    <Text
+                                                        style={
+                                                            styles.resultCategory
+                                                        }
+                                                    >
+                                                        •
+                                                    </Text>
+                                                    <View
+                                                        style={{
+                                                            flexDirection:
+                                                                'row',
+                                                            alignItems:
+                                                                'center',
+                                                        }}
+                                                    >
+                                                        <Ionicons
+                                                            name="location"
+                                                            size={12}
+                                                            color={
+                                                                result.data
+                                                                    .distance <
+                                                                1
+                                                                    ? '#4CAF50'
+                                                                    : result
+                                                                            .data
+                                                                            .distance <
+                                                                        5
+                                                                      ? '#FF9800'
+                                                                      : '#888'
+                                                            }
                                                         />
-                                                        <Text style={{
-                                                            fontSize: 12,
-                                                            color: result.data.distance < 1 ? '#4CAF50' : result.data.distance < 5 ? '#FF9800' : '#888',
-                                                            fontWeight: '600',
-                                                            marginLeft: 2,
-                                                        }}>
-                                                            {formatDistance(result.data.distance)}
+                                                        <Text
+                                                            style={{
+                                                                fontSize: 12,
+                                                                color:
+                                                                    result.data
+                                                                        .distance <
+                                                                    1
+                                                                        ? '#4CAF50'
+                                                                        : result
+                                                                                .data
+                                                                                .distance <
+                                                                            5
+                                                                          ? '#FF9800'
+                                                                          : '#888',
+                                                                fontWeight:
+                                                                    '600',
+                                                                marginLeft: 2,
+                                                            }}
+                                                        >
+                                                            {formatDistance(
+                                                                result.data
+                                                                    .distance
+                                                            )}
                                                         </Text>
                                                     </View>
                                                 </>
@@ -352,11 +468,23 @@ export default function SearchScreen() {
                             <View style={styles.section}>
                                 <View style={styles.sectionHeader}>
                                     <View style={styles.sectionTitleContainer}>
-                                        <Ionicons name="time-outline" size={18} color="#9B59B6" style={{ marginRight: 8 }} />
-                                        <Text style={styles.sectionTitle}>Recientes</Text>
+                                        <Ionicons
+                                            name="time-outline"
+                                            size={18}
+                                            color="#9B59B6"
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <Text style={styles.sectionTitle}>
+                                            Recientes
+                                        </Text>
                                     </View>
-                                    <Pressable onPress={clearRecentSearches} style={styles.clearButtonContainer}>
-                                        <Text style={styles.clearButton}>Limpiar</Text>
+                                    <Pressable
+                                        onPress={clearRecentSearches}
+                                        style={styles.clearButtonContainer}
+                                    >
+                                        <Text style={styles.clearButton}>
+                                            Limpiar
+                                        </Text>
                                     </Pressable>
                                 </View>
                                 <View style={styles.recentGrid}>
@@ -364,12 +492,21 @@ export default function SearchScreen() {
                                         <Pressable
                                             key={index}
                                             style={styles.recentChip}
-                                            onPress={() => handleRecentSearch(search)}
+                                            onPress={() =>
+                                                handleRecentSearch(search)
+                                            }
                                         >
-                                            <Text style={styles.recentChipText} numberOfLines={1}>
+                                            <Text
+                                                style={styles.recentChipText}
+                                                numberOfLines={1}
+                                            >
                                                 {search}
                                             </Text>
-                                            <Ionicons name="arrow-forward" size={14} color="#9B59B6" />
+                                            <Ionicons
+                                                name="arrow-forward"
+                                                size={14}
+                                                color="#9B59B6"
+                                            />
                                         </Pressable>
                                     ))}
                                 </View>
@@ -379,8 +516,15 @@ export default function SearchScreen() {
                         {/* Clicks rápidos */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeaderSimple}>
-                                <Ionicons name="flash-outline" size={18} color="#9B59B6" style={{ marginRight: 8 }} />
-                                <Text style={styles.sectionTitle}>Explorar</Text>
+                                <Ionicons
+                                    name="flash-outline"
+                                    size={18}
+                                    color="#9B59B6"
+                                    style={{ marginRight: 8 }}
+                                />
+                                <Text style={styles.sectionTitle}>
+                                    Explorar
+                                </Text>
                             </View>
                             <View style={styles.quickGrid}>
                                 {quickClicks.map(item => (
@@ -388,46 +532,71 @@ export default function SearchScreen() {
                                         key={item.id}
                                         style={({ pressed }) => [
                                             styles.quickChip,
-                                            item.isNearby && nearbyFilter && styles.quickChipActive,
-                                            item.isNearby && !userCoords && styles.quickChipDisabled,
-                                            pressed && !item.isNearby && styles.quickChipPressed,
+                                            item.isNearby &&
+                                                nearbyFilter &&
+                                                styles.quickChipActive,
+                                            item.isNearby &&
+                                                !userCoords &&
+                                                styles.quickChipDisabled,
+                                            pressed &&
+                                                !item.isNearby &&
+                                                styles.quickChipPressed,
                                         ]}
                                         onPress={() => {
                                             if (item.isNearby) {
                                                 if (userCoords) {
-                                                    setNearbyFilter(!nearbyFilter)
-                                                    if (!nearbyFilter) {
-                                                        console.log(`📍 Filtro "Cerca de mí" ACTIVADO: < ${item.maxDistance} km`)
-                                                    } else {
-                                                        console.log('📍 Filtro "Cerca de mí" DESACTIVADO')
-                                                    }
+                                                    setNearbyFilter(
+                                                        !nearbyFilter
+                                                    )
                                                 }
                                             } else {
                                                 // Buscar automáticamente con la query del botón y guardarla
-                                                const query = item.searchQuery || item.label
+                                                const query =
+                                                    item.searchQuery ||
+                                                    item.label
                                                 setSearchQuery(query)
                                                 saveRecentSearch(query)
-                                                console.log(`🔍 Búsqueda rápida: ${query}`)
                                             }
                                         }}
                                         disabled={item.isNearby && !userCoords}
                                     >
-                                        <View style={[
-                                            styles.quickIconContainer,
-                                            item.isNearby && nearbyFilter && styles.quickIconContainerActive,
-                                            item.isNearby && !userCoords && styles.quickIconContainerDisabled,
-                                        ]}>
-                                            <Ionicons 
-                                                name={item.icon} 
-                                                size={18} 
-                                                color={item.isNearby && nearbyFilter ? '#FFF' : item.isNearby && !userCoords ? '#CCC' : '#9B59B6'} 
+                                        <View
+                                            style={[
+                                                styles.quickIconContainer,
+                                                item.isNearby &&
+                                                    nearbyFilter &&
+                                                    styles.quickIconContainerActive,
+                                                item.isNearby &&
+                                                    !userCoords &&
+                                                    styles.quickIconContainerDisabled,
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name={item.icon}
+                                                size={18}
+                                                color={
+                                                    item.isNearby &&
+                                                    nearbyFilter
+                                                        ? '#FFF'
+                                                        : item.isNearby &&
+                                                            !userCoords
+                                                          ? '#CCC'
+                                                          : '#9B59B6'
+                                                }
                                             />
                                         </View>
-                                        <Text style={[
-                                            styles.quickText,
-                                            item.isNearby && nearbyFilter && styles.quickTextActive,
-                                            item.isNearby && !userCoords && styles.quickTextDisabled,
-                                        ]} numberOfLines={1}>
+                                        <Text
+                                            style={[
+                                                styles.quickText,
+                                                item.isNearby &&
+                                                    nearbyFilter &&
+                                                    styles.quickTextActive,
+                                                item.isNearby &&
+                                                    !userCoords &&
+                                                    styles.quickTextDisabled,
+                                            ]}
+                                            numberOfLines={1}
+                                        >
                                             {item.label}
                                         </Text>
                                     </Pressable>

@@ -86,12 +86,6 @@ export const uploadProfilePicture = async (userId, imageUri, filename) => {
         const uriParts = imageUri.split('.')
         const fileType = uriParts[uriParts.length - 1]
 
-        console.log('📤 Subiendo imagen:', {
-            url: `${API_URL}/users/upload-profile-picture/${userId}`,
-            filename,
-            fileType,
-        })
-
         // Intentar con fetch y blob
         const response = await fetch(imageUri)
         const blob = await response.blob()
@@ -116,7 +110,6 @@ export const uploadProfilePicture = async (userId, imageUri, filename) => {
         }
 
         const data = await uploadResponse.json()
-        console.log('✅ Upload exitoso:', data)
         return data
     } catch (error) {
         console.error('❌ Error al subir imagen:', error)

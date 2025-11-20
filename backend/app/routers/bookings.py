@@ -155,20 +155,29 @@ async def create_booking(
     
     # TODO: Enviar notificación al dueño del negocio
     
-    return created_booking@router.patch("/{booking_id}/confirm")
+    return created_booking
+
+@router.patch("/{booking_id}/confirm")
 async def confirm_booking(
     booking_id: str,
     current_user: TokenData = Depends(get_current_user)
 ):
     """Dueño de negocio confirma reserva"""
+    print(f"🔍 Confirming booking: {booking_id}")
+    
     # Convertir booking_id a ObjectId si es necesario
     try:
         booking_object_id = ObjectId(booking_id)
+        print(f"✅ ObjectId created: {booking_object_id}")
         booking = await db.bookings.find_one({"_id": booking_object_id})
-    except Exception:
+        print(f"📦 Booking found with ObjectId: {booking}")
+    except Exception as e:
+        print(f"❌ Error with ObjectId: {e}, trying string...")
         booking = await db.bookings.find_one({"_id": booking_id})
+        print(f"📦 Booking found with string: {booking}")
     
     if not booking:
+        print(f"❌ Booking not found: {booking_id}")
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
     
     # Verificar que el usuario sea dueño del negocio

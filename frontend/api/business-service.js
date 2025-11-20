@@ -128,12 +128,6 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         // Crear FormData
         const formData = new FormData()
 
-        console.log('📤 Subiendo imagen de negocio:', {
-            url: `${API_URL}/business/upload-pictures/${businessId}`,
-            imageUri,
-            filename,
-        })
-
         // Leer la imagen como blob
         const response = await fetch(imageUri)
         const blob = await response.blob()
@@ -158,7 +152,6 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         }
 
         const data = await uploadResponse.json()
-        console.log('✅ Upload exitoso:', data)
         return data
     } catch (error) {
         console.error('❌ Error al subir imagen:', error)

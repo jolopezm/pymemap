@@ -34,7 +34,6 @@ export function LocationProvider({ children }) {
                 [STORAGE_KEYS.USER_COORDS, JSON.stringify(coords)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
-            console.log('✅ Ubicación guardada en caché')
         } catch (error) {
             console.error('Error guardando ubicación:', error)
         }
@@ -55,14 +54,9 @@ export function LocationProvider({ children }) {
                 const coords = JSON.parse(coordsJson)
 
                 if (!isStale) {
-                    console.log(
-                        `📦 Ubicación cargada del caché (${Math.floor(cacheAge / 1000)}s antiguo)`
-                    )
                     setUserLocation(address)
                     setUserCoords(coords)
                     setIsFromCache(true)
-                } else {
-                    console.log('⚠️ Ubicación en caché obsoleta')
                 }
             }
         } catch (error) {
@@ -75,17 +69,10 @@ export function LocationProvider({ children }) {
             setIsLoadingLocation(true)
             setLocationError(null)
             setPermissionRequested(true)
-            console.log(
-                '🌍 [LocationContext] Solicitando permiso y obteniendo ubicación...'
-            )
 
             const location = await getCurrentLocation(forceRefresh)
 
             if (location) {
-                console.log(
-                    '✅ [LocationContext] Ubicación obtenida:',
-                    location.address
-                )
                 setUserLocation(location.address)
                 setUserCoords({
                     latitude: location.latitude,
@@ -124,7 +111,6 @@ export function LocationProvider({ children }) {
 
     // Actualizar ubicación manualmente (ej: cuando el usuario selecciona en el mapa)
     const updateLocation = async (coords, address) => {
-        console.log('📍 [LocationContext] Ubicación actualizada manualmente')
         setUserCoords(coords)
         setUserLocation(
             address ||
@@ -147,7 +133,6 @@ export function LocationProvider({ children }) {
                 STORAGE_KEYS.USER_COORDS,
                 STORAGE_KEYS.CACHE_TIMESTAMP,
             ])
-            console.log('🗑️ Caché de ubicación limpiado')
         } catch (error) {
             console.error('Error limpiando caché de ubicación:', error)
         }

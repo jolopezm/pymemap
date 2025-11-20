@@ -13,10 +13,6 @@ export function BookingCalendar({ businessId, onDateSelect, selectedDate }) {
     const [internalSelected, setInternalSelected] = useState(undefined)
 
     useEffect(() => {
-        console.log('✅ availableDates state updated:', availableDates)
-    }, [availableDates])
-
-    useEffect(() => {
         if (selectedDate) {
             setInternalSelected(new Date(selectedDate))
         }
@@ -32,17 +28,10 @@ export function BookingCalendar({ businessId, onDateSelect, selectedDate }) {
         try {
             const year = currentMonth.getFullYear()
             const month = currentMonth.getMonth() + 1
-            console.log('📅 Fetching availability for:', {
-                businessId,
-                year,
-                month,
-            })
             const data = await getBusinessAvailability(businessId, year, month)
-            console.log('📅 Availability data received:', data)
 
             // Extraer fechas disponibles
             const dates = data.map(item => item.date)
-            console.log('📅 Available dates:', dates)
             setAvailableDates(dates)
         } catch (error) {
             console.error('Error fetching availability:', error)
@@ -56,22 +45,7 @@ export function BookingCalendar({ businessId, onDateSelect, selectedDate }) {
         const month = String(date.getMonth() + 1).padStart(2, '0')
         const day = String(date.getDate()).padStart(2, '0')
         const dateStr = `${year}-${month}-${day}`
-
         const available = availableDates.includes(dateStr)
-
-        // Log para debugging (solo para algunas fechas)
-        if (date.getDate() >= 25 && date.getDate() <= 27) {
-            console.log('🔍 Checking date:', {
-                originalDate: date,
-                year,
-                month,
-                day,
-                dateStr,
-                available,
-                availableDatesLength: availableDates.length,
-                availableDates: availableDates,
-            })
-        }
 
         return available
     }
@@ -92,19 +66,13 @@ export function BookingCalendar({ businessId, onDateSelect, selectedDate }) {
                         const day = String(date.getDate()).padStart(2, '0')
                         const dateStr = `${year}-${month}-${day}`
 
-                        console.log('📅 Date selected:', dateStr)
                         const available = isDateAvailable(date)
-                        console.log('📅 Is available?', available)
 
                         if (available) {
                             setInternalSelected(date)
                             if (onDateSelect) {
                                 onDateSelect(dateStr)
                             }
-                        } else {
-                            console.log(
-                                '⚠️ Date not available, selection blocked'
-                            )
                         }
                     }
                 }}

@@ -81,19 +81,11 @@ export default function EditBusiness() {
         setUploading(true)
         try {
             const filename = image.split('/').pop()
-
-            console.log('📤 Subiendo imagen de negocio:', {
-                businessId,
-                filename,
-            })
-
             const updatedBusiness = await uploadBusinessPicture(
                 businessId,
                 image,
                 filename
             )
-
-            console.log('✅ Negocio actualizado:', updatedBusiness)
 
             // Actualizar el estado local con el negocio actualizado
             setBusiness(updatedBusiness)

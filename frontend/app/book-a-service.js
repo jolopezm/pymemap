@@ -61,13 +61,6 @@ export default function BookService() {
             endTime.setHours(endTime.getHours() + 1)
             const endTimeStr = formatTime(endTime)
 
-            console.log('📤 Enviando booking:', {
-                business_id: businessId,
-                date: dateStr,
-                start_time: timeStr,
-                end_time: endTimeStr,
-            })
-
             // 1. Crear la reserva
             const booking = await createBooking({
                 business_id: businessId,
@@ -76,11 +69,8 @@ export default function BookService() {
                 end_time: endTimeStr,
             })
 
-            console.log('✅ Booking created:', booking)
-
             // 2. Obtener el negocio para tener el owner_id
             const businessData = await getBusiness(businessId)
-            console.log('📍 Business data:', businessData)
 
             if (!businessData?.owner_id) {
                 console.warn('⚠️ No se encontró owner_id en el negocio')
@@ -102,15 +92,11 @@ export default function BookService() {
                         booking_id: booking._id || booking.id,
                         business_name: businessName || businessData.name,
                         requested_date: dateStr,
-                        requested_time: timeStr
-                    }
+                        requested_time: timeStr,
+                    },
                 }
 
-                console.log('📤 Enviando notificación:', notifPayload)
-
                 await createNotification(notifPayload)
-                console.log('✅ Notification sent to vendor')
-
                 Toast.success(
                     '¡Solicitud enviada! El vendedor la revisará pronto'
                 )

@@ -7,19 +7,12 @@ export async function createNotification(notificationData) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
     try {
-        console.log('📤 Creating notification:', {
-            url: `${API_URL}/notifications`,
-            data: notificationData,
-            hasToken: !!token,
-        })
-
         const response = await axios.post(
             `${API_URL}/notifications`,
             notificationData,
             { headers }
         )
 
-        console.log('✅ Notification created successfully:', response.data)
         return response.data
     } catch (error) {
         console.error('❌ Error creating notification:', {
@@ -42,11 +35,12 @@ export async function getNotifications(userId) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
     try {
-        console.log(`📥 Fetching notifications for user: ${userId}`)
-        const response = await axios.get(`${API_URL}/notifications?user_id=${userId}`, {
-            headers,
-        })
-        console.log(`✅ Notifications fetched: ${response.data.length} items`)
+        const response = await axios.get(
+            `${API_URL}/notifications?user_id=${userId}`,
+            {
+                headers,
+            }
+        )
         return response.data
     } catch (error) {
         console.error('❌ Error fetching notifications:', error)
@@ -64,13 +58,11 @@ export async function markNotificationAsRead(notificationId) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
     try {
-        console.log(`📝 Marking notification as read: ${notificationId}`)
         const response = await axios.patch(
             `${API_URL}/notifications/${notificationId}`,
             {},
             { headers }
         )
-        console.log('✅ Notification marked as read')
         return response.data
     } catch (error) {
         console.error('❌ Error marking notification as read:', error)
@@ -78,5 +70,5 @@ export async function markNotificationAsRead(notificationId) {
     }
 }
 
-// Default export for backward compatibility  
+// Default export for backward compatibility
 export default getNotifications

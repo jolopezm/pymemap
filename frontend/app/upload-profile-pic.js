@@ -40,13 +40,6 @@ export default function UploadProfilePic() {
         setUploading(true)
         try {
             const filename = image.split('/').pop()
-
-            console.log('📤 Subiendo imagen:', {
-                userId: user?._id || user?.id,
-                filename,
-                userIdLength: (user?._id || user?.id)?.length,
-            })
-
             const userId = user?._id || user?.id
 
             if (!userId || userId.length !== 24) {
@@ -59,13 +52,11 @@ export default function UploadProfilePic() {
                 filename
             )
 
-            console.log('✅ Usuario actualizado:', updatedUser)
-
             // Refrescar los datos del usuario
             if (refreshUser) {
                 await refreshUser()
             }
-            
+
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente')
         } catch (error) {
             console.error('❌ Error al subir imagen:', error)

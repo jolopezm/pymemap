@@ -59,7 +59,6 @@ export default function BookingsPanel() {
         try {
             const booking = bookings.find(b => (b._id || b.id) === bookingId)
 
-            console.log('✅ Confirming booking:', bookingId)
             await confirmBooking(bookingId)
 
             // Enviar notificación al cliente
@@ -73,16 +72,11 @@ export default function BookingsPanel() {
                         reference: {
                             booking_id: bookingId,
                             date: booking.date,
-                            start_time: booking.start_time
-                        }
+                            start_time: booking.start_time,
+                        },
                     }
 
-                    console.log(
-                        '📤 Sending confirmation notification:',
-                        notifPayload
-                    )
                     await createNotification(notifPayload)
-                    console.log('✅ Notification sent to client')
                 } catch (notifError) {
                     console.error('⚠️ Error sending notification:', notifError)
                     console.error(
@@ -105,8 +99,6 @@ export default function BookingsPanel() {
     const handleReject = async bookingId => {
         try {
             const booking = bookings.find(b => (b._id || b.id) === bookingId)
-
-            console.log('❌ Rejecting booking:', bookingId)
             await rejectBooking(bookingId)
 
             // Enviar notificación al cliente
@@ -120,16 +112,11 @@ export default function BookingsPanel() {
                         reference: {
                             booking_id: bookingId,
                             date: booking.date,
-                            start_time: booking.start_time
-                        }
+                            start_time: booking.start_time,
+                        },
                     }
 
-                    console.log(
-                        '📤 Sending rejection notification:',
-                        notifPayload
-                    )
                     await createNotification(notifPayload)
-                    console.log('✅ Notification sent to client')
                 } catch (notifError) {
                     console.error('⚠️ Error sending notification:', notifError)
                     console.error(
@@ -241,29 +228,37 @@ export default function BookingsPanel() {
                         </Pressable>
                     </View>
                 )}
-                
+
                 {/* Botón para ver detalles siempre visible */}
                 <View style={styles.detailSection}>
                     <Pressable
                         style={styles.detailButton}
-                        onPress={() => router.push({
-                            pathname: '/booking-detail',
-                            params: { id: item._id }
-                        })}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/booking-detail',
+                                params: { id: item._id },
+                            })
+                        }
                     >
-                        <Text style={styles.detailButtonText}>📋 Ver Detalle</Text>
+                        <Text style={styles.detailButtonText}>
+                            📋 Ver Detalle
+                        </Text>
                     </Pressable>
-                    
+
                     {/* Botón para solicitar pago cuando está confirmada */}
                     {item.status === 'confirmed' && (
                         <Pressable
                             style={styles.paymentButton}
-                            onPress={() => router.push({
-                                pathname: '/booking-detail',
-                                params: { id: item._id }
-                            })}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/booking-detail',
+                                    params: { id: item._id },
+                                })
+                            }
                         >
-                            <Text style={styles.paymentButtonText}>💰 Solicitar Pago</Text>
+                            <Text style={styles.paymentButtonText}>
+                                💰 Solicitar Pago
+                            </Text>
                         </Pressable>
                     )}
                 </View>
@@ -314,7 +309,8 @@ export default function BookingsPanel() {
                             No tienes reservas aún
                         </Text>
                         <Text style={styles.emptySubtext}>
-                            Aquí aparecerán todas las solicitudes de reserva de tus negocios
+                            Aquí aparecerán todas las solicitudes de reserva de
+                            tus negocios
                         </Text>
                     </View>
                 ) : (
