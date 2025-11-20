@@ -213,52 +213,23 @@ export async function setBusinessAvailability(businessId, availabilityData) {
 }
 
 /**
- * Solicitar pago por una reserva (vendedor)
+ * Verificar código de confirmación (vendedor)
  */
-export async function requestBookingPayment(bookingId, requestedPrice) {
+export async function verifyBookingCode(bookingId, code) {
     try {
         const headers = await getAuthHeaders()
-        console.log(
-            '🏷️ Requesting payment for booking:',
-            bookingId,
-            'Price:',
-            requestedPrice
-        )
+        console.log('🔐 Verifying code for booking:', bookingId, 'Code:', code)
 
         const response = await axios.patch(
-            `${API_URL}/bookings/${bookingId}/request-payment`,
-            { requested_price: requestedPrice },
+            `${API_URL}/bookings/${bookingId}/verify-code`,
+            { code: code },
             { headers }
         )
-        console.log('✅ Payment request sent:', response.data)
+        console.log('✅ Code verified:', response.data)
         return response.data
     } catch (error) {
         console.error(
-            '❌ Error requesting booking payment:',
-            error.response?.data || error.message
-        )
-        throw error
-    }
-}
-
-/**
- * Pagar una reserva (cliente)
- */
-export async function payBooking(bookingId) {
-    try {
-        const headers = await getAuthHeaders()
-        console.log('💳 Paying booking:', bookingId)
-
-        const response = await axios.post(
-            `${API_URL}/bookings/${bookingId}/pay`,
-            {},
-            { headers }
-        )
-        console.log('✅ Booking payment completed:', response.data)
-        return response.data
-    } catch (error) {
-        console.error(
-            '❌ Error paying booking:',
+            '❌ Error verifying code:',
             error.response?.data || error.message
         )
         throw error

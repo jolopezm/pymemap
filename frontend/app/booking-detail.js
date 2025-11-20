@@ -18,8 +18,7 @@ import { globalStyles } from '../styles/global'
 import {
     getAllMyBusinessBookings,
     getMyBookings,
-    requestBookingPayment,
-    payBooking,
+    verifyBookingCode,
 } from '../api/booking-service'
 import { getBusiness } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
@@ -38,7 +37,7 @@ export default function BookingDetail() {
     const [booking, setBooking] = React.useState(null)
     const [business, setBusiness] = React.useState(null)
     const [loading, setLoading] = React.useState(true)
-    const [price, setPrice] = React.useState('')
+    const [verificationCode, setVerificationCode] = React.useState('')
     const [isOwner, setIsOwner] = React.useState(false)
 
     React.useEffect(() => {
@@ -70,7 +69,6 @@ export default function BookingDetail() {
 
                 if (foundBooking) {
                     setBooking(foundBooking)
-                    setPrice(foundBooking.requested_price?.toString() || '')
 
                     // Encontrar el negocio relacionado
                     const foundBusiness = businessData.find(
@@ -102,15 +100,15 @@ export default function BookingDetail() {
         }
     }, [bookingId, user])
 
-    const handleSendPaymentRequest = async () => {
+    const handleVerifyCode = async () => {
         try {
-            const parsed = parseFloat(price)
-            if (isNaN(parsed) || parsed <= 0) {
-                alert('Ingrese un monto válido')
+            const code = parseInt(verificationCode)
+            if (isNaN(code) || verificationCode.length !== 4) {
+                alert('Ingrese un código válido de 4 dígitos')
                 return
             }
 
-            await requestBookingPayment(bookingId, parsed)
+            await verifyBookingCode(bookingId, code)
 
             // Refrescar datos
             const [businessBookings, clientBookings, businessData] =
@@ -135,57 +133,21 @@ export default function BookingDetail() {
             )
             setBusiness(foundBusiness)
 
-            // Enviar notificación al cliente (sin botón de calificar)
+            // Enviar notificación al cliente
             await sendNotificationToClient(
-                'Solicitud de pago',
-                `El vendedor solicita $${parsed} por tu reserva del ${booking.date} a las ${booking.start_time}`,
-                false // No incluir acción de calificar
+                'Servicio completado',
+                `Tu servicio del ${booking.date} a las ${booking.start_time} ha sido completado. ¡No olvides calificar!`,
+                true // Incluir acción de calificar
             )
 
-            alert('Solicitud de cobro enviada')
+            alert('✅ Código verificado - Servicio completado')
         } catch (error) {
-            console.error('Error requesting payment:', error)
-            alert('Error al enviar la solicitud de cobro')
-        }
-    }
-
-    const handlePay = async () => {
-        try {
-            await payBooking(bookingId)
-
-            // Refrescar datos
-            const [businessBookings, clientBookings, businessData] =
-                await Promise.all([
-                    getAllMyBusinessBookings().catch(() => []),
-                    getMyBookings().catch(() => []),
-                    getBusiness(),
-                ])
-
-            let updated = businessBookings.find(
-                b => (b.id || b._id) === bookingId
-            )
-            if (!updated) {
-                updated = clientBookings.find(
-                    b => (b.id || b._id) === bookingId
-                )
+            console.error('Error verifying code:', error)
+            if (error.response?.status === 400) {
+                alert('❌ Código incorrecto. Intenta de nuevo.')
+            } else {
+                alert('Error al verificar el código')
             }
-
-            setBooking(updated)
-            const foundBusiness = businessData.find(
-                b => (b.id || b._id) === updated.business_id
-            )
-            setBusiness(foundBusiness)
-
-            // Enviar notificación al vendedor
-            await sendNotificationToOwner(
-                'Reserva pagada',
-                `La reserva del ${updated.date} a las ${updated.start_time} ha sido pagada por el cliente.`
-            )
-
-            alert('Pago realizado con éxito')
-        } catch (error) {
-            console.error('Error paying booking:', error)
-            alert('Error al realizar el pago')
         }
     }
 
@@ -375,37 +337,46 @@ export default function BookingDetail() {
                     </>
                 )}
 
-                {booking.requested_price != null && (
+                {booking.price != null && !isOwner && (
                     <>
                         <Text style={globalStyles.subtitle}>
-                            Precio solicitado
+                            Tu Código de Verificación
                         </Text>
-                        <Text style={styles.priceText}>
-                            ${booking.requested_price}
-                        </Text>
+                        <View style={styles.codeContainer}>
+                            <Text style={styles.codeText}>{booking.price}</Text>
+                            <Text style={styles.codeHint}>
+                                Muestra este código al vendedor cuando completes
+                                el servicio
+                            </Text>
+                        </View>
                     </>
                 )}
 
                 {isOwner && booking.status === 'confirmed' && (
                     <>
                         <Text style={globalStyles.subtitle}>
-                            Establecer Precio del Servicio
+                            Verificar Servicio Completado
+                        </Text>
+                        <Text style={styles.instructionText}>
+                            Pide al cliente su código de 4 dígitos para
+                            confirmar que el servicio fue completado
                         </Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Ingrese el precio"
+                            placeholder="Ingrese el código del cliente"
                             keyboardType="numeric"
-                            value={price}
-                            onChangeText={setPrice}
+                            maxLength={4}
+                            value={verificationCode}
+                            onChangeText={setVerificationCode}
                         />
 
                         <Pressable
                             style={styles.submitButton}
-                            onPress={handleSendPaymentRequest}
-                            disabled={!price || parseFloat(price) <= 0}
+                            onPress={handleVerifyCode}
+                            disabled={verificationCode.length !== 4}
                         >
                             <Text style={styles.submitButtonText}>
-                                Enviar Solicitud de Cobro
+                                Verificar Código
                             </Text>
                         </Pressable>
                     </>
@@ -413,37 +384,23 @@ export default function BookingDetail() {
 
                 {!isOwner && (
                     <>
-                        {booking.status === 'payment_requested' ? (
-                            <View style={styles.clientInfo}>
-                                <Text style={styles.priceText}>
-                                    Precio solicitado: $
-                                    {booking.requested_price}
-                                </Text>
-                                <Pressable
-                                    style={styles.submitButton}
-                                    onPress={handlePay}
-                                >
-                                    <Text style={styles.submitButtonText}>
-                                        Pagar
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        ) : (
-                            <View style={styles.clientInfo}>
-                                <Ionicons
-                                    name="information-circle"
-                                    size={24}
-                                    color="#6A4C93"
-                                />
-                                <Text style={styles.clientInfoText}>
-                                    {booking.status === 'pending'
-                                        ? 'Esperando confirmación del vendedor'
-                                        : booking.status === 'confirmed'
-                                          ? 'Confirmada - Esperando precio del vendedor'
-                                          : 'Solo el vendedor puede establecer el precio'}
-                                </Text>
-                            </View>
-                        )}
+                        <View style={styles.clientInfo}>
+                            <Ionicons
+                                name="information-circle"
+                                size={24}
+                                color="#6A4C93"
+                            />
+                            <Text style={styles.clientInfoText}>
+                                {booking.status === 'pending'
+                                    ? 'Esperando confirmación del vendedor'
+                                    : booking.status === 'confirmed'
+                                      ? 'Confirmada - Muestra tu código al completar el servicio'
+                                      : booking.status === 'completed'
+                                        ? '¡Servicio completado! No olvides calificar'
+                                        : 'Estado: ' +
+                                          getStatusText(booking.status)}
+                            </Text>
+                        </View>
                     </>
                 )}
 
@@ -464,20 +421,48 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         fontSize: 14,
     },
-    priceText: {
-        color: '#6A4C93',
-        fontSize: 24,
-        fontWeight: 'bold',
+    codeContainer: {
+        backgroundColor: '#F0E6FF',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
         marginBottom: 24,
+        borderWidth: 2,
+        borderColor: '#6A4C93',
+        borderStyle: 'dashed',
+    },
+    codeText: {
+        color: '#6A4C93',
+        fontSize: 48,
+        fontWeight: 'bold',
+        letterSpacing: 8,
+        fontFamily: 'monospace',
+    },
+    codeHint: {
+        color: '#6A4C93',
+        fontSize: 12,
+        marginTop: 12,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    instructionText: {
+        color: '#555',
+        fontSize: 14,
+        marginBottom: 12,
+        fontStyle: 'italic',
     },
     input: {
         backgroundColor: '#F5F5F5',
         borderRadius: 8,
         padding: 12,
-        fontSize: 16,
+        fontSize: 24,
         marginBottom: 16,
         borderWidth: 1,
         borderColor: '#DDD',
+        textAlign: 'center',
+        letterSpacing: 8,
+        fontFamily: 'monospace',
+        fontWeight: 'bold',
     },
     submitButton: {
         backgroundColor: '#6A4C93',
