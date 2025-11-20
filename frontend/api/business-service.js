@@ -1,6 +1,12 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import {
+    getCachedOrFetch,
+    setCache,
+    invalidateCache,
+    TTL,
+} from '../utils/cache'
 
 async function getAuthHeaders() {
     const token = await AsyncStorage.getItem('token')
@@ -12,53 +18,76 @@ async function getAuthHeaders() {
     return {}
 }
 
-// Como el backend NO tiene endpoint /business/:id, siempre buscar en la lista
 export async function getBusiness(id) {
-    const headers = await getAuthHeaders()
+    const cacheKey = id ? `business_${id}` : 'business_list'
 
-    // Obtener lista completa de negocios
-    const response = await axios.get(`${API_URL}/business/`, { headers })
-    const list = response.data
+    try {
+        // Intentar obtener del caché (5 minutos)
+        const data = await getCachedOrFetch(
+            cacheKey,
+            async () => {
+                const headers = await getAuthHeaders()
+                const response = await axios.get(`${API_URL}/business/`, {
+                    headers,
+                })
+                return response.data
+            },
+            TTL.MEDIUM
+        )
 
-    // Si no se pasó id, devolver toda la lista
-    if (!id) {
-        return list
+        // Si no se pasó id, devolver toda la lista
+        if (!id) {
+            return data
+        }
+
+        // Si se pasó id, buscar en la lista
+        if (Array.isArray(data)) {
+            const normalizedId = String(id).trim().toLowerCase()
+
+            const found = data.find(b => {
+                const mongoId = String(b._id ?? '')
+                    .trim()
+                    .toLowerCase()
+                const regularId = String(b.id ?? '')
+                    .trim()
+                    .toLowerCase()
+                const name = String(b.name ?? '')
+                    .trim()
+                    .toLowerCase()
+
+                const matches =
+                    mongoId === normalizedId ||
+                    regularId === normalizedId ||
+                    name === normalizedId
+                return matches
+            })
+
+            return found || null
+        }
+
+        return null
+    } catch (error) {
+        console.error('❌ Error obteniendo negocios:', error.message)
+        throw error
     }
-
-    // Si se pasó id, buscar en la lista
-    if (Array.isArray(list)) {
-        const normalizedId = String(id).trim().toLowerCase()
-
-        const found = list.find(b => {
-            const mongoId = String(b._id ?? '')
-                .trim()
-                .toLowerCase()
-            const regularId = String(b.id ?? '')
-                .trim()
-                .toLowerCase()
-            const name = String(b.name ?? '')
-                .trim()
-                .toLowerCase()
-
-            const matches =
-                mongoId === normalizedId ||
-                regularId === normalizedId ||
-                name === normalizedId
-            return matches
-        })
-
-        return found || null
-    }
-
-    return null
 }
 
 export async function createBusiness(businessData) {
-    const headers = await getAuthHeaders()
-    const response = await axios.post(`${API_URL}/business`, businessData, {
-        headers,
-    })
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.post(`${API_URL}/business`, businessData, {
+            headers,
+        })
+
+        // Invalidar caché al crear negocio
+        await invalidateCache('business_list')
+        console.log('🗑️ Caché de negocios invalidado después de crear')
+
+        return response.data
+    } catch (error) {
+        console.error('❌ Error creando negocio:', error.message)
+        throw error
+    }
 }
 
 export async function requestService(serviceData) {
@@ -152,6 +181,12 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         }
 
         const data = await uploadResponse.json()
+
+        // Invalidar caché al subir imagen
+        await invalidateCache('business_list')
+        await invalidateCache(`business_${businessId}`)
+        console.log('🗑️ Caché de negocios invalidado después de subir imagen')
+
         return data
     } catch (error) {
         console.error('❌ Error al subir imagen:', error)
@@ -160,23 +195,47 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
 }
 
 export async function updateBusiness(businessId, updateData) {
-    const headers = await getAuthHeaders()
-    const response = await axios.patch(
-        `${API_URL}/business/${businessId}`,
-        updateData,
-        { headers }
-    )
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.patch(
+            `${API_URL}/business/${businessId}`,
+            updateData,
+            { headers }
+        )
+
+        // Invalidar caché al actualizar negocio
+        await invalidateCache('business_list')
+        await invalidateCache(`business_${businessId}`)
+        console.log('🗑️ Caché de negocios invalidado después de actualizar')
+
+        return response.data
+    } catch (error) {
+        console.error('❌ Error actualizando negocio:', error.message)
+        throw error
+    }
 }
 
 export async function updateBusinessLocation(businessId, latitude, longitude) {
-    const headers = await getAuthHeaders()
-    const response = await axios.patch(
-        `${API_URL}/business/${businessId}/location`,
-        { latitude, longitude },
-        { headers }
-    )
-    return response.data
+    try {
+        const headers = await getAuthHeaders()
+        const response = await axios.patch(
+            `${API_URL}/business/${businessId}/location`,
+            { latitude, longitude },
+            { headers }
+        )
+
+        // Invalidar caché al actualizar ubicación
+        await invalidateCache('business_list')
+        await invalidateCache(`business_${businessId}`)
+        console.log(
+            '🗑️ Caché de negocios invalidado después de actualizar ubicación'
+        )
+
+        return response.data
+    } catch (error) {
+        console.error('❌ Error actualizando ubicación:', error.message)
+        throw error
+    }
 }
 
 export async function getNearbyBusinesses(latitude, longitude, radiusKm = 10) {
