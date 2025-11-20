@@ -401,7 +401,7 @@ export default function BookingDetail() {
 
                 <Pressable
                     onPress={() =>
-                        router.push('report-feedback', {
+                        router.push('report', {
                             serviceId: booking.service_id,
                         })
                     }

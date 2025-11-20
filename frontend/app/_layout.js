@@ -105,6 +105,10 @@ export default function Layout() {
                                     name="chat-view"
                                     options={{ title: '' }}
                                 />
+                                <Stack.Screen
+                                    name="report"
+                                    options={{ title: 'Reportar' }}
+                                />
                             </Stack>
                         </ChatProvider>
                     </LocationProvider>

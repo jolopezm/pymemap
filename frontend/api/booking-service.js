@@ -1,6 +1,12 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import {
+    getCachedOrFetch,
+    setCache,
+    invalidateCache,
+    TTL,
+} from '../utils/cache'
 
 async function getAuthHeaders() {
     const token = await AsyncStorage.getItem('token')
@@ -63,13 +69,18 @@ export async function createBooking(bookingData) {
             bookingData,
             { headers }
         )
+
+        // Invalidar caché al crear reserva
+        await invalidateCache('my_bookings')
+        await invalidateCache('all_my_business_bookings')
+        console.log('🗑️ Caché de reservas invalidado después de crear')
+
         return response.data
     } catch (error) {
         console.error(
             '❌ Error creating booking:',
             error.response?.data || error.message
         )
-
         throw error
     }
 }
@@ -85,6 +96,12 @@ export async function confirmBooking(bookingId) {
             {},
             { headers }
         )
+
+        // Invalidar caché al confirmar reserva
+        await invalidateCache('my_bookings')
+        await invalidateCache('all_my_business_bookings')
+        console.log('🗑️ Caché de reservas invalidado después de confirmar')
+
         return response.data
     } catch (error) {
         console.error(
@@ -106,6 +123,12 @@ export async function rejectBooking(bookingId) {
             {},
             { headers }
         )
+
+        // Invalidar caché al rechazar reserva
+        await invalidateCache('my_bookings')
+        await invalidateCache('all_my_business_bookings')
+        console.log('🗑️ Caché de reservas invalidado después de rechazar')
+
         return response.data
     } catch (error) {
         console.error(
@@ -120,19 +143,20 @@ export async function rejectBooking(bookingId) {
  * Obtener mis reservas (cliente)
  */
 export async function getMyBookings() {
-    try {
-        const headers = await getAuthHeaders()
-        const response = await axios.get(`${API_URL}/bookings/my-bookings`, {
-            headers,
-        })
-        return response.data
-    } catch (error) {
-        console.error(
-            'Error getting my bookings:',
-            error.response?.data || error.message
-        )
-        return []
-    }
+    return getCachedOrFetch(
+        'my_bookings',
+        async () => {
+            const headers = await getAuthHeaders()
+            const response = await axios.get(
+                `${API_URL}/bookings/my-bookings`,
+                {
+                    headers,
+                }
+            )
+            return response.data
+        },
+        TTL.SHORT // 3 minutos - las reservas cambian frecuentemente
+    )
 }
 
 /**
@@ -159,22 +183,18 @@ export async function getBusinessBookings(businessId) {
  * Obtener todas las reservas de todos los negocios del usuario (dueño)
  */
 export async function getAllMyBusinessBookings() {
-    try {
-        const headers = await getAuthHeaders()
-
-        const response = await axios.get(
-            `${API_URL}/bookings/my-business-bookings`,
-            { headers }
-        )
-
-        return response.data
-    } catch (error) {
-        console.error(
-            '❌ Error getting all business bookings:',
-            error.response?.data || error.message
-        )
-        return []
-    }
+    return getCachedOrFetch(
+        'all_my_business_bookings',
+        async () => {
+            const headers = await getAuthHeaders()
+            const response = await axios.get(
+                `${API_URL}/bookings/my-business-bookings`,
+                { headers }
+            )
+            return response.data
+        },
+        TTL.SHORT // 3 minutos - las reservas cambian frecuentemente
+    )
 }
 
 /**
@@ -210,6 +230,14 @@ export async function verifyBookingCode(bookingId, code) {
             { code: code },
             { headers }
         )
+
+        // Invalidar caché al verificar código
+        await invalidateCache('my_bookings')
+        await invalidateCache('all_my_business_bookings')
+        console.log(
+            '🗑️ Caché de reservas invalidado después de verificar código'
+        )
+
         return response.data
     } catch (error) {
         console.error(
