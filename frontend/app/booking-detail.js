@@ -15,15 +15,15 @@ import { useAuth } from '../context/auth-context'
 import Screen from '../components/screen'
 import LoadingSpinner from '../components/loading-spinner'
 import { globalStyles } from '../styles/global'
-import { 
-    getAllMyBusinessBookings, 
-    getMyBookings, 
-    requestBookingPayment, 
-    payBooking 
+import {
+    getAllMyBusinessBookings,
+    getMyBookings,
+    requestBookingPayment,
+    payBooking,
 } from '../api/booking-service'
 import { getBusiness } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
-import { createChat } from '../api/chat-service'
+import { getChatByParticipants, createChat } from '../api/chat-service'
 
 export default function BookingDetail() {
     const params = useSearchParams()
@@ -46,13 +46,14 @@ export default function BookingDetail() {
         const fetchData = async () => {
             try {
                 setLoading(true)
-                
+
                 // Obtener todas las reservas (tanto como propietario como cliente)
-                const [businessBookings, clientBookings, businessData] = await Promise.all([
-                    getAllMyBusinessBookings().catch(() => []),
-                    getMyBookings().catch(() => []),
-                    getBusiness(),
-                ])
+                const [businessBookings, clientBookings, businessData] =
+                    await Promise.all([
+                        getAllMyBusinessBookings().catch(() => []),
+                        getMyBookings().catch(() => []),
+                        getBusiness(),
+                    ])
 
                 if (!mounted) return
 
@@ -60,7 +61,7 @@ export default function BookingDetail() {
                 let foundBooking = businessBookings.find(
                     b => (b.id || b._id) === bookingId
                 )
-                
+
                 if (!foundBooking) {
                     foundBooking = clientBookings.find(
                         b => (b.id || b._id) === bookingId
@@ -110,32 +111,37 @@ export default function BookingDetail() {
             }
 
             await requestBookingPayment(bookingId, parsed)
-            
+
             // Refrescar datos
-            const [businessBookings, clientBookings, businessData] = await Promise.all([
-                getAllMyBusinessBookings().catch(() => []),
-                getMyBookings().catch(() => []),
-                getBusiness(),
-            ])
-            
-            let updated = businessBookings.find(b => (b.id || b._id) === bookingId)
+            const [businessBookings, clientBookings, businessData] =
+                await Promise.all([
+                    getAllMyBusinessBookings().catch(() => []),
+                    getMyBookings().catch(() => []),
+                    getBusiness(),
+                ])
+
+            let updated = businessBookings.find(
+                b => (b.id || b._id) === bookingId
+            )
             if (!updated) {
-                updated = clientBookings.find(b => (b.id || b._id) === bookingId)
+                updated = clientBookings.find(
+                    b => (b.id || b._id) === bookingId
+                )
             }
-            
+
             setBooking(updated)
             const foundBusiness = businessData.find(
                 b => (b.id || b._id) === updated.business_id
             )
             setBusiness(foundBusiness)
-            
+
             // Enviar notificación al cliente (sin botón de calificar)
             await sendNotificationToClient(
                 'Solicitud de pago',
                 `El vendedor solicita $${parsed} por tu reserva del ${booking.date} a las ${booking.start_time}`,
                 false // No incluir acción de calificar
             )
-            
+
             alert('Solicitud de cobro enviada')
         } catch (error) {
             console.error('Error requesting payment:', error)
@@ -146,19 +152,24 @@ export default function BookingDetail() {
     const handlePay = async () => {
         try {
             await payBooking(bookingId)
-            
+
             // Refrescar datos
-            const [businessBookings, clientBookings, businessData] = await Promise.all([
-                getAllMyBusinessBookings().catch(() => []),
-                getMyBookings().catch(() => []),
-                getBusiness(),
-            ])
-            
-            let updated = businessBookings.find(b => (b.id || b._id) === bookingId)
+            const [businessBookings, clientBookings, businessData] =
+                await Promise.all([
+                    getAllMyBusinessBookings().catch(() => []),
+                    getMyBookings().catch(() => []),
+                    getBusiness(),
+                ])
+
+            let updated = businessBookings.find(
+                b => (b.id || b._id) === bookingId
+            )
             if (!updated) {
-                updated = clientBookings.find(b => (b.id || b._id) === bookingId)
+                updated = clientBookings.find(
+                    b => (b.id || b._id) === bookingId
+                )
             }
-            
+
             setBooking(updated)
             const foundBusiness = businessData.find(
                 b => (b.id || b._id) === updated.business_id
@@ -170,7 +181,7 @@ export default function BookingDetail() {
                 'Reserva pagada',
                 `La reserva del ${updated.date} a las ${updated.start_time} ha sido pagada por el cliente.`
             )
-            
+
             alert('Pago realizado con éxito')
         } catch (error) {
             console.error('Error paying booking:', error)
@@ -198,7 +209,11 @@ export default function BookingDetail() {
         }
     }
 
-    const sendNotificationToClient = async (title, message, includeRateAction = false) => {
+    const sendNotificationToClient = async (
+        title,
+        message,
+        includeRateAction = false
+    ) => {
         if (!booking) return
         const notificationData = {
             targetUserId: booking.client_id,
@@ -212,7 +227,7 @@ export default function BookingDetail() {
                 title: title,
             },
         }
-        
+
         // Solo agregar acción de calificar si se solicita explícitamente
         if (includeRateAction) {
             notificationData.reference.action = 'rate_business'
@@ -226,28 +241,60 @@ export default function BookingDetail() {
     }
 
     const handleChatPress = async () => {
-        const otherUserId = isOwner ? booking?.client_id : business?.owner_id
-        const chatData = {
-            participants: [user.id || user._id, otherUserId],
-            messages: [],
-        }
         try {
-            await createChat(chatData)
-            router.push('/chat')
+            const currentUserId = user?.id || user?._id
+            const otherUserId = isOwner
+                ? booking?.client_id
+                : business?.owner_id
+
+            if (!currentUserId || !otherUserId) {
+                alert(
+                    'No se puede abrir el chat. Información de usuario faltante.'
+                )
+                return
+            }
+
+            console.log('🔍 Buscando chat existente entre:', {
+                currentUserId,
+                otherUserId,
+                isOwner,
+            })
+
+            // Buscar chat existente
+            let chat = await getChatByParticipants(currentUserId, otherUserId)
+
+            // Si no existe, crear uno nuevo
+            if (!chat) {
+                console.log('📝 Creando nuevo chat...')
+                const chatData = {
+                    participants: [currentUserId, otherUserId],
+                }
+                chat = await createChat(chatData)
+                console.log('✅ Nuevo chat creado:', chat._id || chat.id)
+            } else {
+                console.log(
+                    '✅ Chat existente encontrado:',
+                    chat._id || chat.id
+                )
+            }
+
+            // Navegar al chat con el ID correcto
+            const chatId = chat._id || chat.id
+            console.log('🔗 Navegando al chat:', chatId)
+            router.push(`/chat-view?chatId=${chatId}`)
         } catch (error) {
-            console.error('Error creating chat:', error)
-            alert('Error al crear el chat')
-            return
+            console.error('❌ Error al abrir chat:', error)
+            alert('Error al abrir el chat. Intenta de nuevo.')
         }
     }
 
-    const getStatusText = (status) => {
+    const getStatusText = status => {
         const statusMap = {
             pending: 'Pendiente',
             confirmed: 'Confirmada',
             payment_requested: 'Pago solicitado',
             completed: 'Completada',
-            cancelled: 'Cancelada'
+            cancelled: 'Cancelada',
         }
         return statusMap[status] || status
     }
@@ -322,7 +369,9 @@ export default function BookingDetail() {
                 {booking.service_description && (
                     <>
                         <Text style={globalStyles.subtitle}>Descripción</Text>
-                        <Text style={styles.infoText}>{booking.service_description}</Text>
+                        <Text style={styles.infoText}>
+                            {booking.service_description}
+                        </Text>
                     </>
                 )}
 
@@ -387,12 +436,11 @@ export default function BookingDetail() {
                                     color="#6A4C93"
                                 />
                                 <Text style={styles.clientInfoText}>
-                                    {booking.status === 'pending' 
+                                    {booking.status === 'pending'
                                         ? 'Esperando confirmación del vendedor'
                                         : booking.status === 'confirmed'
-                                        ? 'Confirmada - Esperando precio del vendedor'
-                                        : 'Solo el vendedor puede establecer el precio'
-                                    }
+                                          ? 'Confirmada - Esperando precio del vendedor'
+                                          : 'Solo el vendedor puede establecer el precio'}
                                 </Text>
                             </View>
                         )}

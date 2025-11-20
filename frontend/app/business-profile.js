@@ -666,7 +666,7 @@ export default function BusinessProfile() {
                             ]}
                             onPress={() =>
                                 router.push({
-                                    pathname: '/manage-availavility',
+                                    pathname: '/edit-business',
                                     params: {
                                         businessId:
                                             business?._id || business?.id,
@@ -675,13 +675,13 @@ export default function BusinessProfile() {
                             }
                         >
                             <Ionicons
-                                name="settings-outline"
+                                name="create-outline"
                                 size={20}
                                 color="#fff"
                                 style={{ marginRight: 8 }}
                             />
                             <Text style={globalStyles.buttonText}>
-                                Configurar Disponibilidad
+                                Editar Negocio
                             </Text>
                         </Pressable>
                     </>

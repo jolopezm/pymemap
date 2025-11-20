@@ -24,7 +24,7 @@ export default function EditBusiness() {
     const router = useRouter()
 
     // Obtener el ID del negocio desde los parámetros de la URL
-    const businessId = params.get('id')
+    const businessId = params.get('businessId') || params.get('id')
 
     const [business, setBusiness] = React.useState(null)
     const [image, setImage] = React.useState(null)
