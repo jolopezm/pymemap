@@ -1,307 +1,715 @@
 <!doctype html>
 <html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Historial de Pagos - PymeMap</title>
-    <style>
-        :root{
-            --purple:#6C3BBF;
-            --bg:#ffffff;
-            --muted:#6B6B6B;
-            --line:#D9D9D9;
-            --table-bg:#fff;
-            --success:#2ECC71;
-            --warning:#F1C40F;
-            --danger:#E74C3C;
-            --shadow: 0 4px 14px rgba(108,59,191,0.08);
-            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-        }
-        body{ margin:0; background:#F7F7FB; color:#222; }
-        .container{ max-width:1200px; margin:28px auto; padding:20px; }
-        header.top{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
-        .title-block h1{ margin:0; font-size:20px; color:var(--purple); }
-        .title-block p{ margin:4px 0 0; color:var(--muted); font-size:13px; }
-        .period-total{ background:var(--purple); color:#fff; padding:10px 14px; border-radius:10px; box-shadow:var(--shadow); font-weight:600; display:flex; gap:10px; align-items:center; }
-        /* Filters */
-        .filters{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-        .filter-group{ background:#fff; padding:10px; border-radius:8px; border:1px solid var(--line); display:flex; gap:8px; align-items:center; }
-        .filter-group label{ font-size:12px; color:var(--muted); min-width:60px; }
-        input[type="date"], input[type="number"], select, input[type="search"], input[type="text"]{
-            border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; min-width:120px; background:#fff;
-        }
-        .actions{ margin-left:auto; display:flex; gap:8px; align-items:center; }
-        .btn{ background:var(--purple); color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-        .btn.ghost{ background:transparent; color:var(--purple); border:1px solid var(--purple); }
-        .btn.small{ padding:6px 10px; font-size:13px; }
-        /* Table */
-        .table-wrap{ background:#fff; border-radius:10px; padding:12px; border:1px solid var(--line); }
-        table{ width:100%; border-collapse:collapse; font-size:13px; }
-        thead th{ text-align:left; padding:12px 8px; color:var(--muted); font-size:12px; border-bottom:1px solid var(--line); }
-        tbody td{ padding:12px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
-        tr:hover td{ background:#FBFBFD; }
-        .amount{ font-weight:700; }
-        .link{ color:var(--purple); text-decoration:none; font-weight:600; }
-        /* Badges */
-        .badge{ display:inline-flex; align-items:center; gap:8px; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; }
-        .badge.success{ background:var(--success); color:#033; }
-        .badge.warning{ background:var(--warning); color:#4a3a00; }
-        .badge.danger{ background:var(--danger); color:#fff; }
-        .badge.pending{ background:#9B9B9B; color:#fff; }
-        .tooltip{ position:relative; display:inline-block; }
-        .tooltip .tt{ visibility:hidden; opacity:0; transition:0.12s; position:absolute; left:50%; transform:translateX(-50%); bottom:calc(100% + 8px); background:#222; color:#fff; padding:6px 8px; border-radius:6px; font-size:12px; white-space:nowrap; }
-        .tooltip:hover .tt{ visibility:visible; opacity:1; }
-        /* Actions */
-        .actions-col button{ background:transparent; border:1px solid var(--purple); color:var(--purple); padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
-        /* Modal / side panel */
-        .overlay{ position:fixed; inset:0; background:rgba(10,10,10,0.35); display:none; align-items:flex-end; justify-content:flex-end; z-index:60; }
-        .panel{ background:#fff; width:420px; max-width:100%; height:100%; box-shadow: -12px 0 30px rgba(0,0,0,0.08); padding:18px; overflow:auto; }
-        .panel header{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
-        .timeline{ margin-top:10px; }
-        .step{ display:flex; gap:10px; align-items:center; margin-bottom:12px; }
-        .dot{ width:14px; height:14px; border-radius:50%; background:#E6E6E6; display:inline-block; }
-        .dot.completed{ background:var(--purple); box-shadow:0 0 0 4px rgba(108,59,191,0.08);}
-        .step .when{ color:var(--muted); font-size:12px; }
-        .download-btn{ margin-top:12px; background:var(--purple); color:#fff; padding:10px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; width:100%; }
-        .close-btn{ background:transparent; border:none; font-size:18px; cursor:pointer; }
-        /* Pagination */
-        .pager{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:12px; }
-        .pager .controls{ display:flex; gap:8px; align-items:center; }
-        .page-btn{ border:1px solid var(--line); background:#fff; padding:6px 8px; border-radius:6px; cursor:pointer; }
-        .perpage{ border:1px solid var(--line); background:#fff; padding:6px 8px; border-radius:6px; }
-        /* Responsive */
-        @media(max-width:900px){
-            .filters{ flex-direction:column; }
-            header.top{ flex-direction:column; align-items:flex-start; gap:12px; }
-            .actions{ margin-left:0; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="top">
-            <div class="title-block">
-                <h1>Historial de Pagos</h1>
-                <p>Revisa, filtra y exporta tus transacciones.</p>
-            </div>
-            <div class="period-total" aria-hidden="true">
-                <div style="font-size:12px; opacity:0.9">Total periodo</div>
-                <div style="font-size:16px">CLP $12.345.678</div>
-            </div>
-        </header>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Historial de Pagos - PymeMap</title>
 
-        <section class="filters" aria-label="Filtros de búsqueda">
-            <div class="filter-group">
-                <label for="from">Desde</label>
-                <input id="from" type="date">
-            </div>
-            <div class="filter-group">
-                <label for="to">Hasta</label>
-                <input id="to" type="date">
-            </div>
-            <div class="filter-group">
-                <label for="status">Estado</label>
-                <select id="status">
-                    <option value="">Todos</option>
-                    <option>Autorizado</option>
-                    <option>Failed</option>
-                    <option>Refunded</option>
-                    <option>Pending</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="method">Método</label>
-                <select id="method">
-                    <option value="">Todos</option>
-                    <option>Transbank</option>
-                    <option>Otro</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Monto</label>
-                <input id="min" type="number" placeholder="min" style="width:80px;">
-                <input id="max" type="number" placeholder="max" style="width:80px;">
-            </div>
-            <div class="filter-group">
-                <label for="orderSort">Orden</label>
-                <select id="orderSort">
-                    <option value="desc">ID desc</option>
-                    <option value="asc">ID asc</option>
-                </select>
-            </div>
+        <!-- Auth Guard - Protege esta página -->
+        <script type="module" src="js/auth-guard.js"></script>
 
-            <div style="flex:1 1 220px; display:flex; gap:8px; align-items:center;">
-                <input id="search" type="search" placeholder="Buscar ID pago / orden / cliente" style="flex:1;">
-                <div class="actions">
-                    <button id="exportTop" class="btn small">Exportar</button>
+        <style>
+            :root {
+                --purple: #6c3bbf;
+                --bg: #ffffff;
+                --muted: #6b6b6b;
+                --line: #d9d9d9;
+                --table-bg: #fff;
+                --success: #2ecc71;
+                --warning: #f1c40f;
+                --danger: #e74c3c;
+                --shadow: 0 4px 14px rgba(108, 59, 191, 0.08);
+                font-family:
+                    Inter,
+                    system-ui,
+                    -apple-system,
+                    'Segoe UI',
+                    Roboto,
+                    'Helvetica Neue',
+                    Arial;
+            }
+            body {
+                margin: 0;
+                background: #f7f7fb;
+                color: #222;
+            }
+            .container {
+                max-width: 1200px;
+                margin: 28px auto;
+                padding: 20px;
+            }
+            header.top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 18px;
+            }
+            .title-block h1 {
+                margin: 0;
+                font-size: 20px;
+                color: var(--purple);
+            }
+            .title-block p {
+                margin: 4px 0 0;
+                color: var(--muted);
+                font-size: 13px;
+            }
+            .period-total {
+                background: var(--purple);
+                color: #fff;
+                padding: 10px 14px;
+                border-radius: 10px;
+                box-shadow: var(--shadow);
+                font-weight: 600;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+            /* Filters */
+            .filters {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 14px;
+            }
+            .filter-group {
+                background: #fff;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid var(--line);
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            .filter-group label {
+                font-size: 12px;
+                color: var(--muted);
+                min-width: 60px;
+            }
+            input[type='date'],
+            input[type='number'],
+            select,
+            input[type='search'],
+            input[type='text'] {
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 13px;
+                min-width: 120px;
+                background: #fff;
+            }
+            .actions {
+                margin-left: auto;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            .btn {
+                background: var(--purple);
+                color: #fff;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+            }
+            .btn.ghost {
+                background: transparent;
+                color: var(--purple);
+                border: 1px solid var(--purple);
+            }
+            .btn.small {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+            /* Table */
+            .table-wrap {
+                background: #fff;
+                border-radius: 10px;
+                padding: 12px;
+                border: 1px solid var(--line);
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+            thead th {
+                text-align: left;
+                padding: 12px 8px;
+                color: var(--muted);
+                font-size: 12px;
+                border-bottom: 1px solid var(--line);
+            }
+            tbody td {
+                padding: 12px 8px;
+                border-bottom: 1px solid var(--line);
+                vertical-align: middle;
+            }
+            tr:hover td {
+                background: #fbfbfd;
+            }
+            .amount {
+                font-weight: 700;
+            }
+            .link {
+                color: var(--purple);
+                text-decoration: none;
+                font-weight: 600;
+            }
+            /* Badges */
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                color: #fff;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 700;
+            }
+            .badge.success {
+                background: var(--success);
+                color: #033;
+            }
+            .badge.warning {
+                background: var(--warning);
+                color: #4a3a00;
+            }
+            .badge.danger {
+                background: var(--danger);
+                color: #fff;
+            }
+            .badge.pending {
+                background: #9b9b9b;
+                color: #fff;
+            }
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
+            .tooltip .tt {
+                visibility: hidden;
+                opacity: 0;
+                transition: 0.12s;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: calc(100% + 8px);
+                background: #222;
+                color: #fff;
+                padding: 6px 8px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+            .tooltip:hover .tt {
+                visibility: visible;
+                opacity: 1;
+            }
+            /* Actions */
+            .actions-col button {
+                background: transparent;
+                border: 1px solid var(--purple);
+                color: var(--purple);
+                padding: 6px 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+            }
+            /* Modal / side panel */
+            .overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(10, 10, 10, 0.35);
+                display: none;
+                align-items: flex-end;
+                justify-content: flex-end;
+                z-index: 60;
+            }
+            .panel {
+                background: #fff;
+                width: 420px;
+                max-width: 100%;
+                height: 100%;
+                box-shadow: -12px 0 30px rgba(0, 0, 0, 0.08);
+                padding: 18px;
+                overflow: auto;
+            }
+            .panel header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+            .timeline {
+                margin-top: 10px;
+            }
+            .step {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+            .dot {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #e6e6e6;
+                display: inline-block;
+            }
+            .dot.completed {
+                background: var(--purple);
+                box-shadow: 0 0 0 4px rgba(108, 59, 191, 0.08);
+            }
+            .step .when {
+                color: var(--muted);
+                font-size: 12px;
+            }
+            .download-btn {
+                margin-top: 12px;
+                background: var(--purple);
+                color: #fff;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-weight: 700;
+                width: 100%;
+            }
+            .close-btn {
+                background: transparent;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+            }
+            /* Pagination */
+            .pager {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 12px;
+                gap: 12px;
+            }
+            .pager .controls {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            .page-btn {
+                border: 1px solid var(--line);
+                background: #fff;
+                padding: 6px 8px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            .perpage {
+                border: 1px solid var(--line);
+                background: #fff;
+                padding: 6px 8px;
+                border-radius: 6px;
+            }
+            /* Responsive */
+            @media (max-width: 900px) {
+                .filters {
+                    flex-direction: column;
+                }
+                header.top {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 12px;
+                }
+                .actions {
+                    margin-left: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="top">
+                <div class="title-block">
+                    <h1>Historial de Pagos</h1>
+                    <p>Revisa, filtra y exporta tus transacciones.</p>
                 </div>
-            </div>
-        </section>
-
-        <section class="table-wrap" aria-labelledby="lista">
-            <table role="table" aria-label="Lista de pagos">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>ID Pago</th>
-                        <th>ID Orden</th>
-                        <th>Cliente</th>
-                        <th>Monto (CLP)</th>
-                        <th>Estado</th>
-                        <th>Comprobante</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody">
-                    <!-- Filas renderizadas por JS -->
-                </tbody>
-            </table>
-
-            <div class="pager" style="margin-top:14px;">
-                <div class="controls">
-                    <button id="prev" class="page-btn">«</button>
-                    <div id="pageInfo" style="padding:6px 8px; color:var(--muted);">Página 1 de 1</div>
-                    <button id="next" class="page-btn">»</button>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <select id="perPage" class="perpage">
-                        <option>10</option>
-                        <option>25</option>
-                        <option>50</option>
-                    </select>
-                    <button id="exportBottom" class="btn ghost">Exportar CSV</button>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Panel lateral / modal -->
-    <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
-        <aside class="panel" role="document" aria-labelledby="panelTitle">
-            <header>
-                <div>
-                    <h3 id="panelTitle" style="margin:0 0 6px 0;">Detalle de pago</h3>
-                    <div id="panelSubtitle" style="color:var(--muted); font-size:13px;">Resumen</div>
-                </div>
-                <div>
-                    <button id="closePanel" class="close-btn" aria-label="Cerrar">✕</button>
+                <div class="period-total" aria-hidden="true">
+                    <div style="font-size: 12px; opacity: 0.9">
+                        Total periodo
+                    </div>
+                    <div style="font-size: 16px">CLP $12.345.678</div>
                 </div>
             </header>
 
-            <div id="panelContent">
-                <!-- Contenido dinámico -->
-                <div style="display:grid; gap:8px; margin-bottom:12px;">
-                    <div><strong>Monto:</strong> <span id="p_monto"></span></div>
-                    <div><strong>Estado:</strong> <span id="p_estado" class="badge"></span></div>
-                    <div><strong>Order ID:</strong> <span id="p_order"></span></div>
-                    <div><strong>Provider Ref:</strong> <span id="p_provider"></span></div>
+            <section class="filters" aria-label="Filtros de búsqueda">
+                <div class="filter-group">
+                    <label for="from">Desde</label>
+                    <input id="from" type="date" />
+                </div>
+                <div class="filter-group">
+                    <label for="to">Hasta</label>
+                    <input id="to" type="date" />
+                </div>
+                <div class="filter-group">
+                    <label for="status">Estado</label>
+                    <select id="status">
+                        <option value="">Todos</option>
+                        <option>Autorizado</option>
+                        <option>Failed</option>
+                        <option>Refunded</option>
+                        <option>Pending</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="method">Método</label>
+                    <select id="method">
+                        <option value="">Todos</option>
+                        <option>Transbank</option>
+                        <option>Otro</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Monto</label>
+                    <input
+                        id="min"
+                        type="number"
+                        placeholder="min"
+                        style="width: 80px"
+                    />
+                    <input
+                        id="max"
+                        type="number"
+                        placeholder="max"
+                        style="width: 80px"
+                    />
+                </div>
+                <div class="filter-group">
+                    <label for="orderSort">Orden</label>
+                    <select id="orderSort">
+                        <option value="desc">ID desc</option>
+                        <option value="asc">ID asc</option>
+                    </select>
                 </div>
 
-                <div>
-                    <h4 style="margin:8px 0;">Línea de tiempo</h4>
-                    <div id="timeline" class="timeline"></div>
+                <div
+                    style="
+                        flex: 1 1 220px;
+                        display: flex;
+                        gap: 8px;
+                        align-items: center;
+                    "
+                >
+                    <input
+                        id="search"
+                        type="search"
+                        placeholder="Buscar ID pago / orden / cliente"
+                        style="flex: 1"
+                    />
+                    <div class="actions">
+                        <button id="exportTop" class="btn small">
+                            Exportar
+                        </button>
+                    </div>
                 </div>
+            </section>
 
-                <button id="downloadReceipt" class="download-btn">Descargar comprobante</button>
-            </div>
-        </aside>
-    </div>
+            <section class="table-wrap" aria-labelledby="lista">
+                <table role="table" aria-label="Lista de pagos">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>ID Pago</th>
+                            <th>ID Orden</th>
+                            <th>Cliente</th>
+                            <th>Monto (CLP)</th>
+                            <th>Estado</th>
+                            <th>Comprobante</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <!-- Filas renderizadas por JS -->
+                    </tbody>
+                </table>
 
-    <script>
-        // Datos de ejemplo
-        const data = [
-            { date:'2025-10-28T08:24:00', id:'P-1001', order:'ORD-9001', client:'Comercial A', amount:12500, status:'Autorizado', method:'Transbank', receipt:'https://example.com/recibo/1001.pdf', providerRef:'TRX-5001' },
-            { date:'2025-10-27T12:10:00', id:'P-1002', order:'ORD-9002', client:'Cliente B', amount:35000, status:'Failed', method:'Transbank', receipt:'', providerRef:'' },
-            { date:'2025-10-25T09:40:00', id:'P-1003', order:'ORD-9003', client:'Cliente C', amount:5000, status:'Refunded', method:'Otro', receipt:'https://example.com/recibo/1003.pdf', providerRef:'TRX-5012' },
-            { date:'2025-10-26T14:05:00', id:'P-1004', order:'ORD-9004', client:'Comercial D', amount:4500, status:'Pending', method:'Transbank', receipt:'', providerRef:'TRX-5020' },
-            // ... añade más filas según necesites
-        ];
+                <div class="pager" style="margin-top: 14px">
+                    <div class="controls">
+                        <button id="prev" class="page-btn">«</button>
+                        <div
+                            id="pageInfo"
+                            style="padding: 6px 8px; color: var(--muted)"
+                        >
+                            Página 1 de 1
+                        </div>
+                        <button id="next" class="page-btn">»</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center">
+                        <select id="perPage" class="perpage">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                        <button id="exportBottom" class="btn ghost">
+                            Exportar CSV
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-        // Estado de UI
-        let state = {
-            filtered: [...data],
-            page: 1,
-            perPage: 10,
-        };
+        <!-- Panel lateral / modal -->
+        <div
+            id="overlay"
+            class="overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-hidden="true"
+        >
+            <aside class="panel" role="document" aria-labelledby="panelTitle">
+                <header>
+                    <div>
+                        <h3 id="panelTitle" style="margin: 0 0 6px 0">
+                            Detalle de pago
+                        </h3>
+                        <div
+                            id="panelSubtitle"
+                            style="color: var(--muted); font-size: 13px"
+                        >
+                            Resumen
+                        </div>
+                    </div>
+                    <div>
+                        <button
+                            id="closePanel"
+                            class="close-btn"
+                            aria-label="Cerrar"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </header>
 
-        // Elementos
-        const tbody = document.getElementById('tbody');
-        const statusEl = document.getElementById('status');
-        const methodEl = document.getElementById('method');
-        const fromEl = document.getElementById('from');
-        const toEl = document.getElementById('to');
-        const minEl = document.getElementById('min');
-        const maxEl = document.getElementById('max');
-        const orderSortEl = document.getElementById('orderSort');
-        const searchEl = document.getElementById('search');
-        const perPageEl = document.getElementById('perPage');
-        const prevBtn = document.getElementById('prev');
-        const nextBtn = document.getElementById('next');
-        const pageInfo = document.getElementById('pageInfo');
-        const overlay = document.getElementById('overlay');
-        const closePanel = document.getElementById('closePanel');
-        const panel = { monto:document.getElementById('p_monto'), estado:document.getElementById('p_estado'), order:document.getElementById('p_order'), provider:document.getElementById('p_provider'), timeline:document.getElementById('timeline'), downloadBtn:document.getElementById('downloadReceipt') };
+                <div id="panelContent">
+                    <!-- Contenido dinámico -->
+                    <div style="display: grid; gap: 8px; margin-bottom: 12px">
+                        <div>
+                            <strong>Monto:</strong> <span id="p_monto"></span>
+                        </div>
+                        <div>
+                            <strong>Estado:</strong>
+                            <span id="p_estado" class="badge"></span>
+                        </div>
+                        <div>
+                            <strong>Order ID:</strong>
+                            <span id="p_order"></span>
+                        </div>
+                        <div>
+                            <strong>Provider Ref:</strong>
+                            <span id="p_provider"></span>
+                        </div>
+                    </div>
 
-        // Utils
-        function formatDateISO(iso){ const d=new Date(iso); return d.toLocaleString(); }
-        function formatCLP(n){ return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(n); }
-        function badgeFor(status){
-            const s = status.toLowerCase();
-            if(s.includes('autoriz')) return {cls:'badge success', text:'Autorizado', tip:'El pago fue autorizado por el proveedor'};
-            if(s.includes('failed')) return {cls:'badge danger', text:'Failed', tip:'Falló en la pasarela'};
-            if(s.includes('refund')) return {cls:'badge warning', text:'Reembolsado', tip:'Se ha procesado un reembolso'};
-            if(s.includes('pending')) return {cls:'badge pending', text:'Pending', tip:'En proceso de confirmación'};
-            return {cls:'badge pending', text:status, tip:''};
-        }
+                    <div>
+                        <h4 style="margin: 8px 0">Línea de tiempo</h4>
+                        <div id="timeline" class="timeline"></div>
+                    </div>
 
-        // Render rows según filtros + paginación
-        function applyFilters(){
-            const from = fromEl.value ? new Date(fromEl.value) : null;
-            const to = toEl.value ? new Date(toEl.value + 'T23:59:59') : null;
-            const status = statusEl.value;
-            const method = methodEl.value;
-            const min = minEl.value ? parseFloat(minEl.value) : null;
-            const max = maxEl.value ? parseFloat(maxEl.value) : null;
-            const q = searchEl.value.trim().toLowerCase();
-            const orderSort = orderSortEl.value;
+                    <button id="downloadReceipt" class="download-btn">
+                        Descargar comprobante
+                    </button>
+                </div>
+            </aside>
+        </div>
 
-            let list = data.filter(item=>{
-                if(from && new Date(item.date) < from) return false;
-                if(to && new Date(item.date) > to) return false;
-                if(status && item.status !== status) return false;
-                if(method && item.method !== method) return false;
-                if(min !== null && item.amount < min) return false;
-                if(max !== null && item.amount > max) return false;
-                if(q){
-                    const hay = (item.id + ' ' + item.order + ' ' + item.client).toLowerCase();
-                    if(!hay.includes(q)) return false;
-                }
-                return true;
-            });
+        <script>
+            // Datos de ejemplo
+            const data = [
+                {
+                    date: '2025-10-28T08:24:00',
+                    id: 'P-1001',
+                    order: 'ORD-9001',
+                    client: 'Comercial A',
+                    amount: 12500,
+                    status: 'Autorizado',
+                    method: 'Transbank',
+                    receipt: 'https://example.com/recibo/1001.pdf',
+                    providerRef: 'TRX-5001',
+                },
+                {
+                    date: '2025-10-27T12:10:00',
+                    id: 'P-1002',
+                    order: 'ORD-9002',
+                    client: 'Cliente B',
+                    amount: 35000,
+                    status: 'Failed',
+                    method: 'Transbank',
+                    receipt: '',
+                    providerRef: '',
+                },
+                {
+                    date: '2025-10-25T09:40:00',
+                    id: 'P-1003',
+                    order: 'ORD-9003',
+                    client: 'Cliente C',
+                    amount: 5000,
+                    status: 'Refunded',
+                    method: 'Otro',
+                    receipt: 'https://example.com/recibo/1003.pdf',
+                    providerRef: 'TRX-5012',
+                },
+                {
+                    date: '2025-10-26T14:05:00',
+                    id: 'P-1004',
+                    order: 'ORD-9004',
+                    client: 'Comercial D',
+                    amount: 4500,
+                    status: 'Pending',
+                    method: 'Transbank',
+                    receipt: '',
+                    providerRef: 'TRX-5020',
+                },
+                // ... añade más filas según necesites
+            ]
 
-            list.sort((a,b)=>{
-                if(orderSort === 'asc') return a.id.localeCompare(b.id, undefined, {numeric:true});
-                return b.id.localeCompare(a.id, undefined, {numeric:true});
-            });
+            // Estado de UI
+            let state = {
+                filtered: [...data],
+                page: 1,
+                perPage: 10,
+            }
 
-            state.filtered = list;
-            state.page = 1;
-            renderTable();
-        }
+            // Elementos
+            const tbody = document.getElementById('tbody')
+            const statusEl = document.getElementById('status')
+            const methodEl = document.getElementById('method')
+            const fromEl = document.getElementById('from')
+            const toEl = document.getElementById('to')
+            const minEl = document.getElementById('min')
+            const maxEl = document.getElementById('max')
+            const orderSortEl = document.getElementById('orderSort')
+            const searchEl = document.getElementById('search')
+            const perPageEl = document.getElementById('perPage')
+            const prevBtn = document.getElementById('prev')
+            const nextBtn = document.getElementById('next')
+            const pageInfo = document.getElementById('pageInfo')
+            const overlay = document.getElementById('overlay')
+            const closePanel = document.getElementById('closePanel')
+            const panel = {
+                monto: document.getElementById('p_monto'),
+                estado: document.getElementById('p_estado'),
+                order: document.getElementById('p_order'),
+                provider: document.getElementById('p_provider'),
+                timeline: document.getElementById('timeline'),
+                downloadBtn: document.getElementById('downloadReceipt'),
+            }
 
-        function renderTable(){
-            const total = state.filtered.length;
-            const per = parseInt(perPageEl.value,10) || 10;
-            state.perPage = per;
-            const pages = Math.max(1, Math.ceil(total / per));
-            if(state.page > pages) state.page = pages;
-            const start = (state.page -1) * per;
-            const slice = state.filtered.slice(start, start+per);
+            // Utils
+            function formatDateISO(iso) {
+                const d = new Date(iso)
+                return d.toLocaleString()
+            }
+            function formatCLP(n) {
+                return new Intl.NumberFormat('es-CL', {
+                    style: 'currency',
+                    currency: 'CLP',
+                    maximumFractionDigits: 0,
+                }).format(n)
+            }
+            function badgeFor(status) {
+                const s = status.toLowerCase()
+                if (s.includes('autoriz'))
+                    return {
+                        cls: 'badge success',
+                        text: 'Autorizado',
+                        tip: 'El pago fue autorizado por el proveedor',
+                    }
+                if (s.includes('failed'))
+                    return {
+                        cls: 'badge danger',
+                        text: 'Failed',
+                        tip: 'Falló en la pasarela',
+                    }
+                if (s.includes('refund'))
+                    return {
+                        cls: 'badge warning',
+                        text: 'Reembolsado',
+                        tip: 'Se ha procesado un reembolso',
+                    }
+                if (s.includes('pending'))
+                    return {
+                        cls: 'badge pending',
+                        text: 'Pending',
+                        tip: 'En proceso de confirmación',
+                    }
+                return { cls: 'badge pending', text: status, tip: '' }
+            }
 
-            tbody.innerHTML = slice.map(item=>{
-                const b = badgeFor(item.status);
-                const receiptLink = item.receipt ? `<a class="link" href="${item.receipt}" target="_blank" rel="noopener">Ver</a>` : '<span style="color:var(--muted)">—</span>';
-                return `<tr data-id="${item.id}">
+            // Render rows según filtros + paginación
+            function applyFilters() {
+                const from = fromEl.value ? new Date(fromEl.value) : null
+                const to = toEl.value
+                    ? new Date(toEl.value + 'T23:59:59')
+                    : null
+                const status = statusEl.value
+                const method = methodEl.value
+                const min = minEl.value ? parseFloat(minEl.value) : null
+                const max = maxEl.value ? parseFloat(maxEl.value) : null
+                const q = searchEl.value.trim().toLowerCase()
+                const orderSort = orderSortEl.value
+
+                let list = data.filter(item => {
+                    if (from && new Date(item.date) < from) return false
+                    if (to && new Date(item.date) > to) return false
+                    if (status && item.status !== status) return false
+                    if (method && item.method !== method) return false
+                    if (min !== null && item.amount < min) return false
+                    if (max !== null && item.amount > max) return false
+                    if (q) {
+                        const hay = (
+                            item.id +
+                            ' ' +
+                            item.order +
+                            ' ' +
+                            item.client
+                        ).toLowerCase()
+                        if (!hay.includes(q)) return false
+                    }
+                    return true
+                })
+
+                list.sort((a, b) => {
+                    if (orderSort === 'asc')
+                        return a.id.localeCompare(b.id, undefined, {
+                            numeric: true,
+                        })
+                    return b.id.localeCompare(a.id, undefined, {
+                        numeric: true,
+                    })
+                })
+
+                state.filtered = list
+                state.page = 1
+                renderTable()
+            }
+
+            function renderTable() {
+                const total = state.filtered.length
+                const per = parseInt(perPageEl.value, 10) || 10
+                state.perPage = per
+                const pages = Math.max(1, Math.ceil(total / per))
+                if (state.page > pages) state.page = pages
+                const start = (state.page - 1) * per
+                const slice = state.filtered.slice(start, start + per)
+
+                tbody.innerHTML =
+                    slice
+                        .map(item => {
+                            const b = badgeFor(item.status)
+                            const receiptLink = item.receipt
+                                ? `<a class="link" href="${item.receipt}" target="_blank" rel="noopener">Ver</a>`
+                                : '<span style="color:var(--muted)">—</span>'
+                            return `<tr data-id="${item.id}">
                     <td>${formatDateISO(item.date)}</td>
                     <td>${item.id}</td>
                     <td>${item.order}</td>
@@ -310,104 +718,173 @@
                     <td><span class="${b.cls}" title="${b.tip}">${b.text}</span></td>
                     <td>${receiptLink}</td>
                     <td class="actions-col"><button class="btn small" data-action="detail" data-id="${item.id}">Ver detalle</button></td>
-                </tr>`;
-            }).join('') || `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">No hay resultados</td></tr>`;
+                </tr>`
+                        })
+                        .join('') ||
+                    `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">No hay resultados</td></tr>`
 
-            pageInfo.textContent = `Página ${state.page} de ${pages} • ${total} resultados`;
-        }
-
-        // Event listeners
-        [statusEl, methodEl, fromEl, toEl, minEl, maxEl, orderSortEl].forEach(el=>el.addEventListener('change', applyFilters));
-        searchEl.addEventListener('input', debounce(applyFilters, 250));
-        perPageEl.addEventListener('change', ()=>{ state.page=1; renderTable(); });
-        prevBtn.addEventListener('click', ()=>{ if(state.page>1){ state.page--; renderTable(); } });
-        nextBtn.addEventListener('click', ()=>{ const pages=Math.max(1,Math.ceil(state.filtered.length/state.perPage)); if(state.page<pages){ state.page++; renderTable(); } });
-
-        // Delegación para botones de detalle
-        tbody.addEventListener('click', (e)=>{
-            const btn = e.target.closest('button[data-action="detail"]');
-            if(!btn) return;
-            const id = btn.dataset.id;
-            openDetail(id);
-        });
-
-        // Open / close panel
-        function openDetail(id){
-            const item = data.find(d=>d.id===id);
-            if(!item) return;
-            panel.monto.textContent = formatCLP(item.amount);
-            const b = badgeFor(item.status);
-            panel.estado.className = b.cls;
-            panel.estado.textContent = b.text;
-            panel.order.textContent = item.order;
-            panel.provider.textContent = item.providerRef || '—';
-            // timeline: Created -> Autorizado -> Confirmado/Failed/Refunded
-            const steps = [];
-            steps.push({label:'Creado', when:formatDateISO(item.date), done:true});
-            if(item.status.toLowerCase().includes('autoriz')){
-                steps.push({label:'Autorizado', when:'—', done:true});
-            } else {
-                steps.push({label:'Autorizado', when:'—', done:false});
+                pageInfo.textContent = `Página ${state.page} de ${pages} • ${total} resultados`
             }
-            if(item.status.toLowerCase().includes('failed')) steps.push({label:'Fallido', when:'—', done:true});
-            else if(item.status.toLowerCase().includes('refund')) steps.push({label:'Reembolsado', when:'—', done:true});
-            else if(item.status.toLowerCase().includes('pending')) steps.push({label:'Pendiente', when:'—', done:false});
-            else steps.push({label:'Confirmado', when:'—', done:true});
 
-            panel.timeline.innerHTML = steps.map(s=>`<div class="step"><span class="dot ${s.done?'completed':''}"></span><div><div style="font-weight:600">${s.label}</div><div class="when">${s.when}</div></div></div>`).join('');
-            panel.downloadBtn.disabled = !item.receipt;
-            panel.downloadBtn.onclick = ()=>{ if(item.receipt) window.open(item.receipt,'_blank'); };
-            overlay.style.display = 'flex';
-            overlay.setAttribute('aria-hidden','false');
-        }
+            // Event listeners
+            ;[
+                statusEl,
+                methodEl,
+                fromEl,
+                toEl,
+                minEl,
+                maxEl,
+                orderSortEl,
+            ].forEach(el => el.addEventListener('change', applyFilters))
+            searchEl.addEventListener('input', debounce(applyFilters, 250))
+            perPageEl.addEventListener('change', () => {
+                state.page = 1
+                renderTable()
+            })
+            prevBtn.addEventListener('click', () => {
+                if (state.page > 1) {
+                    state.page--
+                    renderTable()
+                }
+            })
+            nextBtn.addEventListener('click', () => {
+                const pages = Math.max(
+                    1,
+                    Math.ceil(state.filtered.length / state.perPage)
+                )
+                if (state.page < pages) {
+                    state.page++
+                    renderTable()
+                }
+            })
 
-        closePanel.addEventListener('click', closeDetail);
-        overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeDetail(); });
-        function closeDetail(){ overlay.style.display = 'none'; overlay.setAttribute('aria-hidden','true'); }
+            // Delegación para botones de detalle
+            tbody.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-action="detail"]')
+                if (!btn) return
+                const id = btn.dataset.id
+                openDetail(id)
+            })
 
-        // Export CSV de la vista filtrada
-        function exportCSV(rows){
-            const cols = ['fecha','id_pago','id_orden','cliente','monto_clp','estado','metodo','comprobante','providerRef'];
-            const csv = [cols.join(',')].concat(rows.map(r=>{
-                return [
-                    new Date(r.date).toISOString(),
-                    r.id,
-                    r.order,
-                    `"${r.client.replace(/"/g,'""')}"`,
-                    r.amount,
-                    r.status,
-                    r.method,
-                    r.receipt,
-                    r.providerRef || ''
-                ].join(',');
-            })).join('\n');
+            // Open / close panel
+            function openDetail(id) {
+                const item = data.find(d => d.id === id)
+                if (!item) return
+                panel.monto.textContent = formatCLP(item.amount)
+                const b = badgeFor(item.status)
+                panel.estado.className = b.cls
+                panel.estado.textContent = b.text
+                panel.order.textContent = item.order
+                panel.provider.textContent = item.providerRef || '—'
+                // timeline: Created -> Autorizado -> Confirmado/Failed/Refunded
+                const steps = []
+                steps.push({
+                    label: 'Creado',
+                    when: formatDateISO(item.date),
+                    done: true,
+                })
+                if (item.status.toLowerCase().includes('autoriz')) {
+                    steps.push({ label: 'Autorizado', when: '—', done: true })
+                } else {
+                    steps.push({ label: 'Autorizado', when: '—', done: false })
+                }
+                if (item.status.toLowerCase().includes('failed'))
+                    steps.push({ label: 'Fallido', when: '—', done: true })
+                else if (item.status.toLowerCase().includes('refund'))
+                    steps.push({ label: 'Reembolsado', when: '—', done: true })
+                else if (item.status.toLowerCase().includes('pending'))
+                    steps.push({ label: 'Pendiente', when: '—', done: false })
+                else steps.push({ label: 'Confirmado', when: '—', done: true })
 
-            const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `historial_pagos_${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+                panel.timeline.innerHTML = steps
+                    .map(
+                        s =>
+                            `<div class="step"><span class="dot ${s.done ? 'completed' : ''}"></span><div><div style="font-weight:600">${s.label}</div><div class="when">${s.when}</div></div></div>`
+                    )
+                    .join('')
+                panel.downloadBtn.disabled = !item.receipt
+                panel.downloadBtn.onclick = () => {
+                    if (item.receipt) window.open(item.receipt, '_blank')
+                }
+                overlay.style.display = 'flex'
+                overlay.setAttribute('aria-hidden', 'false')
+            }
 
-        document.getElementById('exportTop').addEventListener('click', ()=>exportCSV(state.filtered));
-        document.getElementById('exportBottom').addEventListener('click', ()=>exportCSV(state.filtered));
+            closePanel.addEventListener('click', closeDetail)
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) closeDetail()
+            })
+            function closeDetail() {
+                overlay.style.display = 'none'
+                overlay.setAttribute('aria-hidden', 'true')
+            }
 
-        // Debounce util
-        function debounce(fn, wait=200){
-            let t;
-            return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
-        }
+            // Export CSV de la vista filtrada
+            function exportCSV(rows) {
+                const cols = [
+                    'fecha',
+                    'id_pago',
+                    'id_orden',
+                    'cliente',
+                    'monto_clp',
+                    'estado',
+                    'metodo',
+                    'comprobante',
+                    'providerRef',
+                ]
+                const csv = [cols.join(',')]
+                    .concat(
+                        rows.map(r => {
+                            return [
+                                new Date(r.date).toISOString(),
+                                r.id,
+                                r.order,
+                                `"${r.client.replace(/"/g, '""')}"`,
+                                r.amount,
+                                r.status,
+                                r.method,
+                                r.receipt,
+                                r.providerRef || '',
+                            ].join(',')
+                        })
+                    )
+                    .join('\n')
 
-        // Inicializar
-        function init(){
-            // default perPage
-            perPageEl.value = '10';
-            applyFilters();
-        }
+                const blob = new Blob([csv], {
+                    type: 'text/csv;charset=utf-8;',
+                })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `historial_pagos_${new Date().toISOString().slice(0, 10)}.csv`
+                a.click()
+                URL.revokeObjectURL(url)
+            }
 
-        init();
-    </script>
-</body>
+            document
+                .getElementById('exportTop')
+                .addEventListener('click', () => exportCSV(state.filtered))
+            document
+                .getElementById('exportBottom')
+                .addEventListener('click', () => exportCSV(state.filtered))
+
+            // Debounce util
+            function debounce(fn, wait = 200) {
+                let t
+                return (...args) => {
+                    clearTimeout(t)
+                    t = setTimeout(() => fn(...args), wait)
+                }
+            }
+
+            // Inicializar
+            function init() {
+                // default perPage
+                perPageEl.value = '10'
+                applyFilters()
+            }
+
+            init()
+        </script>
+    </body>
 </html>

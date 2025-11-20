@@ -4,21 +4,53 @@
 
 Este proyecto ha sido completamente reestructurado para separar responsabilidades y facilitar el mantenimiento. Ya no es un "monolito" de 700+ líneas, ahora es modular y escalable.
 
+**🔐 NUEVO: Sistema de autenticación JWT integrado** - Ver [AUTH_SYSTEM.md](AUTH_SYSTEM.md)
+
 ## 📂 Estructura del Proyecto
 
 ```
 webadmin/
-├── index.html              # HTML limpio (166 líneas) - solo estructura
+├── login.html              # Página de inicio de sesión 🔐
+├── index.html              # Dashboard principal (protegido)
+├── pedidos.html            # Gestión de pedidos (protegido)
+├── servicios.html          # Catálogo de servicios (protegido)
+├── historial.html          # Historial de pagos (protegido)
+├── vision.html             # Visión general (protegido)
 ├── css/
 │   └── estilo.css         # Todos los estilos CSS organizados
 ├── js/
-│   └── main.js            # Toda la lógica JavaScript modular
+│   ├── main.js            # Lógica JavaScript modular
+│   ├── auth-service.js    # Servicio de autenticación 🔐
+│   ├── auth-guard.js      # Protección de rutas 🔐
+│   └── ejemplos.js        # Guía de uso
 ├── templates/
 │   ├── comment-card.html  # Template para tarjetas de comentarios
 │   ├── metric-card.html   # Template para métricas
 │   └── reply-box.html     # Template para caja de respuesta
-└── README_WEBADMIN.md     # Este archivo
+├── README_WEBADMIN.md     # Este archivo
+└── AUTH_SYSTEM.md         # Documentación del sistema de auth 🔐
 ```
+
+## 🔐 Sistema de Autenticación
+
+Todas las páginas del admin están protegidas con autenticación JWT.
+
+### Inicio rápido:
+
+1. **Accede al login**: `http://localhost:8000/login.html`
+2. **Ingresa credenciales** de tu cuenta PymeMap
+3. **Accede al dashboard**: Automáticamente redirigido después del login
+
+### Características:
+
+- ✅ Login con JWT tokens
+- ✅ Protección automática de todas las páginas
+- ✅ Logout seguro con limpieza de sesión
+- ✅ Información de usuario en header
+- ✅ Verificación de expiración de sesión
+- ✅ Redirección automática si no autenticado
+
+📖 **Documentación completa**: [AUTH_SYSTEM.md](AUTH_SYSTEM.md)
 
 ## ✨ Mejoras Implementadas
 

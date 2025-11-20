@@ -1,68 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Servicios</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Mis Servicios</h1>
-        <button class="btn-nuevo">+ Nuevo servicio</button>
-    </header>
-    <main>
-        <section id="servicios-listado">
-            <h2>Gestiona tu catálogo y mantén tu oferta actualizada.</h2>
-            <div class="servicio-card">
-                <h3>Título del servicio</h3>
-                <p>Descripción breve (máx. 140 caracteres)</p>
-                <p>Precio: CLP</p>
-                <p>Duración: min</p>
-                <p>Categoría</p>
-                <label>
-                    Estado: 
-                    <input type="checkbox"> Activo/Inactivo
-                </label>
-                <div class="acciones">
-                    <button>Editar</button>
-                    <button>Duplicar</button>
-                    <button>Eliminar</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mis Servicios</title>
+        <link rel="stylesheet" href="styles.css" />
+
+        <!-- Auth Guard - Protege esta página -->
+        <script type="module" src="js/auth-guard.js"></script>
+    </head>
+    <body>
+        <header>
+            <h1>Mis Servicios</h1>
+            <button class="btn-nuevo">+ Nuevo servicio</button>
+        </header>
+        <main>
+            <section id="servicios-listado">
+                <h2>Gestiona tu catálogo y mantén tu oferta actualizada.</h2>
+                <div class="servicio-card">
+                    <h3>Título del servicio</h3>
+                    <p>Descripción breve (máx. 140 caracteres)</p>
+                    <p>Precio: CLP</p>
+                    <p>Duración: min</p>
+                    <p>Categoría</p>
+                    <label>
+                        Estado:
+                        <input type="checkbox" /> Activo/Inactivo
+                    </label>
+                    <div class="acciones">
+                        <button>Editar</button>
+                        <button>Duplicar</button>
+                        <button>Eliminar</button>
+                    </div>
                 </div>
+                <div class="empty-state">
+                    <p>Crea tu primer servicio.</p>
+                </div>
+            </section>
+        </main>
+        <div id="modal-servicio" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Nuevo/Editar servicio</h2>
+                <input
+                    type="text"
+                    placeholder="Título del servicio"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="text"
+                    placeholder="Descripción breve"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="number"
+                    placeholder="Precio (CLP)"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="number"
+                    placeholder="Duración (min)"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="text"
+                    placeholder="Categoría"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="url"
+                    placeholder="Foto (URL)"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <select>
+                    <option>Disponibilidad</option>
+                    <!-- Add time slots here -->
+                </select>
+                <button class="btn-guardar">Guardar servicio</button>
             </div>
-            <div class="empty-state">
-                <p>Crea tu primer servicio.</p>
-            </div>
-        </section>
-    </main>
-    <div id="modal-servicio" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Nuevo/Editar servicio</h2>
-            <input type="text" placeholder="Título del servicio" style="border: 1px solid #D9D9D9;">
-            <input type="text" placeholder="Descripción breve" style="border: 1px solid #D9D9D9;">
-            <input type="number" placeholder="Precio (CLP)" style="border: 1px solid #D9D9D9;">
-            <input type="number" placeholder="Duración (min)" style="border: 1px solid #D9D9D9;">
-            <input type="text" placeholder="Categoría" style="border: 1px solid #D9D9D9;">
-            <input type="url" placeholder="Foto (URL)" style="border: 1px solid #D9D9D9;">
-            <select>
-                <option>Disponibilidad</option>
-                <!-- Add time slots here -->
-            </select>
-            <button class="btn-guardar">Guardar servicio</button>
         </div>
-    </div>
-    <footer>
-        <section id="promociones">
-            <h2>Promociones (opcional MVP)</h2>
-            <input type="text" placeholder="Precio promo" style="border: 1px solid #D9D9D9;">
-            <input type="date" placeholder="Vigencia" style="border: 1px solid #D9D9D9;">
-            <label>
-                Visibilidad: 
-                <input type="checkbox"> Visible
-            </label>
-        </section>
-    </footer>
-    <script src="script.js"></script>
-</body>
+        <footer>
+            <section id="promociones">
+                <h2>Promociones (opcional MVP)</h2>
+                <input
+                    type="text"
+                    placeholder="Precio promo"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <input
+                    type="date"
+                    placeholder="Vigencia"
+                    style="border: 1px solid #d9d9d9"
+                />
+                <label>
+                    Visibilidad:
+                    <input type="checkbox" /> Visible
+                </label>
+            </section>
+        </footer>
+        <script src="script.js"></script>
+    </body>
 </html>
