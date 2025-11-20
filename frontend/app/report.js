@@ -9,6 +9,7 @@ import { getBusiness } from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../context/auth-context'
+import { createReport } from '../api/report-service'
 
 export default function ReportScreen() {
     const [open, setOpen] = React.useState(false)
@@ -156,19 +157,22 @@ export default function ReportScreen() {
                         },
                     ]}
                     disabled={!text.length || !value}
-                    onPress={() => {
-                        console.log('📝 Enviando reporte:', {
+                    onPress={async () => {
+                        const reportData = {
                             bookingId,
                             businessId,
                             businessName: business?.name || businessName,
                             serviceDescription,
                             type: value,
                             description: text,
+                            state: 'open',
                             timestamp: new Date().toISOString(),
                             reportedBy: user?.id || user?._id,
                             reportedByName: user?.name || 'Usuario',
                             reportedByEmail: user?.email || '',
-                        })
+                        }
+
+                        await createReport(reportData)
                         alert('✅ Gracias por tu feedback!')
                         setText('')
                         setValue(null)

@@ -6,7 +6,7 @@ import traceback
 import os
 import re
 from dotenv import load_dotenv
-from .routers import gmaps, users, auth, business, notifications, chat, reviews, bookings
+from .routers import gmaps, users, auth, business, notifications, chat, reviews, bookings, reports
 from app.services.upload_images_to_gcp import ensure_gcp_credentials
 
 
@@ -58,6 +58,7 @@ app.include_router(notifications.router, prefix="/notifications", tags=["Notific
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 app.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
+app.include_router(reports.router, prefix="/reports", tags=["Reports"])
 
 
 @app.on_event("startup")
