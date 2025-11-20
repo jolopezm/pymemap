@@ -27,13 +27,8 @@ export const AuthProvider = ({ children }) => {
 
     const login = async ({ email, password }) => {
         try {
-            // Llamar al servicio de login que hace la petición al backend
-            await loginService({ email, password })
-            
-            // Obtener los datos completos del usuario
-            const userData = await getCurrentUser()
-            
-            // Guardar usuario en el estado y AsyncStorage
+            await loginService({ email, password })            
+            const userData = await getCurrentUser() 
             await AsyncStorage.setItem('user', JSON.stringify(userData))
             setUser(userData)
             
