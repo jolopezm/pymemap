@@ -18,7 +18,6 @@ async function getAuthHeaders() {
     return {}
 }
 
-// Como el backend NO tiene endpoint /business/:id, siempre buscar en la lista
 export async function getBusiness(id) {
     const cacheKey = id ? `business_${id}` : 'business_list'
 

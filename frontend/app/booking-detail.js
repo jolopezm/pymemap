@@ -401,8 +401,15 @@ export default function BookingDetail() {
 
                 <Pressable
                     onPress={() =>
-                        router.push('report', {
-                            serviceId: booking.service_id,
+                        router.push({
+                            pathname: '/report',
+                            params: {
+                                bookingId: bookingId,
+                                businessId: business?.id || business?._id,
+                                businessName: business?.name || 'Negocio',
+                                serviceDescription:
+                                    booking?.service_description || '',
+                            },
                         })
                     }
                     style={[globalStyles.button, { marginTop: 16 }]}

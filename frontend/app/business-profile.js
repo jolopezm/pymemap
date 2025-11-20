@@ -835,7 +835,6 @@ export default function BusinessProfile() {
                         style={globalStyles.button}
                         onPress={() => {
                             setModalVisible(false)
-                            // ✅ CORRECCIÓN: Pasar el chatId correctamente
                             const chatId = chat?._id || chat?.id
 
                             if (chatId) {
