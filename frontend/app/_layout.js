@@ -45,7 +45,9 @@ export default function Layout() {
                                 />
                                 <Stack.Screen
                                     name="auth-code"
-                                    options={{ title: 'Código de verificación' }}
+                                    options={{
+                                        title: 'Código de verificación',
+                                    }}
                                 />
                                 <Stack.Screen
                                     name="profile"
@@ -90,6 +92,14 @@ export default function Layout() {
                                 <Stack.Screen
                                     name="booking-detail"
                                     options={{ title: 'Detalle de la reserva' }}
+                                />
+                                <Stack.Screen
+                                    name="bookings-panel"
+                                    options={{ title: 'Panel de reservas' }}
+                                />
+                                <Stack.Screen
+                                    name="book-a-service"
+                                    options={{ title: 'Reserva un servicio' }}
                                 />
                                 <Stack.Screen
                                     name="chat-view"

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from datetime import datetime, timedelta
 from typing import List
 from bson import ObjectId
+import random
 from ..db import db
 from ..models.sellers import (
     BusinessAvailability, 
@@ -136,36 +137,14 @@ async def create_booking(
     """Cliente crea solicitud de reserva"""
     # Obtener el user_id
     user_id = await get_user_id_from_token(current_user)
-    
-    # NOTA: Validaciones de disponibilidad desactivadas en el flujo simplificado
-    # El vendedor revisará y aprobará/rechazará cada solicitud manualmente
-    # Este código se mantiene comentado para uso futuro si se desea habilitar validaciones
-    
-    # # Verificar disponibilidad
-    # availability = await db.availability.find_one({
-    #     "business_id": booking.business_id,
-    #     "date": booking.date
-    # })
-    # 
-    # if not availability:
-    #     raise HTTPException(status_code=400, detail="Fecha no disponible")
-    # 
-    # # Verificar que el slot esté libre
-    # overlapping_booking = await db.bookings.find_one({
-    #     "business_id": booking.business_id,
-    #     "date": booking.date,
-    #     "status": {"$in": ["pending", "confirmed"]},
-    #     "start_time": {"$lt": booking.end_time},
-    #     "end_time": {"$gt": booking.start_time}
-    # })
-    # 
-    # if overlapping_booking:
-    #     raise HTTPException(status_code=400, detail="Horario no disponible")
-    
     booking_dict = booking.dict()
     booking_dict["client_id"] = user_id
     booking_dict["created_at"] = datetime.now()
     booking_dict["status"] = "pending"  # Todas las nuevas solicitudes inician como pending
+    
+    # Generar código de verificación de 4 dígitos
+    verification_code = random.randint(1000, 9999)
+    booking_dict["requested_price"] = verification_code  # Reutilizamos el campo como código
     
     result = await db.bookings.insert_one(booking_dict)
     created_booking = await db.bookings.find_one({"_id": result.inserted_id})
@@ -176,9 +155,7 @@ async def create_booking(
     
     # TODO: Enviar notificación al dueño del negocio
     
-    return created_booking
-
-@router.patch("/{booking_id}/confirm")
+    return created_booking@router.patch("/{booking_id}/confirm")
 async def confirm_booking(
     booking_id: str,
     current_user: TokenData = Depends(get_current_user)
@@ -337,13 +314,13 @@ async def get_all_my_business_bookings(current_user: TokenData = Depends(get_cur
     
     return bookings
 
-@router.patch("/{booking_id}/request-payment")
-async def request_booking_payment(
+@router.patch("/{booking_id}/verify-code")
+async def verify_booking_code(
     booking_id: str,
-    payment_data: dict,
+    code_data: dict,
     current_user: TokenData = Depends(get_current_user)
 ):
-    """Vendedor solicita cobrar un precio por la reserva"""
+    """Negocio verifica el código de confirmación del cliente"""
     # Convertir booking_id a ObjectId si es necesario
     try:
         booking_object_id = ObjectId(booking_id)
@@ -371,49 +348,32 @@ async def request_booking_payment(
     if owner_id != user_id:
         raise HTTPException(status_code=403, detail="No autorizado")
     
-    requested_price = payment_data.get("requested_price")
-    if requested_price is None:
-        raise HTTPException(status_code=400, detail="requested_price is required")
+    entered_code = code_data.get("code")
+    if entered_code is None:
+        raise HTTPException(status_code=400, detail="code is required")
+    
+    # Verificar que el código coincida
+    stored_code = booking.get("requested_price")
+    if int(entered_code) != int(stored_code):
+        raise HTTPException(status_code=400, detail="Código incorrecto")
+    
+    # Si el código es correcto, marcar como completado
+    from datetime import datetime
+    completed_at = datetime.utcnow().isoformat()
     
     # Usar el mismo ID que funcionó para la consulta
     booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
     await db.bookings.update_one(
         {"_id": booking_id_for_update},
-        {"$set": {"requested_price": requested_price, "status": "payment_requested"}}
+        {"$set": {"status": "completed", "completed_at": completed_at}}
     )
     
-    return {"message": "Solicitud de pago enviada"}
+    return {"message": "Código verificado - Servicio completado", "verified": True}
 
 @router.post("/{booking_id}/pay")
 async def pay_booking(
     booking_id: str,
     current_user: TokenData = Depends(get_current_user)
 ):
-    """Cliente paga la reserva solicitada"""
-    # Convertir booking_id a ObjectId si es necesario
-    try:
-        booking_object_id = ObjectId(booking_id)
-        booking = await db.bookings.find_one({"_id": booking_object_id})
-    except Exception:
-        booking = await db.bookings.find_one({"_id": booking_id})
-    
-    if not booking:
-        raise HTTPException(status_code=404, detail="Reserva no encontrada")
-    
-    # Verificar que el usuario sea el cliente
-    user_id = await get_user_id_from_token(current_user)
-    
-    if str(booking.get("client_id", "")) != user_id:
-        raise HTTPException(status_code=403, detail="No autorizado")
-    
-    from datetime import datetime
-    paid_at = datetime.utcnow().isoformat()
-    
-    # Usar el mismo ID que funcionó para la consulta
-    booking_id_for_update = booking_object_id if 'booking_object_id' in locals() else booking_id
-    await db.bookings.update_one(
-        {"_id": booking_id_for_update},
-        {"$set": {"status": "completed", "paid_at": paid_at}}
-    )
-    
-    return {"message": "Pago realizado con éxito"}
+    """DEPRECATED - Mantener por compatibilidad pero no hace nada"""
+    return {"message": "Endpoint deprecated - usar verify-code"}
