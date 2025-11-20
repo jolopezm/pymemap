@@ -26,7 +26,12 @@ import {
     createChat,
     sendMessage,
 } from '../api/chat-service'
-import { calculateDistance, getRoutingDistance, formatDistance, formatDuration } from '../utils/geolocation'
+import {
+    calculateDistance,
+    getRoutingDistance,
+    formatDistance,
+    formatDuration,
+} from '../utils/geolocation'
 import { useLocation } from '../context/location-context'
 import GmapsView from '../components/gmaps-view'
 import { getReviewsByBusiness } from '../api/review-service'
@@ -52,7 +57,7 @@ export default function BusinessProfile() {
     const [chat, setChat] = React.useState(null)
     const [modalVisible, setModalVisible] = React.useState(false)
     const [distance, setDistance] = React.useState(null)
-    const [routingInfo, setRoutingInfo] = React.useState(null) // { distance, duration } de OSRM
+    const [routingInfo, setRoutingInfo] = React.useState(null)
     const [loadingRouting, setLoadingRouting] = React.useState(false)
     const [showMap, setShowMap] = React.useState(false)
     const [reviews, setReviews] = React.useState([])
@@ -87,11 +92,14 @@ export default function BusinessProfile() {
     const handleChatPress = async () => {
         try {
             console.log('🚀 Iniciando chat:', {
-                currentUser: user?._id,
-                owner: owner?._id,
+                currentUser: user?._id || user?.id,
+                owner: owner?._id || owner?.id,
             })
 
-            if (!user?._id || !owner?._id) {
+            const currentUserId = user?._id || user?.id
+            const ownerId = owner?._id || owner?.id
+
+            if (!currentUserId || !ownerId) {
                 Alert.alert(
                     'Error',
                     'No se puede iniciar el chat. Usuario u owner no encontrado.'
@@ -99,25 +107,37 @@ export default function BusinessProfile() {
                 return
             }
 
-            let chat
+            let chatData
             try {
-                chat = await getChatByParticipants(user._id, owner._id)
-                console.log('✅ Chat existente encontrado:', chat._id)
+                // Intentar obtener chat existente
+                chatData = await getChatByParticipants(currentUserId, ownerId)
+                console.log(
+                    '✅ Chat existente encontrado:',
+                    chatData._id || chatData.id
+                )
             } catch (error) {
                 if (error.response?.status === 404) {
-                    console.log('📝 Chat no existe, creando uno nuevo...')
-                    chat = await createChat({
-                        participants: [user._id, owner._id],
+                    // Crear nuevo chat si no existe
+                    console.log('📝 Creando nuevo chat...')
+                    chatData = await createChat({
+                        participants: [currentUserId, ownerId],
                         lastMessage: null,
                         lastMessageTimestamp: new Date().toISOString(),
                     })
-                    setChat(chat)
+                    console.log(
+                        '✅ Nuevo chat creado:',
+                        chatData._id || chatData.id
+                    )
                 } else {
                     throw error
                 }
             }
 
-            await newMessage(chat)
+            setChat(chatData)
+
+            // Enviar mensaje
+            await newMessage(chatData)
+
             setModalVisible(true)
         } catch (error) {
             console.error('❌ Error en handleChatPress:', error)
@@ -128,21 +148,31 @@ export default function BusinessProfile() {
     const newMessage = async chatObj => {
         if (!message.trim()) return
 
+        // Obtener el ID del chat correctamente
+        const chatId = chatObj._id || chatObj.id
+
+        if (!chatId) {
+            console.error('❌ No se pudo obtener el chatId:', chatObj)
+            throw new Error('Chat ID no válido')
+        }
+
         const messageData = {
-            chatId: chatObj._id,
+            chatId: chatId,
             sender_id: user.id || user._id,
-            content: message,
+            content: message.trim(),
             read: false,
             timestamp: new Date().toISOString(),
         }
 
         try {
-            console.log('Sending message:', messageData)
+            console.log('📤 Sending message:', messageData)
             setMessage('')
             await sendMessage(messageData)
+            console.log('✅ Mensaje enviado correctamente')
         } catch (error) {
-            console.error('Error sending message:', error)
+            console.error('❌ Error sending message:', error)
             setMessage(messageData.content)
+            throw error
         }
     }
 
@@ -176,7 +206,7 @@ export default function BusinessProfile() {
                         business.latitude,
                         business.longitude
                     )
-                    
+
                     if (mounted && routing) {
                         setRoutingInfo(routing)
                         // Actualizar distancia con la real
@@ -184,7 +214,9 @@ export default function BusinessProfile() {
                         console.log('🚗 Distancia real obtenida:', routing)
                     }
                 } catch (error) {
-                    console.log('⚠️ No se pudo obtener distancia real, usando aproximada')
+                    console.log(
+                        '⚠️ No se pudo obtener distancia real, usando aproximada'
+                    )
                 } finally {
                     if (mounted) setLoadingRouting(false)
                 }
@@ -363,7 +395,6 @@ export default function BusinessProfile() {
                     {business?.description ?? 'Sin descripción'}
                 </Text>
 
-
                 <Text style={globalStyles.subtitle}>Ubicación</Text>
                 <Text style={{ color: '#555', marginBottom: 8 }}>
                     {business?.address ?? 'Sin ubicación'}
@@ -374,40 +405,75 @@ export default function BusinessProfile() {
                     <View style={{ marginTop: 8, marginBottom: 16 }}>
                         {/* Mostrar distancia y tiempo */}
                         {!isLoadingLocation && distance && (
-                            <View style={{
-                                marginBottom: 12,
-                                backgroundColor: '#F5F0FF',
-                                padding: 12,
-                                borderRadius: 8,
-                            }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: routingInfo ? 6 : 0 }}>
-                                    <Ionicons name="navigate-outline" size={20} color="#9B59B6" />
-                                    <Text style={{
-                                        marginLeft: 8,
-                                        fontSize: 14,
-                                        color: '#6A4C93',
-                                        fontWeight: '600',
-                                    }}>
-                                        {routingInfo 
+                            <View
+                                style={{
+                                    marginBottom: 12,
+                                    backgroundColor: '#F5F0FF',
+                                    padding: 12,
+                                    borderRadius: 8,
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        marginBottom: routingInfo ? 6 : 0,
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="navigate-outline"
+                                        size={20}
+                                        color="#9B59B6"
+                                    />
+                                    <Text
+                                        style={{
+                                            marginLeft: 8,
+                                            fontSize: 14,
+                                            color: '#6A4C93',
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        {routingInfo
                                             ? `${formatDistance(distance)} por carretera`
-                                            : `${formatDistance(distance, true)} de tu ubicación`
-                                        }
+                                            : `${formatDistance(distance, true)} de tu ubicación`}
                                     </Text>
                                     {loadingRouting && (
-                                        <Text style={{ marginLeft: 8, fontSize: 12, color: '#999' }}>
+                                        <Text
+                                            style={{
+                                                marginLeft: 8,
+                                                fontSize: 12,
+                                                color: '#999',
+                                            }}
+                                        >
                                             Calculando ruta...
                                         </Text>
                                     )}
                                 </View>
                                 {routingInfo && (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 28 }}>
-                                        <Ionicons name="time-outline" size={16} color="#9B59B6" />
-                                        <Text style={{
-                                            marginLeft: 6,
-                                            fontSize: 13,
-                                            color: '#6A4C93',
-                                        }}>
-                                            Aprox. {formatDuration(routingInfo.duration)} en auto
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            marginLeft: 28,
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name="time-outline"
+                                            size={16}
+                                            color="#9B59B6"
+                                        />
+                                        <Text
+                                            style={{
+                                                marginLeft: 6,
+                                                fontSize: 13,
+                                                color: '#6A4C93',
+                                            }}
+                                        >
+                                            Aprox.{' '}
+                                            {formatDuration(
+                                                routingInfo.duration
+                                            )}{' '}
+                                            en auto
                                         </Text>
                                     </View>
                                 )}
@@ -430,26 +496,36 @@ export default function BusinessProfile() {
                                     }}
                                     onPress={() => setShowMap(!showMap)}
                                 >
-                                    <Ionicons name="map-outline" size={20} color="#FFF" />
-                                    <Text style={{
-                                        marginLeft: 8,
-                                        color: '#FFF',
-                                        fontSize: 15,
-                                        fontWeight: '600',
-                                    }}>
-                                        {showMap ? 'Ocultar mapa' : 'Cómo llegar'}
+                                    <Ionicons
+                                        name="map-outline"
+                                        size={20}
+                                        color="#FFF"
+                                    />
+                                    <Text
+                                        style={{
+                                            marginLeft: 8,
+                                            color: '#FFF',
+                                            fontSize: 15,
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        {showMap
+                                            ? 'Ocultar mapa'
+                                            : 'Cómo llegar'}
                                     </Text>
                                 </Pressable>
 
                                 {/* Mapa con ruta */}
                                 {showMap && (
-                                    <View style={{ 
-                                        height: 250, 
-                                        width: '100%', 
-                                        borderRadius: 12, 
-                                        overflow: 'hidden',
-                                        marginBottom: 12,
-                                    }}>
+                                    <View
+                                        style={{
+                                            height: 250,
+                                            width: '100%',
+                                            borderRadius: 12,
+                                            overflow: 'hidden',
+                                            marginBottom: 12,
+                                        }}
+                                    >
                                         <GmapsView
                                             latitude={business.latitude}
                                             longitude={business.longitude}
@@ -478,25 +554,35 @@ export default function BusinessProfile() {
                                     }}
                                     onPress={() => setShowMap(!showMap)}
                                 >
-                                    <Ionicons name="location-outline" size={20} color="#FFF" />
-                                    <Text style={{
-                                        marginLeft: 8,
-                                        color: '#FFF',
-                                        fontSize: 15,
-                                        fontWeight: '600',
-                                    }}>
-                                        {showMap ? 'Ocultar mapa' : 'Ver en el mapa'}
+                                    <Ionicons
+                                        name="location-outline"
+                                        size={20}
+                                        color="#FFF"
+                                    />
+                                    <Text
+                                        style={{
+                                            marginLeft: 8,
+                                            color: '#FFF',
+                                            fontSize: 15,
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        {showMap
+                                            ? 'Ocultar mapa'
+                                            : 'Ver en el mapa'}
                                     </Text>
                                 </Pressable>
 
                                 {showMap && (
-                                    <View style={{ 
-                                        height: 250, 
-                                        width: '100%', 
-                                        borderRadius: 12, 
-                                        overflow: 'hidden',
-                                        marginBottom: 12,
-                                    }}>
+                                    <View
+                                        style={{
+                                            height: 250,
+                                            width: '100%',
+                                            borderRadius: 12,
+                                            overflow: 'hidden',
+                                            marginBottom: 12,
+                                        }}
+                                    >
                                         <GmapsView
                                             latitude={business.latitude}
                                             longitude={business.longitude}
@@ -758,7 +844,16 @@ export default function BusinessProfile() {
                         style={globalStyles.button}
                         onPress={() => {
                             setModalVisible(false)
-                            router.push(`/chat-view?chatId=${chat?._id}`)
+                            // ✅ CORRECCIÓN: Pasar el chatId correctamente
+                            const chatId = chat?._id || chat?.id
+                            console.log('🔗 Navegando al chat:', chatId)
+
+                            if (chatId) {
+                                router.push(`/chat-view?chatId=${chatId}`)
+                            } else {
+                                console.error('❌ No hay chatId disponible')
+                                Alert.alert('Error', 'No se pudo abrir el chat')
+                            }
                         }}
                     >
                         <Text style={globalStyles.buttonText}>Ir al chat</Text>

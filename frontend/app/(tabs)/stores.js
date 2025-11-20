@@ -1,34 +1,34 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, Image, Modal, Animated, Dimensions } from 'react-native'
+import { View, Text, Pressable, StyleSheet, ScrollView, Image, Modal, Animated, Dimensions, Platform } from 'react-native'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
-import { getServices, getBusiness } from '../../api/business-service'
+import { getBusiness } from '../../api/business-service'
 import { calculateBusinessDistances, formatDistance } from '../../utils/geolocation'
 import { useLocation } from '../../context/location-context'
 import LocationPickerModal from '../../components/location-picker-modal'
-import MapView, { Marker } from 'react-native-maps'
+import { MapView, Marker } from '../../components/map-view-wrapper'
 
-const CARD_WIDTH = Dimensions.get('window').width * 0.7 // 70% del ancho de pantalla
+const CARD_WIDTH = Dimensions.get('window').width * 0.7
 const CARD_PADDING = 16
 
 export default function StoresScreen() {
     const router = useRouter()
     const { userLocation, userCoords, updateLocation } = useLocation()
-    const [allBusinesses, setAllBusinesses] = useState([]) // Todos los negocios sin filtrar
-    const [businesses, setBusinesses] = useState([]) // Negocios filtrados y ordenados
-    const [activeView, setActiveView] = useState('list') // 'list' o 'map'
+    const [allBusinesses, setAllBusinesses] = useState([])
+    const [businesses, setBusinesses] = useState([])
+    const [activeView, setActiveView] = useState('list')
     const [locationModalVisible, setLocationModalVisible] = useState(false)
-    const [selectedMapBusiness, setSelectedMapBusiness] = useState(null) // Negocio seleccionado en el mapa
-    const mapRef = useRef(null) // Referencia al mapa
-    const scrollViewRef = useRef(null) // Referencia al ScrollView de cards
-    const [mapRegion, setMapRegion] = useState(null) // Región visible del mapa
+    const [selectedMapBusiness, setSelectedMapBusiness] = useState(null)
+    const mapRef = useRef(null)
+    const scrollViewRef = useRef(null)
+    const [mapRegion, setMapRegion] = useState(null)
     const [selectedFilters, setSelectedFilters] = useState({
         domicilio: false,
         categories: [],
         recoger: false,
-        distance: null, // null, 1, 3, 5, 10 (km)
+        distance: null,
     })
     const [showSortModal, setShowSortModal] = useState(false)
     const [showCategoriesModal, setShowCategoriesModal] = useState(false)
@@ -39,6 +39,13 @@ export default function StoresScreen() {
     useEffect(() => {
         fetchData()
     }, [])
+
+    // Forzar vista de lista en web
+    useEffect(() => {
+        if (Platform.OS === 'web' && activeView === 'map') {
+            setActiveView('list')
+        }
+    }, [activeView])
 
     const handleLocationSelected = async (coords) => {
         // Actualizar ubicación en el contexto global
@@ -206,19 +213,18 @@ export default function StoresScreen() {
     // Manejar clic en marcador del mapa
     const handleMarkerPress = (business) => {
         setSelectedMapBusiness(business)
-        // Encontrar el índice de la card y hacer scroll
         const businessesWithCoords = businesses.filter(b => b.latitude && b.longitude)
         const index = businessesWithCoords.findIndex(b => (b.id && b.id === business.id) || (b._id && b._id === business._id))
         
         if (index !== -1 && scrollViewRef.current) {
-            // Calcular posición exacta: (ancho de card + gap) * índice
             const scrollX = index * (CARD_WIDTH + 12)
             scrollViewRef.current.scrollTo({ x: scrollX, animated: true })
         }
     }
 
-    // Centrar mapa en un negocio específico
     const centerMapOnBusiness = (business) => {
+        if (Platform.OS === 'web') return // No hacer nada en web
+        
         if (mapRef.current && business.latitude && business.longitude) {
             mapRef.current.animateToRegion({
                 latitude: business.latitude,
@@ -229,14 +235,12 @@ export default function StoresScreen() {
         }
     }
 
-    // Ajustar mapa para mostrar todos los marcadores
     const fitMapToMarkers = () => {
-        if (!mapRef.current || !userCoords) return
+        if (Platform.OS === 'web' || !mapRef.current || !userCoords) return
         
         const businessesWithCoords = businesses.filter(b => b.latitude && b.longitude)
         if (businessesWithCoords.length === 0) return
 
-        // Calcular bounds
         const lats = [...businessesWithCoords.map(b => b.latitude), userCoords.latitude]
         const lons = [...businessesWithCoords.map(b => b.longitude), userCoords.longitude]
         
@@ -247,13 +251,13 @@ export default function StoresScreen() {
         
         const centerLat = (minLat + maxLat) / 2
         const centerLon = (minLon + maxLon) / 2
-        const latDelta = (maxLat - minLat) * 1.3 // 30% padding
+        const latDelta = (maxLat - minLat) * 1.3
         const lonDelta = (maxLon - minLon) * 1.3
         
         mapRef.current.animateToRegion({
             latitude: centerLat,
             longitude: centerLon,
-            latitudeDelta: Math.max(latDelta, 0.02), // Mínimo zoom
+            latitudeDelta: Math.max(latDelta, 0.02),
             longitudeDelta: Math.max(lonDelta, 0.02),
         }, 500)
     }
@@ -334,16 +338,18 @@ export default function StoresScreen() {
                 </Pressable>
             </View>
 
-            {/* Tabs: Mapa / Lista */}
+            {/* Tabs: Mapa / Lista - Ocultar Mapa en web */}
             <View style={styles.tabsContainer}>
-                <Pressable 
-                    style={[styles.tab, activeView === 'map' && styles.tabActive]}
-                    onPress={() => setActiveView('map')}
-                >
-                    <Text style={[styles.tabText, activeView === 'map' && styles.tabTextActive]}>
-                        Mapa
-                    </Text>
-                </Pressable>
+                {Platform.OS !== 'web' && (
+                    <Pressable 
+                        style={[styles.tab, activeView === 'map' && styles.tabActive]}
+                        onPress={() => setActiveView('map')}
+                    >
+                        <Text style={[styles.tabText, activeView === 'map' && styles.tabTextActive]}>
+                            Mapa
+                        </Text>
+                    </Pressable>
+                )}
                 <Pressable 
                     style={[styles.tab, activeView === 'list' && styles.tabActive]}
                     onPress={() => setActiveView('list')}
@@ -572,11 +578,10 @@ export default function StoresScreen() {
                         )}
                     </View>
                 ) : (
-                    // Vista de Mapa
+                    // Vista de Mapa - Solo renderizar en móvil
                     <View style={styles.mapContainer}>
-                        {userCoords && businesses.length > 0 ? (
+                        {Platform.OS !== 'web' && userCoords && businesses.length > 0 ? (
                             <>
-                                {/* Mapa interactivo con React Native Maps */}
                                 <MapView
                                     ref={mapRef}
                                     style={styles.map}
@@ -590,7 +595,6 @@ export default function StoresScreen() {
                                     showsMyLocationButton={true}
                                     onRegionChangeComplete={(region) => setMapRegion(region)}
                                 >
-                                    {/* Marcadores de negocios - pins púrpura */}
                                     {businesses.filter(b => b.latitude && b.longitude).map((business) => {
                                         const lat = parseFloat(business.latitude)
                                         const lng = parseFloat(business.longitude)
@@ -611,7 +615,7 @@ export default function StoresScreen() {
                                     })}
                                 </MapView>
 
-                                {/* Cards rediseñadas - estilo visual grande */}
+                                {/* Cards del mapa */}
                                 <View style={styles.mapCardsContainer}>
                                     <ScrollView 
                                         ref={scrollViewRef}
@@ -691,7 +695,7 @@ export default function StoresScreen() {
                                 </View>
                             </>
                         ) : (
-                            // Placeholder cuando no hay ubicación o negocios
+                            // Placeholder - Mensaje para web
                             <View style={styles.mapPlaceholder}>
                                 <LinearGradient
                                     colors={['#E8E8E8', '#F5F5F5']}
@@ -702,7 +706,9 @@ export default function StoresScreen() {
                                     </View>
                                     <View style={styles.mapInfo}>
                                         <Text style={styles.mapInfoText}>
-                                            {!userCoords 
+                                            {Platform.OS === 'web'
+                                                ? 'Vista de mapa no disponible en web. Usa la vista de Lista.'
+                                                : !userCoords 
                                                 ? 'Habilita tu ubicación para ver el mapa'
                                                 : businesses.length === 0
                                                 ? 'No hay negocios para mostrar'

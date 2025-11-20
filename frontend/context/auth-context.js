@@ -1,19 +1,51 @@
 import React, { createContext, useState, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { login as loginService, getCurrentUser } from '../api/auth-service'
+import { clearAllCache } from '../utils/cache-manager'
 
 const AuthContext = createContext()
+
+const STORAGE_KEYS = {
+    USER: '@user_data',
+    TOKEN: '@auth_token',
+    AUTH_DATA: '@auth_data',
+}
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [isFromCache, setIsFromCache] = useState(false)
 
     useEffect(() => {
         const loadUser = async () => {
             try {
-                const storedUser = await AsyncStorage.getItem('user')
+                const storedUser = await AsyncStorage.getItem(STORAGE_KEYS.USER)
                 if (storedUser) {
-                    setUser(JSON.parse(storedUser))
+                    const userData = JSON.parse(storedUser)
+                    setUser(userData)
+                    setIsFromCache(true)
+                    console.log('📦 Usuario cargado desde caché')
+
+                    // Intentar refrescar en segundo plano
+                    try {
+                        const freshData = await getCurrentUser()
+                        if (
+                            JSON.stringify(freshData) !==
+                            JSON.stringify(userData)
+                        ) {
+                            await AsyncStorage.setItem(
+                                STORAGE_KEYS.USER,
+                                JSON.stringify(freshData)
+                            )
+                            setUser(freshData)
+                            setIsFromCache(false)
+                            console.log('🔄 Usuario actualizado desde servidor')
+                        }
+                    } catch (error) {
+                        console.log(
+                            '⚠️ No se pudo actualizar usuario, usando caché'
+                        )
+                    }
                 }
             } catch (error) {
                 console.error('Error loading user from storage:', error)
@@ -27,16 +59,16 @@ export const AuthProvider = ({ children }) => {
 
     const login = async ({ email, password }) => {
         try {
-            // Llamar al servicio de login que hace la petición al backend
             await loginService({ email, password })
-            
-            // Obtener los datos completos del usuario
             const userData = await getCurrentUser()
-            
-            // Guardar usuario en el estado y AsyncStorage
-            await AsyncStorage.setItem('user', JSON.stringify(userData))
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.USER,
+                JSON.stringify(userData)
+            )
             setUser(userData)
-            
+            setIsFromCache(false)
+            console.log('✅ Login exitoso, usuario guardado')
+
             return userData
         } catch (error) {
             console.error('Error during login:', error)
@@ -46,10 +78,11 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await AsyncStorage.removeItem('user')
-            await AsyncStorage.removeItem('token')
-            await AsyncStorage.removeItem('authData')
+            // Limpiar TODO el caché de la aplicación
+            await clearAllCache()
             setUser(null)
+            setIsFromCache(false)
+            console.log('🚪 Logout exitoso, caché completamente limpiado')
         } catch (error) {
             console.error('Error during logout:', error)
         }
@@ -58,8 +91,13 @@ export const AuthProvider = ({ children }) => {
     const refreshUser = async () => {
         try {
             const userData = await getCurrentUser()
-            await AsyncStorage.setItem('user', JSON.stringify(userData))
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.USER,
+                JSON.stringify(userData)
+            )
             setUser(userData)
+            setIsFromCache(false)
+            console.log('🔄 Usuario refrescado')
             return userData
         } catch (error) {
             console.error('Error refreshing user:', error)
@@ -68,7 +106,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, refreshUser, loading }}>
+        <AuthContext.Provider
+            value={{
+                user,
+                login,
+                logout,
+                refreshUser,
+                loading,
+                isFromCache,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     )

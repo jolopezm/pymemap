@@ -2,8 +2,17 @@ import React, { createContext, useState, useEffect, useCallback } from 'react'
 import { getChats, getMessages } from '../api/chat-service'
 import { getUserById } from '../api/user-service'
 import { useAuth } from './auth-context'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const ChatContext = createContext()
+
+const STORAGE_KEYS = {
+    CHATS: '@chats_data',
+    OTHER_USERS: '@other_users_data',
+    CACHE_TIMESTAMP: '@chats_cache_timestamp',
+}
+
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
 export const ChatProvider = ({ children }) => {
     const { user } = useAuth()
@@ -12,74 +21,185 @@ export const ChatProvider = ({ children }) => {
     const [unreadCount, setUnreadCount] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [isFromCache, setIsFromCache] = useState(false)
 
-    // Función para calcular mensajes no leídos
-    const calculateUnreadCount = useCallback((chatData) => {
+    // ============= FUNCIONES DE CACHÉ =============
+
+    const saveToCache = async (chatsData, usersData) => {
+        try {
+            await AsyncStorage.multiSet([
+                [STORAGE_KEYS.CHATS, JSON.stringify(chatsData)],
+                [STORAGE_KEYS.OTHER_USERS, JSON.stringify(usersData)],
+                [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
+            ])
+            console.log('✅ Chats guardados en caché')
+        } catch (error) {
+            console.error('Error guardando chats en caché:', error)
+        }
+    }
+
+    const loadFromCache = async () => {
+        try {
+            const [[, chatsJson], [, usersJson], [, timestamp]] =
+                await AsyncStorage.multiGet([
+                    STORAGE_KEYS.CHATS,
+                    STORAGE_KEYS.OTHER_USERS,
+                    STORAGE_KEYS.CACHE_TIMESTAMP,
+                ])
+
+            if (chatsJson && usersJson && timestamp) {
+                const cacheAge = Date.now() - parseInt(timestamp)
+                const isStale = cacheAge > CACHE_DURATION
+
+                return {
+                    chats: JSON.parse(chatsJson),
+                    otherUsers: JSON.parse(usersJson),
+                    isStale,
+                    cacheAge: Math.floor(cacheAge / 1000),
+                }
+            }
+
+            return null
+        } catch (error) {
+            console.error('Error cargando chats del caché:', error)
+            return null
+        }
+    }
+
+    const clearCache = async () => {
+        try {
+            await AsyncStorage.multiRemove([
+                STORAGE_KEYS.CHATS,
+                STORAGE_KEYS.OTHER_USERS,
+                STORAGE_KEYS.CACHE_TIMESTAMP,
+            ])
+            console.log('🗑️ Caché de chats limpiado')
+        } catch (error) {
+            console.error('Error limpiando caché:', error)
+        }
+    }
+
+    // ============= FUNCIONES EXISTENTES =============
+
+    const calculateUnreadCount = useCallback(chatData => {
         const total = chatData.reduce((sum, chat) => {
             return sum + (chat.unreadMessageCount || 0)
         }, 0)
         setUnreadCount(total)
     }, [])
 
-    // Obtener datos de los otros usuarios en los chats
-    const fetchOtherUsers = useCallback(async (chatData) => {
-        if (!chatData || chatData.length === 0 || !user) return
+    const fetchOtherUsers = useCallback(
+        async chatData => {
+            if (!chatData || chatData.length === 0 || !user) return {}
 
-        const userPromises = chatData.map(async (chat) => {
-            try {
-                // Determinar quién es el otro usuario (no el usuario autenticado)
-                const otherUserId = chat.participants?.find(
-                    participantId => participantId !== (user.id || user._id)
-                )
+            const userPromises = chatData.map(async chat => {
+                try {
+                    const otherUserId = chat.participants?.find(
+                        participantId => participantId !== (user.id || user._id)
+                    )
 
-                if (otherUserId) {
-                    const otherUser = await getUserById(otherUserId)
-                    return { chatId: chat.id || chat._id, user: otherUser }
+                    if (otherUserId) {
+                        const otherUser = await getUserById(otherUserId)
+                        return { chatId: chat.id || chat._id, user: otherUser }
+                    }
+                } catch (error) {
+                    console.error('Error fetching other user:', error)
+                    return null
                 }
+            })
+
+            const results = await Promise.all(userPromises)
+            const usersMap = {}
+            results.forEach(result => {
+                if (result) {
+                    usersMap[result.chatId] = result.user
+                }
+            })
+            return usersMap
+        },
+        [user]
+    )
+
+    const fetchChats = useCallback(
+        async (forceRefresh = false) => {
+            if (!user) {
+                setError('Usuario no autenticado')
+                setLoading(false)
+                return
+            }
+
+            setLoading(true)
+            setError(null)
+
+            try {
+                // 1️⃣ INTENTAR CARGAR DEL CACHÉ PRIMERO
+                if (!forceRefresh) {
+                    const cached = await loadFromCache()
+
+                    if (cached && !cached.isStale) {
+                        console.log(
+                            `📦 Usando chats del caché (${cached.cacheAge}s antiguo)`
+                        )
+                        setChats(cached.chats)
+                        setOtherUsers(cached.otherUsers)
+                        calculateUnreadCount(cached.chats)
+                        setIsFromCache(true)
+                        setLoading(false)
+
+                        // Actualizar en segundo plano
+                        setTimeout(() => fetchChats(true), 100)
+                        return
+                    }
+
+                    // Si hay caché obsoleto, úsalo mientras cargas datos frescos
+                    if (cached) {
+                        console.log(
+                            '⚠️ Usando caché obsoleto mientras se actualiza...'
+                        )
+                        setChats(cached.chats)
+                        setOtherUsers(cached.otherUsers)
+                        calculateUnreadCount(cached.chats)
+                        setIsFromCache(true)
+                    }
+                }
+
+                // 2️⃣ OBTENER DATOS FRESCOS DEL SERVIDOR
+                console.log('🌐 Obteniendo chats frescos del servidor')
+                const chatData = await getChats(user.id || user._id)
+                const usersData = await fetchOtherUsers(chatData)
+
+                // 3️⃣ ACTUALIZAR ESTADO Y GUARDAR EN CACHÉ
+                setChats(chatData)
+                setOtherUsers(usersData)
+                calculateUnreadCount(chatData)
+                setIsFromCache(false)
+
+                await saveToCache(chatData, usersData)
             } catch (error) {
-                console.error('Error fetching other user:', error)
-                return null
+                console.error('Error fetching chats:', error)
+
+                // 4️⃣ FALLBACK: Si falla, intentar usar caché aunque esté obsoleto
+                const cached = await loadFromCache()
+                if (cached) {
+                    console.log('🆘 Error de red, usando caché de respaldo')
+                    setChats(cached.chats)
+                    setOtherUsers(cached.otherUsers)
+                    calculateUnreadCount(cached.chats)
+                    setIsFromCache(true)
+                    setError('Usando datos guardados (sin conexión)')
+                } else {
+                    setError('Error al cargar los chats')
+                }
+            } finally {
+                setLoading(false)
             }
-        })
+        },
+        [user, calculateUnreadCount, fetchOtherUsers]
+    )
 
-        const results = await Promise.all(userPromises)
-        const usersMap = {}
-        results.forEach((result) => {
-            if (result) {
-                usersMap[result.chatId] = result.user
-            }
-        })
-        setOtherUsers(usersMap)
-    }, [user])
-
-    // Obtener todos los chats del usuario
-    const fetchChats = useCallback(async () => {
-        if (!user) {
-            setError('Usuario no autenticado')
-            setLoading(false)
-            return
-        }
-
-        setLoading(true)
-        setError(null)
-
-        try {
-            const chatData = await getChats(user.id || user._id)
-            setChats(chatData)
-            calculateUnreadCount(chatData)
-            await fetchOtherUsers(chatData)
-        } catch (error) {
-            console.error('Error fetching chats:', error)
-            setError('Error al cargar los chats')
-        } finally {
-            setLoading(false)
-        }
-    }, [user, calculateUnreadCount, fetchOtherUsers])
-
-    // Marcar un chat como leído
-    const markChatAsRead = useCallback((chatId) => {
-        setChats((prevChats) => {
-            const updatedChats = prevChats.map((chat) => {
+    const markChatAsRead = useCallback(
+        async chatId => {
+            const updatedChats = chats.map(chat => {
                 if ((chat.id || chat._id) === chatId) {
                     return {
                         ...chat,
@@ -89,19 +209,19 @@ export const ChatProvider = ({ children }) => {
                 }
                 return chat
             })
-            calculateUnreadCount(updatedChats)
-            return updatedChats
-        })
-        
-        // Opcional: refrescar desde el backend para sincronizar
-        // Puedes descomentar esto si quieres una sincronización completa
-        // fetchChats()
-    }, [calculateUnreadCount])
 
-    // Actualizar último mensaje de un chat
-    const updateLastMessage = useCallback((chatId, message) => {
-        setChats((prevChats) => {
-            return prevChats.map((chat) => {
+            setChats(updatedChats)
+            calculateUnreadCount(updatedChats)
+
+            // Actualizar caché inmediatamente
+            await saveToCache(updatedChats, otherUsers)
+        },
+        [chats, otherUsers, calculateUnreadCount]
+    )
+
+    const updateLastMessage = useCallback(
+        async (chatId, message) => {
+            const updatedChats = chats.map(chat => {
                 if ((chat.id || chat._id) === chatId) {
                     return {
                         ...chat,
@@ -111,13 +231,18 @@ export const ChatProvider = ({ children }) => {
                 }
                 return chat
             })
-        })
-    }, [])
 
-    // Incrementar contador de mensajes no leídos
-    const incrementUnreadCount = useCallback((chatId) => {
-        setChats((prevChats) => {
-            const updatedChats = prevChats.map((chat) => {
+            setChats(updatedChats)
+
+            // Actualizar caché
+            await saveToCache(updatedChats, otherUsers)
+        },
+        [chats, otherUsers]
+    )
+
+    const incrementUnreadCount = useCallback(
+        async chatId => {
+            const updatedChats = chats.map(chat => {
                 if ((chat.id || chat._id) === chatId) {
                     return {
                         ...chat,
@@ -127,17 +252,20 @@ export const ChatProvider = ({ children }) => {
                 }
                 return chat
             })
-            calculateUnreadCount(updatedChats)
-            return updatedChats
-        })
-    }, [calculateUnreadCount])
 
-    // Refrescar chats manualmente
+            setChats(updatedChats)
+            calculateUnreadCount(updatedChats)
+
+            // Actualizar caché
+            await saveToCache(updatedChats, otherUsers)
+        },
+        [chats, otherUsers, calculateUnreadCount]
+    )
+
     const refreshChats = useCallback(() => {
-        fetchChats()
+        fetchChats(true)
     }, [fetchChats])
 
-    // Cargar chats al montar el componente o cuando cambie el usuario
     useEffect(() => {
         if (user) {
             fetchChats()
@@ -146,6 +274,7 @@ export const ChatProvider = ({ children }) => {
             setOtherUsers({})
             setUnreadCount(0)
             setLoading(false)
+            clearCache() // Limpiar caché al cerrar sesión
         }
     }, [user, fetchChats])
 
@@ -157,10 +286,12 @@ export const ChatProvider = ({ children }) => {
                 unreadCount,
                 loading,
                 error,
+                isFromCache, // Nuevo: indica si los datos vienen del caché
                 markChatAsRead,
                 updateLastMessage,
                 incrementUnreadCount,
                 refreshChats,
+                clearCache, // Nuevo: exponer función de limpieza
             }}
         >
             {children}
