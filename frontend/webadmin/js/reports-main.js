@@ -9,6 +9,8 @@ import {
     REPORT_TYPE_LABELS,
     REPORT_STATE_LABELS,
 } from './api/report-service.js'
+import { getChatByParticipants } from './api/chat.js'
+import { getCurrentUser } from './api/auth-service.js'
 
 // ============================================
 // DATOS Y ESTADO
@@ -195,11 +197,11 @@ function renderReports() {
             </div>
             
             <div class="report-actions">
-                <button class="btn ghost" data-action="view-details" data-report-id="${r._id || r.bookingId}">
-                    👁️ Ver detalles
+                <button class="btn ghost" data-action="reply" data-report-id="${r._id || r.bookingId}">
+                    Responder
                 </button>
                 <button class="btn ghost" data-action="change-state" data-report-id="${r._id || r.bookingId}">
-                    🔄 Cambiar estado
+                    Cambiar estado
                 </button>
                 ${
                     r.state !== 'resolved' && r.state !== 'closed'
@@ -210,6 +212,13 @@ function renderReports() {
                 `
                         : ''
                 }
+                <button class="btn ghost" data-action="view-details" data-report-id="${r._id || r.bookingId}">
+                    Ver detalles
+                </button>
+
+                <button class="btn ghost" data-action="view-chat" data-report-id="${r._id || r.bookingId}">
+                    Ver chat
+                </button>
             </div>
             
             <div class="report-response-container"></div>
@@ -225,9 +234,25 @@ function renderReports() {
             })
 
         reportDiv
+            .querySelector('[data-action="reply"]')
+            .addEventListener('click', () => {
+                openReplyBox(reportDiv, r)
+            })
+
+        reportDiv
             .querySelector('[data-action="change-state"]')
             .addEventListener('click', () => {
                 showStateSelector(reportDiv, r)
+            })
+
+        reportDiv
+            .querySelector('[data-action="view-chat"]')
+            .addEventListener('click', () => {
+                const chat = getChatByParticipants(
+                    '68e6b4821ffe0add544fcd1d', //r.reportedBy,
+                    '68e6d00a04bb4f89f15ced05'
+                )
+                console.log('Chat encontrado:', chat)
             })
 
         const resolveBtn = reportDiv.querySelector(
@@ -366,6 +391,76 @@ function showStateSelector(container, report) {
         .addEventListener('click', () => {
             selector.remove()
         })
+}
+
+/**
+ * Abre el cuadro de respuesta para un reporte
+ */
+function openReplyBox(container, report) {
+    // Prevenir duplicados
+    if (container.querySelector('.reply-box')) return
+
+    const box = document.createElement('div')
+    box.className = 'reply-box'
+    box.innerHTML = `
+        <textarea placeholder="Escribe tu respuesta aquí..."></textarea>
+        <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn" data-action="send">Enviar</button>
+            <button class="btn ghost" data-action="cancel">Cancelar</button>
+        </div>
+    `
+
+    container.querySelector('.report-response-container').appendChild(box)
+
+    const ta = box.querySelector('textarea')
+    ta.focus()
+
+    box.querySelector('[data-action="cancel"]').addEventListener('click', () =>
+        box.remove()
+    )
+    box.querySelector('[data-action="send"]').addEventListener(
+        'click',
+        async () => {
+            const text = ta.value.trim()
+            if (!text) {
+                alert('Por favor escribe una respuesta.')
+                return
+            }
+
+            // Obtener usuario actual
+            const currentUser = await getCurrentUser()
+            if (!currentUser) {
+                alert('Error: No se pudo obtener el usuario actual.')
+                return
+            }
+
+            const adminId = currentUser._id
+            const clientId = report.reportedBy
+
+            // Datos para crear chat
+            const chatData = {
+                participants: [adminId, clientId],
+            }
+
+            // Datos para enviar mensaje
+            const messageData = {
+                chatId: 'simulated-chat-id', // Simulado, en realidad vendría del chat creado
+                sender_id: adminId,
+                content: text,
+                timestamp: new Date().toISOString(),
+            }
+
+            // Imprimir en consola en lugar de enviar
+            console.log('Datos para crear chat:', chatData)
+            console.log('Datos para enviar mensaje:', messageData)
+
+            // Simular envío
+            showToast('Respuesta enviada (simulado - ver consola)')
+
+            // Cerrar el box
+            box.remove()
+        }
+    )
 }
 
 /**
