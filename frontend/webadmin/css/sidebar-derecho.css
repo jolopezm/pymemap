@@ -1,0 +1,11 @@
+/* ========================================
+   Sidebar Derecho (Charts, etc)
+   ======================================== */
+.side-top {
+    display: flex;
+    flex-direction: column;
+}
+
+canvas {
+    background: transparent;
+}

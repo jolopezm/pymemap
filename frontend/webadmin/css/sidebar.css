@@ -1,0 +1,71 @@
+/* ========================================
+   Sidebar
+   ======================================== */
+.sidebar {
+    width: 260px;
+    background: var(--bg);
+    border-right: 1px solid var(--light-gray);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: var(--shadow);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.logo {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.logo .mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), #8a5edf);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.nav {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #333;
+    text-decoration: none;
+    border: 1px solid transparent;
+    font-weight: 500;
+}
+
+.nav a.active {
+    background: linear-gradient(
+        90deg,
+        rgba(108, 59, 191, 0.08),
+        rgba(108, 59, 191, 0.03)
+    );
+    color: var(--purple);
+    border: 1px solid var(--light-gray);
+    box-shadow: inset 0 0 0 1px transparent;
+}
+
+.nav a:hover {
+    background: #fbf7ff;
+}

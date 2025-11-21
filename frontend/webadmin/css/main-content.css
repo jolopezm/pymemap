@@ -1,0 +1,55 @@
+/* ========================================
+   Main Content
+   ======================================== */
+.main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.biz {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.biz .name {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--purple);
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #eee, #ddd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid var(--light-gray);
+}
+
+.card {
+    background: var(--bg);
+    padding: 18px;
+    border: 1px solid var(--light-gray);
+    box-shadow: var(--shadow);
+}
