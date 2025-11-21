@@ -60,7 +60,7 @@
                 </section>
 
                 <div class="content">
-                    <div class="card">
+                    <div class="card" id="reports-card">
                         <h2
                             style="
                                 margin: 0 0 12px;
@@ -128,7 +128,37 @@
                         <div class="pagination" id="pagination"></div>
                     </div>
 
-                    <div class="side-top">
+                    <!-- Chat Panel -->
+                    <div class="card" id="chat-panel" style="display: none">
+                        <div class="chat-panel-header">
+                            <h2
+                                style="
+                                    margin: 0;
+                                    font-size: 16px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Chat con Usuario
+                            </h2>
+                            <button class="btn ghost" id="close-chat-panel">
+                                ✕ Cerrar
+                            </button>
+                        </div>
+                        <div class="chat-messages" id="chat-messages"></div>
+                        <div class="chat-input-panel">
+                            <textarea
+                                id="chat-input-text"
+                                placeholder="Escribe un mensaje..."
+                                rows="3"
+                            ></textarea>
+                            <button class="btn" id="send-chat-message">
+                                Enviar mensaje
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="side-top" id="side-top">
                         <div class="card">
                             <h3
                                 style="

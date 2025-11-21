@@ -1,16 +1,18 @@
-/**
- * Pymap Admin - Reports Management
- * Gestión de reportes y casos
- */
-
 import {
     getReports,
     updateReportState,
     REPORT_TYPE_LABELS,
     REPORT_STATE_LABELS,
 } from './api/report-service.js'
-import { getChatByParticipants, getMessagesByChatId } from './api/chat.js'
+import {
+    getChatByParticipants,
+    createChat,
+    getMessagesByChatId,
+    sendMessage,
+} from './api/chat.js'
 import { getCurrentUser } from './api/auth-service.js'
+
+console.log('Reports main.js imports loaded')
 
 // ============================================
 // DATOS Y ESTADO
@@ -24,6 +26,9 @@ let state = {
     stateFilter: 'all',
     search: '',
 }
+
+let currentChat = null
+let currentReport = null
 
 let toastTimeout
 
@@ -198,7 +203,7 @@ function renderReports() {
             
             <div class="report-actions">
                 <button class="btn ghost" data-action="reply" data-report-id="${r._id || r.bookingId}">
-                    Responder
+                    Ver chat
                 </button>
                 <button class="btn ghost" data-action="change-state" data-report-id="${r._id || r.bookingId}">
                     Cambiar estado
@@ -235,28 +240,15 @@ function renderReports() {
 
         reportDiv
             .querySelector('[data-action="reply"]')
-            .addEventListener('click', () => {
-                openReplyBox(reportDiv, r)
+            .addEventListener('click', async () => {
+                console.log('Ver chat clicked, reporte:', r)
+                await openReplyBox(reportDiv, r)
             })
 
         reportDiv
             .querySelector('[data-action="change-state"]')
             .addEventListener('click', () => {
                 showStateSelector(reportDiv, r)
-            })
-
-        reportDiv
-            .querySelector('[data-action="view-chat"]')
-            .addEventListener('click', async () => {
-                const { _id: chatId } = await getChatByParticipants(
-                    '68e6b4821ffe0add544fcd1d',
-                    '68e6d00a04bb4f89f15ced05'
-                )
-
-                const messages = await getMessagesByChatId(chatId)
-
-                console.log('Chat encontrado:', chatId)
-                console.log('Mensajes del chat:', messages)
             })
 
         const resolveBtn = reportDiv.querySelector(
@@ -398,73 +390,191 @@ function showStateSelector(container, report) {
 }
 
 /**
- * Abre el cuadro de respuesta para un reporte
+ * Abre el chat para un reporte
  */
-function openReplyBox(container, report) {
-    // Prevenir duplicados
-    if (container.querySelector('.reply-box')) return
+async function openReplyBox(container, report) {
+    try {
+        console.log('openReplyBox llamada', container, report)
 
-    const box = document.createElement('div')
-    box.className = 'reply-box'
-    box.innerHTML = `
-        <textarea placeholder="Escribe tu respuesta aquí..."></textarea>
-        <div style="display:flex;flex-direction:column;gap:6px">
-            <button class="btn" data-action="send">Enviar</button>
-            <button class="btn ghost" data-action="cancel">Cancelar</button>
-        </div>
-    `
+        // Obtener usuario actual
+        const currentUser = await getCurrentUser()
+        console.log('Usuario actual:', currentUser)
+        if (!currentUser) {
+            showToast('Error: No se pudo obtener el usuario actual.')
+            return
+        }
 
-    container.querySelector('.report-response-container').appendChild(box)
+        const adminId = currentUser._id
+        const clientId = report.reportedBy
 
-    const ta = box.querySelector('textarea')
-    ta.focus()
+        // Buscar chat existente
+        let chat = null
+        try {
+            chat = await getChatByParticipants(adminId, clientId)
+            console.log('Chat encontrado:', chat)
+        } catch (error) {
+            console.log(
+                'No se encontró chat existente, creando uno nuevo',
+                error
+            )
+        }
 
-    box.querySelector('[data-action="cancel"]').addEventListener('click', () =>
-        box.remove()
-    )
-    box.querySelector('[data-action="send"]').addEventListener(
-        'click',
-        async () => {
-            const text = ta.value.trim()
-            if (!text) {
-                alert('Por favor escribe una respuesta.')
-                return
-            }
-
-            // Obtener usuario actual
-            const currentUser = await getCurrentUser()
-            if (!currentUser) {
-                alert('Error: No se pudo obtener el usuario actual.')
-                return
-            }
-
-            const adminId = currentUser._id
-            const clientId = report.reportedBy
-
-            // Datos para crear chat
+        if (!chat) {
             const chatData = {
                 participants: [adminId, clientId],
             }
+            chat = await createChat(chatData)
+            console.log('Chat creado:', chat)
+        }
 
-            // Datos para enviar mensaje
+        // Mostrar el chat en el panel lateral
+        await showChatPanel(chat, report)
+    } catch (error) {
+        console.error('Error en openReplyBox:', error)
+        showToast('Error al abrir el chat')
+    }
+}
+
+/**
+ * Muestra el chat en el panel lateral
+ */
+async function showChatPanel(chat, report) {
+    try {
+        console.log('showChatPanel llamada', chat, report)
+        currentChat = chat
+        currentReport = report
+
+        // Mostrar el panel de chat
+        const chatPanel = $('chat-panel')
+        const reportsCard = $('reports-card')
+        const sideTop = $('side-top')
+
+        console.log('Chat panel element:', chatPanel)
+        console.log('Reports card element:', reportsCard)
+
+        chatPanel.style.display = 'flex'
+        reportsCard.classList.add('with-chat')
+        sideTop.style.display = 'none' // Ocultar el sidebar de acciones rápidas
+
+        console.log('Panel visible')
+
+        // Actualizar el título
+        const header = chatPanel.querySelector('.chat-panel-header h2')
+        header.textContent = `Chat con ${report.reportedByName || 'Usuario'}`
+
+        // Cargar mensajes
+        await loadChatMessages()
+
+        // Configurar event listeners
+        setupChatEventListeners()
+    } catch (error) {
+        console.error('Error en showChatPanel:', error)
+        showToast('Error al mostrar el chat')
+    }
+}
+
+/**
+ * Configura los event listeners del chat
+ */
+function setupChatEventListeners() {
+    const closeBtn = $('close-chat-panel')
+    const sendBtn = $('send-chat-message')
+    const input = $('chat-input-text')
+
+    // Remover listeners anteriores clonando y reemplazando
+    const newCloseBtn = closeBtn.cloneNode(true)
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn)
+
+    const newSendBtn = sendBtn.cloneNode(true)
+    sendBtn.parentNode.replaceChild(newSendBtn, sendBtn)
+
+    // Agregar nuevos listeners
+    newCloseBtn.onclick = () => {
+        const chatPanel = $('chat-panel')
+        const reportsCard = $('reports-card')
+        const sideTop = $('side-top')
+
+        chatPanel.style.display = 'none'
+        reportsCard.classList.remove('with-chat')
+        sideTop.style.display = 'block'
+        currentChat = null
+        currentReport = null
+    }
+
+    newSendBtn.onclick = async () => {
+        const text = input.value.trim()
+        if (!text) {
+            showToast('Por favor escribe un mensaje')
+            return
+        }
+
+        try {
+            const currentUser = await getCurrentUser()
             const messageData = {
-                chatId: 'simulated-chat-id', // Simulado, en realidad vendría del chat creado
-                sender_id: adminId,
+                chatId: currentChat._id,
+                sender_id: currentUser._id,
                 content: text,
                 timestamp: new Date().toISOString(),
             }
 
-            // Imprimir en consola en lugar de enviar
-            console.log('Datos para crear chat:', chatData)
-            console.log('Datos para enviar mensaje:', messageData)
-
-            // Simular envío
-            showToast('Respuesta enviada (simulado - ver consola)')
-
-            // Cerrar el box
-            box.remove()
+            await sendMessage(messageData)
+            input.value = ''
+            await loadChatMessages()
+            showToast('Mensaje enviado')
+        } catch (error) {
+            console.error('Error enviando mensaje:', error)
+            showToast('Error al enviar mensaje')
         }
-    )
+    }
+
+    input.onkeydown = e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            newSendBtn.click()
+        }
+    }
+}
+
+/**
+ * Carga los mensajes del chat actual
+ */
+async function loadChatMessages() {
+    try {
+        if (!currentChat) {
+            console.log('No hay chat actual')
+            return
+        }
+
+        console.log('Cargando mensajes para chat:', currentChat._id)
+        const messages = await getMessagesByChatId(currentChat._id)
+        console.log('Mensajes obtenidos:', messages)
+
+        const container = $('chat-messages')
+        console.log('Container de mensajes:', container)
+        container.innerHTML = ''
+
+        const currentUser = await getCurrentUser()
+
+        if (messages.length === 0) {
+            container.innerHTML =
+                '<p style="text-align:center;color:var(--muted);padding:20px;">No hay mensajes aún</p>'
+            return
+        }
+
+        messages.forEach(msg => {
+            const msgDiv = document.createElement('div')
+            msgDiv.className = `chat-message ${msg.sender_id === currentUser._id ? 'sent' : 'received'}`
+            msgDiv.textContent = msg.content
+            container.appendChild(msgDiv)
+        })
+
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight
+        console.log('Mensajes cargados en el DOM')
+    } catch (error) {
+        console.error('Error en loadChatMessages:', error)
+        showToast('Error al cargar mensajes')
+    }
 }
 
 /**

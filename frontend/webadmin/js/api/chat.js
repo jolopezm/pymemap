@@ -42,6 +42,26 @@ export async function getChatByParticipants(user1, user2) {
     }
 }
 
+export async function sendMessage(messageData) {
+    try {
+        const headers = await getAuthHeaders()
+        const response = await fetch(`${API_URL}/chat/message/`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(messageData),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error sending message:', error)
+        throw error
+    }
+}
+
 export async function getMessagesByChatId(chatId) {
     try {
         const headers = await getAuthHeaders()
