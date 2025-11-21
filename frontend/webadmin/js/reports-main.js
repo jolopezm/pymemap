@@ -220,10 +220,6 @@ function renderReports() {
                 <button class="btn ghost" data-action="view-details" data-report-id="${r._id || r.bookingId}">
                     Ver detalles
                 </button>
-
-                <button class="btn ghost" data-action="view-chat" data-report-id="${r._id || r.bookingId}">
-                    Ver chat
-                </button>
             </div>
             
             <div class="report-response-container"></div>
