@@ -1,4 +1,4 @@
-import { getUsers } from './api/users.js'
+import { getUsers, deleteUser, updateUser } from './api/users.js'
 import { renderTemplate } from './utils/renderer.js'
 import { TableComponent } from './table-component.js'
 
@@ -113,28 +113,28 @@ function initTable() {
                 label: 'Fecha de Nacimiento',
                 render: val => val || 'N/A',
                 editable: false,
-                searchable: true
+                searchable: false
             },
             {
                 key: 'profile_pic',
                 label: 'Foto de Perfil',
                 render: val => [val ? `<a href="${val}" target="_blank">Ver Foto</a>` : 'N/A'],
                 editable: false,
-                searchable: true
+                searchable: false
             },
             {
                 key: 'registered_at',
                 label: 'Creado El',
                 render: val => val ? val : 'N/A',
                 editable: false,
-                searchable: true
+                searchable: false
             },
             {
                 key: 'suspended',
                 label: 'Suspendido',
                 render: val => val ? 'Sí' : 'No',
                 editable: true,
-                searchable: true
+                searchable: false
             }
         ],
         actions: [
@@ -177,9 +177,46 @@ function handleView(id) {
     }
 }
 
-function handleSave(id, updates) {
+async function handleSave(id, updates) {
     console.log('Guardar usuario:', id, updates)
-    showToast('Usuario actualizado (simulado)')
+    
+    // Filtrar solo los campos que cambiaron
+    const originalUser = allUsers.find(u => u._id === id || u.id === id)
+    if (!originalUser) {
+        showToast('Usuario no encontrado', 'error')
+        return
+    }
+    
+    const changedUpdates = {}
+    for (const [key, value] of Object.entries(updates)) {
+        if (originalUser[key] !== value) {
+            changedUpdates[key] = value
+        }
+    }
+    
+    if (Object.keys(changedUpdates).length === 0) {
+        showToast('No hay cambios para guardar')
+        return
+    }
+    
+    // Enviar el usuario completo con los cambios aplicados
+    const fullUserData = { ...originalUser, ...changedUpdates }
+    // Asegurar que _id se mapee a id si es necesario
+    if (fullUserData._id && !fullUserData.id) {
+        fullUserData.id = fullUserData._id
+        delete fullUserData._id
+    }
+    
+    console.log('Datos completos a enviar:', fullUserData)
+    
+    try {
+        await updateUser(id, fullUserData)
+        showToast('Usuario actualizado correctamente')
+        loadUsers() // Recargar para reflejar cambios
+    } catch (error) {
+        console.error('Error al actualizar usuario:', error)
+        showToast('Error al actualizar usuario', 'error')
+    }
 }
 
 function updateMetrics() {

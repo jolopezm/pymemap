@@ -68,6 +68,7 @@ class UserUpdate(BaseModel):
     profile_pic: str | None = None
     phone: str | None = None
     role: str | None = None
+    suspended: bool | None = None
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr

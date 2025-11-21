@@ -1,15 +1,4 @@
-import { API_URL } from './config.js'
-
-async function getAuthHeaders() {
-    const token = localStorage.getItem('token')
-    const headers = {
-        'Content-Type': 'application/json',
-    }
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-    }
-    return headers
-}
+import { API_URL, getAuthHeaders } from './config.js'
 
 export async function getAllReviews() {
     try {

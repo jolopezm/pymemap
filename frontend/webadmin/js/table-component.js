@@ -143,7 +143,7 @@ export class TableComponent {
                 <td><input type="checkbox" disabled></td>
                 ${this.columns.map(col => `
                     <td>
-                        ${col.editable ? `<input type="text" value="${item[col.key] || ''}" data-field="${col.key}">` : (col.render ? col.render(item[col.key], item) : item[col.key] || '—')}
+                        ${col.editable ? (typeof item[col.key] === 'boolean' ? `<input type="checkbox" ${item[col.key] ? 'checked' : ''} data-field="${col.key}">` : `<input type="text" value="${item[col.key] || ''}" data-field="${col.key}">`) : (col.render ? col.render(item[col.key], item) : item[col.key] || '—')}
                     </td>
                 `).join('')}
                 <td>
@@ -291,7 +291,7 @@ window.tableSave = function(containerId, id) {
         const inputs = row.querySelectorAll('input[data-field]')
         const updates = {}
         inputs.forEach(input => {
-            updates[input.dataset.field] = input.value
+            updates[input.dataset.field] = input.type === 'checkbox' ? input.checked : input.value
         })
         table.onAction('save', id, updates)
         table.state.editing = null
