@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Gestión de Usuarios — Pymap</title>
+
+        <!-- Tipografía -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="../css/estilo.css" />
+
+        <!-- Template Include -->
+        <script type="module" src="../js/template-include.js"></script>
+
+        <!-- Auth Guard -->
+        <script type="module" src="../js/auth-guard.js"></script>
+    </head>
+    <body>
+        <div class="app">
+            <!-- Left Sidebar (cargado dinámicamente) -->
+            <div id="sidebar-container"></div>
+
+            <!-- Main content -->
+            <main class="main">
+                <!-- Page Title -->
+                <section class="card">
+                    <div class="page-title">
+                        <h1>Gestión de Usuarios</h1>
+                        <p>
+                            Administra los usuarios registrados en la
+                            plataforma.
+                        </p>
+                    </div>
+
+                    <!-- Métricas -->
+                    <div class="metrics" style="margin-top: 16px">
+                        <div class="metric">
+                            <div class="num" id="total-users">0</div>
+                            <div class="label">Total usuarios</div>
+                        </div>
+                        <div class="metric">
+                            <div class="num" id="active-users">0</div>
+                            <div class="label">Usuarios activos</div>
+                        </div>
+                        <div class="metric">
+                            <div class="num" id="business-users">0</div>
+                            <div class="label">Negocios</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lista de usuarios -->
+                <div class="content">
+                    <div class="card">
+                        <h2
+                            style="
+                                margin: 0 0 12px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--purple);
+                            "
+                        >
+                            Lista de Usuarios
+                        </h2>
+
+                        <!-- Tabla de usuarios -->
+                        <div id="users-table-container"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Toast notifications -->
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <!-- JavaScript -->
+        <script type="module" src="../js/users.js"></script>
+    </body>
+</html>

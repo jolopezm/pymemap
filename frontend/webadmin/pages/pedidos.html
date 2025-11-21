@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Gestión de Reportes — Pymap</title>
+        <link rel="stylesheet" href="../css/estilo.css" />
+        <script type="module" src="../js/template-include.js"></script>
+        <script type="module" src="../js/auth-guard.js"></script>
+    </head>
+    <body>
+        <div class="app">
+            <div id="sidebar-container"></div>
+
+            <main class="main">
+                <section class="card">
+                    <div class="page-title">
+                        <h1>Gestión de Reportes</h1>
+                        <p>
+                            Administra los reportes de usuarios sobre servicios.
+                        </p>
+                    </div>
+
+                    <div class="metrics" style="margin-top: 16px">
+                        <div class="metric">
+                            <div class="num" id="total-reports">0</div>
+                            <div class="label">Total reportes</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="open-reports"
+                                style="color: #f44336"
+                            >
+                                0
+                            </div>
+                            <div class="label">Abiertos</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="in-progress-reports"
+                                style="color: #ffc107"
+                            >
+                                0
+                            </div>
+                            <div class="label">En progreso</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="resolved-reports"
+                                style="color: #4caf50"
+                            >
+                                0
+                            </div>
+                            <div class="label">Resueltos</div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="content">
+                    <div class="card" id="reports-card">
+                        <h2
+                            style="
+                                margin: 0 0 12px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--purple);
+                            "
+                        >
+                            Lista de Reportes
+                        </h2>
+
+                        <div class="controls">
+                            <select class="select" id="typeFilter">
+                                <option value="all">Todos los tipos</option>
+                                <option value="service_issue">
+                                    Problema con servicio
+                                </option>
+                                <option value="payment_issue">
+                                    Problema de pago
+                                </option>
+                                <option value="behavior_issue">
+                                    Problema de comportamiento
+                                </option>
+                                <option value="technical_issue">
+                                    Problema técnico
+                                </option>
+                                <option value="other">Otro</option>
+                            </select>
+
+                            <select class="select" id="stateFilter">
+                                <option value="all">Todos los estados</option>
+                                <option value="open">Abierto</option>
+                                <option value="in_progress">En progreso</option>
+                                <option value="resolved">Resuelto</option>
+                                <option value="closed">Cerrado</option>
+                            </select>
+
+                            <input
+                                type="text"
+                                class="input"
+                                id="search"
+                                placeholder="Buscar por email o descripción..."
+                                style="flex: 1; min-width: 200px"
+                            />
+
+                            <button class="btn" id="refresh-btn">
+                                🔄 Actualizar
+                            </button>
+
+                            <select
+                                class="select"
+                                id="perPage"
+                                style="margin-left: auto"
+                            >
+                                <option value="10" selected>
+                                    10 por página
+                                </option>
+                                <option value="20">20 por página</option>
+                                <option value="50">50 por página</option>
+                            </select>
+                        </div>
+
+                        <div class="reports-list" id="reportsList"></div>
+
+                        <div class="pagination" id="pagination"></div>
+                    </div>
+
+                    <!-- Chat Panel -->
+                    <div class="card" id="chat-panel" style="display: none">
+                        <div class="chat-panel-header">
+                            <h2
+                                style="
+                                    margin: 0;
+                                    font-size: 16px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Chat con Usuario
+                            </h2>
+                            <button class="btn ghost" id="close-chat-panel">
+                                ✕ Cerrar
+                            </button>
+                        </div>
+                        <div class="chat-messages" id="chat-messages"></div>
+                        <div class="chat-input-panel">
+                            <textarea
+                                id="chat-input-text"
+                                placeholder="Escribe un mensaje..."
+                                rows="3"
+                            ></textarea>
+                            <button class="btn" id="send-chat-message">
+                                Enviar mensaje
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="side-top" id="side-top">
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 12px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Acciones Rápidas
+                            </h3>
+                            <div
+                                style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 8px;
+                                "
+                            >
+                                <button class="btn ghost" id="filter-urgent">
+                                    ⚠️ Ver urgentes
+                                </button>
+                                <button class="btn ghost" id="filter-today">
+                                    📅 Ver de hoy
+                                </button>
+                                <button
+                                    class="btn ghost"
+                                    id="filter-unattended"
+                                >
+                                    🔔 Ver sin atender
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 8px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Guía
+                            </h3>
+                            <ul
+                                style="
+                                    margin: 0;
+                                    padding-left: 18px;
+                                    font-size: 13px;
+                                    color: var(--muted);
+                                    line-height: 1.6;
+                                "
+                            >
+                                <li>Revisa los reportes abiertos primero</li>
+                                <li>Responde al usuario de manera clara</li>
+                                <li>Cambia el estado según el progreso</li>
+                                <li>Marca como resuelto cuando se solucione</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 12px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Tipos de Reportes
+                            </h3>
+                            <div style="font-size: 12px; line-height: 1.8">
+                                <div>
+                                    <span style="color: #f44336">●</span>
+                                    Servicio
+                                </div>
+                                <div>
+                                    <span style="color: #ff9800">●</span> Pago
+                                </div>
+                                <div>
+                                    <span style="color: #9c27b0">●</span>
+                                    Comportamiento
+                                </div>
+                                <div>
+                                    <span style="color: #2196f3">●</span>
+                                    Técnico
+                                </div>
+                                <div>
+                                    <span style="color: #607d8b">●</span> Otro
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <script type="module" src="../js/reports-main.js"></script>
+    </body>
+</html>
