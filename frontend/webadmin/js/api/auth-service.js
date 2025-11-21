@@ -1,16 +1,5 @@
-/**
- * PymeMap Admin - Authentication Service
- * Adaptado para uso en navegador (localStorage + fetch)
- */
+import { API_URL } from './config.js'
 
-// Configuración de API
-const API_URL = 'https://pymemap-production-306f.up.railway.app'
-// Para desarrollo local, descomenta:
-// const API_URL = 'http://localhost:8000';
-
-/**
- * Interceptor para agregar token a todas las peticiones
- */
 async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('token')
 
@@ -28,7 +17,6 @@ async function fetchWithAuth(url, options = {}) {
         headers,
     })
 
-    // Si es 401, hacer logout automático
     if (response.status === 401) {
         await logout()
         window.location.href = 'login.html'
@@ -37,10 +25,6 @@ async function fetchWithAuth(url, options = {}) {
     return response
 }
 
-/**
- * Obtiene el usuario actual autenticado
- * @returns {Promise<Object|null>} Usuario o null si no está autenticado
- */
 export async function getCurrentUser() {
     try {
         const token = localStorage.getItem('token')
@@ -63,27 +47,15 @@ export async function getCurrentUser() {
     }
 }
 
-/**
- * Verifica si el usuario está autenticado
- * @returns {boolean} True si tiene token
- */
 export function isAuthenticated() {
     const token = localStorage.getItem('token')
     return !!token
 }
 
-/**
- * Obtiene el token almacenado
- * @returns {string|null} Token JWT o null
- */
 export function getToken() {
     return localStorage.getItem('token')
 }
 
-/**
- * Obtiene los datos del usuario almacenados
- * @returns {Object|null} Datos del usuario o null
- */
 export function getStoredUser() {
     const userStr = localStorage.getItem('user')
     if (!userStr) return null
@@ -96,13 +68,6 @@ export function getStoredUser() {
     }
 }
 
-/**
- * Inicia sesión con email y contraseña
- * @param {Object} credentials - Credenciales de login
- * @param {string} credentials.email - Email del usuario
- * @param {string} credentials.password - Contraseña
- * @returns {Promise<Object>} Respuesta con token
- */
 export async function login({ email, password }) {
     try {
         const response = await fetch(`${API_URL}/login`, {
@@ -123,7 +88,6 @@ export async function login({ email, password }) {
         if (data.access_token) {
             localStorage.setItem('token', data.access_token)
 
-            // Obtener y guardar datos del usuario
             await getCurrentUser()
         }
 
@@ -134,20 +98,12 @@ export async function login({ email, password }) {
     }
 }
 
-/**
- * Cierra sesión del usuario
- */
 export async function logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     localStorage.removeItem('authData')
 }
 
-/**
- * Envía código de autenticación por email
- * @param {string} email - Email del usuario
- * @returns {Promise<Object>} Respuesta del servidor
- */
 export async function sendAuthCode(email) {
     try {
         const response = await fetch(`${API_URL}/send-auth-code`, {
@@ -170,13 +126,6 @@ export async function sendAuthCode(email) {
     }
 }
 
-/**
- * Verifica el código de autenticación
- * @param {Object} authData - Datos de autenticación
- * @param {string} authData.email - Email del usuario
- * @param {string} authData.code - Código recibido
- * @returns {Promise<Object>} Respuesta con token
- */
 export async function verifyAuthCode(authData) {
     try {
         const response = await fetch(`${API_URL}/verify-auth-code`, {
@@ -206,31 +155,17 @@ export async function verifyAuthCode(authData) {
     }
 }
 
-/**
- * Verifica si el usuario tiene un rol específico
- * @param {string} role - Rol a verificar (admin, business, etc)
- * @returns {boolean} True si el usuario tiene el rol
- */
 export function hasRole(role) {
     const user = getStoredUser()
     if (!user) return false
 
-    // Adaptar según tu estructura de usuario
     return user.role === role || user.user_type === role
 }
 
-/**
- * Verifica si el usuario es admin
- * @returns {boolean} True si es admin
- */
 export function isAdmin() {
     return hasRole('admin')
 }
 
-/**
- * Verifica si el usuario es negocio
- * @returns {boolean} True si es negocio
- */
 export function isBusiness() {
     return hasRole('business')
 }

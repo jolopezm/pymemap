@@ -4,28 +4,20 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Gestión de Reportes — PymeMap</title>
-        <link rel="stylesheet" href="css/estilo.css" />
-
-        <!-- Template Include - Carga sidebar -->
-        <script type="module" src="js/template-include.js"></script>
-
-        <!-- Auth Guard - Protege esta página -->
-        <script type="module" src="js/auth-guard.js"></script>
+        <link rel="stylesheet" href="../css/estilo.css" />
+        <script type="module" src="../js/template-include.js"></script>
+        <script type="module" src="../js/auth-guard.js"></script>
     </head>
     <body>
         <div class="app">
-            <!-- Left Sidebar (cargado dinámicamente) -->
             <div id="sidebar-container"></div>
 
-            <!-- Main content -->
             <main class="main">
-                <!-- Top metrics and content -->
                 <section class="card">
                     <div class="page-title">
                         <h1>Gestión de Reportes</h1>
                         <p>
-                            Administra los reportes de usuarios sobre servicios,
-                            pagos y comportamiento.
+                            Administra los reportes de usuarios sobre servicios.
                         </p>
                     </div>
 
@@ -68,7 +60,6 @@
                 </section>
 
                 <div class="content">
-                    <!-- Left: Reports list -->
                     <div class="card">
                         <h2
                             style="
@@ -132,16 +123,11 @@
                             </select>
                         </div>
 
-                        <div class="reports-list" id="reportsList">
-                            <!-- Los reportes se cargan dinámicamente aquí -->
-                        </div>
+                        <div class="reports-list" id="reportsList"></div>
 
-                        <div class="pagination" id="pagination">
-                            <!-- Los botones de paginación se cargan dinámicamente aquí -->
-                        </div>
+                        <div class="pagination" id="pagination"></div>
                     </div>
 
-                    <!-- Right: Stats and quick actions -->
                     <div class="side-top">
                         <div class="card">
                             <h3
@@ -242,7 +228,6 @@
 
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        <!-- JavaScript -->
-        <script type="module" src="js/reports-main.js"></script>
+        <script type="module" src="../js/reports-main.js"></script>
     </body>
 </html>

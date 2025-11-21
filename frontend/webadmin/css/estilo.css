@@ -15,6 +15,7 @@
 @import url('./responsive.css');
 @import url('./sidebar-derecho.css');
 @import url('./content-layout.css');
+@import url('./login.css');
 
 :root {
     --purple: #6c3bbf;

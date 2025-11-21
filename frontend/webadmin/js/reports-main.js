@@ -8,7 +8,7 @@ import {
     updateReportState,
     REPORT_TYPE_LABELS,
     REPORT_STATE_LABELS,
-} from './report-service.js'
+} from './api/report-service.js'
 
 // ============================================
 // DATOS Y ESTADO

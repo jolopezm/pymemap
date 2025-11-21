@@ -6,7 +6,13 @@
  * <script type="module" src="js/auth-guard.js"></script>
  */
 
-import { isAuthenticated, getStoredUser, logout } from './auth-service.js'
+// Detectar si estamos en subcarpeta
+const inSubfolder = window.location.pathname.includes('/pages/')
+const authServicePath = inSubfolder
+    ? './api/auth-service.js'
+    : '../js/api/auth-service.js'
+
+const { isAuthenticated, getStoredUser, logout } = await import(authServicePath)
 
 /**
  * Verifica si el usuario está autenticado
@@ -18,8 +24,9 @@ function checkAuth() {
         const currentPath = window.location.pathname + window.location.search
         sessionStorage.setItem('redirectAfterLogin', currentPath)
 
-        // Redirigir a login
-        window.location.href = 'login.html'
+        // Redirigir a login según ubicación
+        const loginPath = inSubfolder ? 'login.html' : 'pages/login.html'
+        window.location.href = loginPath
         return false
     }
     return true
@@ -68,19 +75,6 @@ function initUserInfo() {
 function setupLogout() {
     // Buscar botón de logout existente o crear uno
     let logoutBtn = document.getElementById('logout-btn')
-
-    if (!logoutBtn) {
-        // Si no existe, buscar el perfil y agregar el botón
-        const profile = document.querySelector('.profile')
-        if (profile) {
-            logoutBtn = document.createElement('button')
-            logoutBtn.id = 'logout-btn'
-            logoutBtn.className = 'btn ghost'
-            logoutBtn.innerHTML = 'Salir'
-            logoutBtn.style.marginLeft = '12px'
-            profile.appendChild(logoutBtn)
-        }
-    }
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
