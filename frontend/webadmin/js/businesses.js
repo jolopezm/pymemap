@@ -7,17 +7,7 @@ let table
 // Cargar negocios al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     loadBusinesses()
-    setupEventListeners()
 })
-
-function setupEventListeners() {
-    document
-        .getElementById('categoryFilter')
-        .addEventListener('change', applyFilters)
-    document
-        .getElementById('searchInput')
-        .addEventListener('input', applyFilters)
-}
 
 async function loadBusinesses() {
     try {
@@ -130,11 +120,6 @@ function getCategoryBadge(category) {
         other: '📦 Otro',
     }
     return badges[category] || '📦 ' + (category || 'Sin categoría')
-}
-
-function applyFilters() {
-    // Los filtros ahora se manejan dentro del TableComponent
-    // Pero podemos mantener compatibilidad si es necesario
 }
 
 function updateMetrics() {

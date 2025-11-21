@@ -13,6 +13,8 @@ class User(BaseModel):
     isAuthenticated: bool = Field(default=False)
     balance: float = Field(default=0.0)
     profile_pic: Optional[str] = Field(default="https://storage.googleapis.com/pymap_profile_pics/profile_pics/user-profile.jpg")
+    role: str = Field(default="user")
+    phone: Optional[str] = Field(default=None)
     
     @field_validator('password')
     @classmethod
@@ -39,6 +41,8 @@ class UserResponse(BaseModel):
     birthdate: str = Field(...)
     balance: float = Field(...)
     profile_pic: Optional[str] = Field(default=None)
+    role: str = Field(default="user")
+    phone: Optional[str] = Field(default=None)
     
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
 
@@ -56,7 +60,10 @@ class UserUpdate(BaseModel):
     name: str | None = None
     email: str | None = None
     birthdate: str | None = None
-
+    profile_pic: str | None = None
+    phone: str | None = None
+    role: str | None = None
+    
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str

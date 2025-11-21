@@ -51,6 +51,7 @@ async function loadUsers() {
         showToast('Cargando usuarios...')
 
         allUsers = await getUsers()
+        console.log('Usuarios cargados:', allUsers)
 
         initTable()
         updateMetrics()
@@ -67,23 +68,37 @@ function initTable() {
         data: allUsers,
         columns: [
             {
+                key: '_id',
+                label: 'ID',
+                render: val => [val ? `<span class="middle-ellipsis">${val}</span>` : 'N/A'],
+                editable: false,
+                searchable: true
+            },
+            {
                 key: 'name',
                 label: 'Nombre',
-                render: (val, item) => `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                            ${val ? val.charAt(0).toUpperCase() : ''}
-                        </div>
-                        <span>${val || ''}</span>
-                    </div>
-                `,
+                render: val => val || 'N/A',
                 editable: true,
+                searchable: true
+            },
+            {
+                key: 'rut',
+                label: 'RUT',
+                render: val => val || 'N/A',
+                editable: false,
                 searchable: true
             },
             {
                 key: 'email',
                 label: 'Email',
                 render: val => val || '',
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'phone',
+                label: 'Teléfono',
+                render: val => val || 'N/A',
                 editable: true,
                 searchable: true
             },
@@ -95,10 +110,18 @@ function initTable() {
                 editable: true
             },
             {
-                key: 'phone',
-                label: 'Teléfono',
+                key: 'birthdate',
+                label: 'Fecha de Nacimiento',
                 render: val => val || 'N/A',
-                editable: true
+                editable: false,
+                searchable: true
+            },
+            {
+                key: 'profile_pic',
+                label: 'Foto de Perfil',
+                render: val => [val ? `<a href="${val}" target="_blank">Ver Foto</a>` : 'N/A'],
+                editable: false,
+                searchable: true
             }
         ],
         actions: [
@@ -157,24 +180,10 @@ function updateMetrics() {
 }
 
 // ============================================
-// EVENT LISTENERS
-// ============================================
-
-function setupEventListeners() {
-    elements.roleFilter.addEventListener('change', applyFilters)
-    elements.searchInput.addEventListener('input', applyFilters)
-}
-
-function applyFilters() {
-    // Los filtros ahora se manejan dentro del TableComponent
-}
-
-// ============================================
 // INICIALIZACIÓN
 // ============================================
 
 function init() {
-    setupEventListeners()
     loadUsers()
 }
 

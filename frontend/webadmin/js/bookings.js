@@ -11,17 +11,7 @@ let table
 // Cargar reservas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     loadBookings()
-    setupEventListeners()
 })
-
-function setupEventListeners() {
-    document
-        .getElementById('statusFilter')
-        .addEventListener('change', applyFilters)
-    document
-        .getElementById('searchInput')
-        .addEventListener('input', applyFilters)
-}
 
 async function loadBookings() {
     try {
@@ -168,10 +158,6 @@ function getStatusBadge(status) {
         badges[status] ||
         `<span class="badge badge-gray">${status || 'Desconocido'}</span>`
     )
-}
-
-function applyFilters() {
-    // Los filtros ahora se manejan dentro del TableComponent
 }
 
 function updateMetrics() {

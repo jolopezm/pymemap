@@ -7,17 +7,7 @@ let table
 // Cargar reseñas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
     loadReviews()
-    setupEventListeners()
 })
-
-function setupEventListeners() {
-    document
-        .getElementById('ratingFilter')
-        .addEventListener('change', applyFilters)
-    document
-        .getElementById('searchInput')
-        .addEventListener('input', applyFilters)
-}
 
 async function loadReviews() {
     try {
@@ -140,10 +130,6 @@ function formatDate(dateString) {
     } catch {
         return dateString
     }
-}
-
-function applyFilters() {
-    // Los filtros ahora se manejan dentro del TableComponent
 }
 
 function updateMetrics() {

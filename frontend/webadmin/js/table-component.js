@@ -1,7 +1,3 @@
-// table-component.js - Componente reutilizable para tablas con paginación, checkboxes y acciones
-
-import { renderTemplate } from './utils/renderer.js'
-
 export class TableComponent {
     constructor(options) {
         this.containerId = options.containerId
