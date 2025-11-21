@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/", response_model=Report)
 async def create_report(report: Report, current_user: TokenData = Depends(get_current_user)):
     try:
-        print(f"📥 Recibiendo reporte de usuario: {current_user.username}")
+        print(f"📥 Recibiendo reporte de usuario: {current_user.email}")
         print(f"📦 Datos del reporte: {report.model_dump(exclude={'id'})}")
         
         report.timestamp = datetime.utcnow().isoformat()
