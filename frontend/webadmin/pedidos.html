@@ -3,87 +3,312 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Pedidos</title>
+        <title>Gestión de Reportes — PymeMap</title>
         <link rel="stylesheet" href="css/estilo.css" />
 
         <!-- Auth Guard - Protege esta página -->
         <script type="module" src="js/auth-guard.js"></script>
     </head>
     <body>
-        <header>
-            <h1>Pedidos</h1>
-            <div class="filters">
-                <input type="date" placeholder="Fecha" />
-                <select>
-                    <option value="">Estado</option>
-                    <option value="solicitado">Solicitado</option>
-                    <option value="confirmado">Confirmado</option>
-                    <option value="completado">Completado</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-                <input type="text" placeholder="Servicio" />
-                <input type="text" placeholder="Cliente" />
-            </div>
-        </header>
-
-        <main>
-            <section class="kanban">
-                <div class="column" id="solicitado">
-                    <h2>Solicitado</h2>
-                    <!-- Tarjetas de pedidos -->
+        <div class="app">
+            <!-- Left Sidebar -->
+            <aside class="sidebar" aria-label="Navegación principal">
+                <div class="logo">
+                    <div class="mark">PM</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px">
+                            PymeMap
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted)">
+                            Panel Administrativo
+                        </div>
+                    </div>
                 </div>
-                <div class="column" id="confirmado">
-                    <h2>Confirmado</h2>
-                    <!-- Tarjetas de pedidos -->
-                </div>
-                <div class="column" id="completado">
-                    <h2>Completado</h2>
-                    <!-- Tarjetas de pedidos -->
-                </div>
-                <div class="column" id="cancelado">
-                    <h2>Cancelado</h2>
-                    <!-- Tarjetas de pedidos -->
-                </div>
-            </section>
 
-            <section class="table-view">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>ID Orden</th>
-                            <th>Cliente</th>
-                            <th>Servicio</th>
-                            <th>Precio</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Filas de pedidos -->
-                    </tbody>
-                </table>
-            </section>
-        </main>
+                <nav class="nav" aria-label="Secciones">
+                    <a href="index.html">💬 Comentarios</a>
+                    <a href="pedidos.html" class="active">🚨 Reportes</a>
+                    <a href="servicios.html">⚙️ Servicios</a>
+                    <a href="historial.html">📊 Historial</a>
+                    <a href="vision.html">👁️ Visión General</a>
+                </nav>
 
-        <footer>
-            <div class="pagination">
-                <!-- Paginación -->
-            </div>
-            <input type="text" placeholder="Buscar por cliente/ID" />
-        </footer>
+                <div
+                    style="
+                        margin-top: auto;
+                        color: var(--muted);
+                        font-size: 13px;
+                    "
+                >
+                    <div
+                        style="
+                            border-top: 1px solid var(--light-gray);
+                            padding-top: 12px;
+                        "
+                    >
+                        Versión 1.0.0
+                    </div>
+                </div>
+            </aside>
 
-        <div class="modal" id="detalle-pedido">
-            <h2>Detalle de Pedido</h2>
-            <p>Datos del Cliente: <span id="cliente-info"></span></p>
-            <p>Servicio: <span id="servicio-info"></span></p>
-            <p>Historial de Cambios: <span id="historial-info"></span></p>
-            <p>Estado de Pago: <span id="estado-pago"></span></p>
-            <button id="marcar-completado">Marcar Completado</button>
-            <a href="#" id="ver-comprobante">Ver Comprobante</a>
-            <a href="#" id="enlace-tickets">Tickets</a>
+            <!-- Main content -->
+            <main class="main">
+                <header class="header">
+                    <div class="biz">
+                        <img
+                            src="https://via.placeholder.com/48"
+                            alt="Business logo"
+                            style="
+                                width: 48px;
+                                height: 48px;
+                                border-radius: 10px;
+                                border: 1px solid var(--light-gray);
+                            "
+                        />
+                        <div>
+                            <div class="name">Mi Negocio</div>
+                            <div style="font-size: 13px; color: var(--muted)">
+                                Gestión de reportes y casos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile">
+                        <div>
+                            <div style="font-weight: 600; font-size: 14px">
+                                Admin Usuario
+                            </div>
+                            <div style="font-size: 12px; color: var(--muted)">
+                                Administrador
+                            </div>
+                        </div>
+                        <div class="avatar">AU</div>
+                    </div>
+                </header>
+
+                <!-- Top metrics and content -->
+                <section class="card">
+                    <div class="page-title">
+                        <h1>Gestión de Reportes</h1>
+                        <p>
+                            Administra los reportes de usuarios sobre servicios,
+                            pagos y comportamiento.
+                        </p>
+                    </div>
+
+                    <div class="metrics" style="margin-top: 16px">
+                        <div class="metric">
+                            <div class="num" id="total-reports">0</div>
+                            <div class="label">Total reportes</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="open-reports"
+                                style="color: #f44336"
+                            >
+                                0
+                            </div>
+                            <div class="label">Abiertos</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="in-progress-reports"
+                                style="color: #ffc107"
+                            >
+                                0
+                            </div>
+                            <div class="label">En progreso</div>
+                        </div>
+                        <div class="metric">
+                            <div
+                                class="num"
+                                id="resolved-reports"
+                                style="color: #4caf50"
+                            >
+                                0
+                            </div>
+                            <div class="label">Resueltos</div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="content">
+                    <!-- Left: Reports list -->
+                    <div class="card">
+                        <h2
+                            style="
+                                margin: 0 0 12px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                color: var(--purple);
+                            "
+                        >
+                            Lista de Reportes
+                        </h2>
+
+                        <div class="controls">
+                            <select class="select" id="typeFilter">
+                                <option value="all">Todos los tipos</option>
+                                <option value="service_issue">
+                                    Problema con servicio
+                                </option>
+                                <option value="payment_issue">
+                                    Problema de pago
+                                </option>
+                                <option value="behavior_issue">
+                                    Problema de comportamiento
+                                </option>
+                                <option value="technical_issue">
+                                    Problema técnico
+                                </option>
+                                <option value="other">Otro</option>
+                            </select>
+
+                            <select class="select" id="stateFilter">
+                                <option value="all">Todos los estados</option>
+                                <option value="open">Abierto</option>
+                                <option value="in_progress">En progreso</option>
+                                <option value="resolved">Resuelto</option>
+                                <option value="closed">Cerrado</option>
+                            </select>
+
+                            <input
+                                type="text"
+                                class="input"
+                                id="search"
+                                placeholder="Buscar por email o descripción..."
+                                style="flex: 1; min-width: 200px"
+                            />
+
+                            <button class="btn" id="refresh-btn">
+                                🔄 Actualizar
+                            </button>
+
+                            <select
+                                class="select"
+                                id="perPage"
+                                style="margin-left: auto"
+                            >
+                                <option value="10" selected>
+                                    10 por página
+                                </option>
+                                <option value="20">20 por página</option>
+                                <option value="50">50 por página</option>
+                            </select>
+                        </div>
+
+                        <div class="reports-list" id="reportsList">
+                            <!-- Los reportes se cargan dinámicamente aquí -->
+                        </div>
+
+                        <div class="pagination" id="pagination">
+                            <!-- Los botones de paginación se cargan dinámicamente aquí -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Stats and quick actions -->
+                    <div class="side-top">
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 12px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Acciones Rápidas
+                            </h3>
+                            <div
+                                style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 8px;
+                                "
+                            >
+                                <button class="btn ghost" id="filter-urgent">
+                                    ⚠️ Ver urgentes
+                                </button>
+                                <button class="btn ghost" id="filter-today">
+                                    📅 Ver de hoy
+                                </button>
+                                <button
+                                    class="btn ghost"
+                                    id="filter-unattended"
+                                >
+                                    🔔 Ver sin atender
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 8px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Guía
+                            </h3>
+                            <ul
+                                style="
+                                    margin: 0;
+                                    padding-left: 18px;
+                                    font-size: 13px;
+                                    color: var(--muted);
+                                    line-height: 1.6;
+                                "
+                            >
+                                <li>Revisa los reportes abiertos primero</li>
+                                <li>Responde al usuario de manera clara</li>
+                                <li>Cambia el estado según el progreso</li>
+                                <li>Marca como resuelto cuando se solucione</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3
+                                style="
+                                    margin: 0 0 12px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                            >
+                                Tipos de Reportes
+                            </h3>
+                            <div style="font-size: 12px; line-height: 1.8">
+                                <div>
+                                    <span style="color: #f44336">●</span>
+                                    Servicio
+                                </div>
+                                <div>
+                                    <span style="color: #ff9800">●</span> Pago
+                                </div>
+                                <div>
+                                    <span style="color: #9c27b0">●</span>
+                                    Comportamiento
+                                </div>
+                                <div>
+                                    <span style="color: #2196f3">●</span>
+                                    Técnico
+                                </div>
+                                <div>
+                                    <span style="color: #607d8b">●</span> Otro
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
 
-        <script src="script.js"></script>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <!-- JavaScript -->
+        <script type="module" src="js/reports-main.js"></script>
     </body>
 </html>

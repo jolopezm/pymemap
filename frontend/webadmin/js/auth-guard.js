@@ -76,7 +76,7 @@ function setupLogout() {
             logoutBtn = document.createElement('button')
             logoutBtn.id = 'logout-btn'
             logoutBtn.className = 'btn ghost'
-            logoutBtn.innerHTML = '🚪 Salir'
+            logoutBtn.innerHTML = 'Salir'
             logoutBtn.style.marginLeft = '12px'
             profile.appendChild(logoutBtn)
         }
