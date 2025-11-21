@@ -11,171 +11,171 @@ async def create_test_businesses():
     # Assuming these are the owner_ids of the 15 users created earlier
     # In a real scenario, you might query the users collection to get their IDs
     owner_ids = [
-        "69207d808b7b0c730b2008f9",  # Maria
-        "69207d828b7b0c730b2008fa",  # Juan
-        "69207d838b7b0c730b2008fb",  # Ana
-        "69207d838b7b0c730b2008fc",  # Pedro
-        "69207d848b7b0c730b2008fd",  # Sofia
-        "69207d848b7b0c730b2008fe",  # Carlos
-        "69207d848b7b0c730b2008ff",  # Laura
-        "69207d858b7b0c730b200900",  # Diego
-        "69207d858b7b0c730b200901",  # Camila
-        "69207d868b7b0c730b200902",  # Andres
-        "69207d868b7b0c730b200903",  # Valentina
-        "69207d868b7b0c730b200904",  # Felipe
-        "69207d878b7b0c730b200905",  # Isabella
-        "69207d878b7b0c730b200906",  # Sebastian
-        "69207d888b7b0c730b200907"   # Martina
+        "69208a6cdcfb50e654182cfa",  # Maria
+        "69208a6edcfb50e654182cfb",  # Juan
+        "69208a6fdcfb50e654182cfc",  # Ana
+        "69208a6fdcfb50e654182cfd",  # Pedro
+        "69208a70dcfb50e654182cfe",  # Sofia
+        "69208a70dcfb50e654182cff",  # Carlos
+        "69208a70dcfb50e654182d00",  # Laura
+        "69208a71dcfb50e654182d01",  # Diego
+        "69208a71dcfb50e654182d02",  # Camila
+        "69208a72dcfb50e654182d03",  # Andres
+        "69208a72dcfb50e654182d04",  # Valentina
+        "69208a72dcfb50e654182d05",  # Felipe
+        "69208a73dcfb50e654182d06",  # Isabella
+        "69208a73dcfb50e654182d07",  # Sebastian
+        "69208a74dcfb50e654182d08"   # Martina
     ]
 
     businesses_data = [
         {
-            "name": "Técnico de bicicletas",
+            "name": "Técnico de Bicicletas",
             "address": "Juan Enrique Concha 254, Ñuñoa, Chile",
             "category": "servicios",
-            "description": "Reparo bicicletas a domicilio o en mi taller",
+            "description": "Reparo bicicletas a domicilio o en mi taller pequeño",
             "owner_id": owner_ids[0],
             "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/b3ec...",
             "latitude": -33.4577022,
             "longitude": -70.5955576
         },
         {
-            "name": "Café Central",
+            "name": "Chef a Domicilio",
             "address": "Plaza de Armas, Santiago, Chile",
             "category": "comida",
-            "description": "Café tradicional con pasteles caseros",
+            "description": "Preparación de comidas caseras a domicilio para eventos o cenas familiares",
             "owner_id": owner_ids[1],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/cafe...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/chef...",
             "latitude": -33.4378,
             "longitude": -70.6503
         },
         {
-            "name": "Tienda de Ropa Vintage",
+            "name": "Costurera Freelance",
             "address": "Av. Providencia 1234, Providencia, Chile",
-            "category": "retail",
-            "description": "Ropa vintage y accesorios únicos",
+            "category": "servicios",
+            "description": "Servicios de costura y arreglos de ropa a domicilio o en mi taller",
             "owner_id": owner_ids[2],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/vintage...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/costurera...",
             "latitude": -33.4314,
             "longitude": -70.6092
         },
         {
-            "name": "Clínica Dental Familiar",
+            "name": "Masajista Terapéutico",
             "address": "Calle Las Condes 567, Las Condes, Chile",
             "category": "salud",
-            "description": "Servicios dentales para toda la familia",
+            "description": "Masajes relajantes y terapéuticos a domicilio o en mi espacio privado",
             "owner_id": owner_ids[3],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/dental...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/masajista...",
             "latitude": -33.4155,
             "longitude": -70.5831
         },
         {
-            "name": "Salón de Belleza Glamour",
+            "name": "Peluquera a Domicilio",
             "address": "Av. Apoquindo 890, Las Condes, Chile",
             "category": "belleza",
-            "description": "Tratamientos de belleza y peluquería",
+            "description": "Cortes de cabello, tintes y tratamientos capilares en la comodidad de tu hogar",
             "owner_id": owner_ids[4],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/beauty...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/peluquera...",
             "latitude": -33.4134,
             "longitude": -70.5975
         },
         {
-            "name": "Academia de Inglés",
+            "name": "Profesor Particular de Inglés",
             "address": "Calle Huérfanos 456, Santiago Centro, Chile",
             "category": "educacion",
-            "description": "Clases de inglés para todos los niveles",
+            "description": "Clases de inglés personalizadas a domicilio o en mi estudio",
             "owner_id": owner_ids[5],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/english...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/profesor...",
             "latitude": -33.4417,
             "longitude": -70.6533
         },
         {
-            "name": "Servicio de Limpieza a Domicilio",
+            "name": "Servicio de Limpieza Doméstica",
             "address": "Av. La Florida 2345, La Florida, Chile",
             "category": "hogar",
-            "description": "Limpieza profunda de hogares y oficinas",
+            "description": "Limpieza profunda de hogares, a domicilio con productos ecológicos",
             "owner_id": owner_ids[6],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/cleaning...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/limpieza...",
             "latitude": -33.5225,
             "longitude": -70.5989
         },
         {
-            "name": "Restaurante Italiano",
+            "name": "Fotógrafo Freelance",
             "address": "Calle Italia 789, Ñuñoa, Chile",
-            "category": "comida",
-            "description": "Auténtica comida italiana con ingredientes frescos",
+            "category": "servicios",
+            "description": "Sesiones fotográficas a domicilio para eventos, retratos y productos",
             "owner_id": owner_ids[7],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/italian...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/fotografo...",
             "latitude": -33.4547,
             "longitude": -70.6047
         },
         {
-            "name": "Farmacia Express",
+            "name": "Terapeuta Holístico",
             "address": "Av. Vicuña Mackenna 1122, Ñuñoa, Chile",
             "category": "salud",
-            "description": "Medicamentos y productos de salud",
+            "description": "Terapias alternativas como reiki y aromaterapia a domicilio",
             "owner_id": owner_ids[8],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/pharmacy...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/terapeuta...",
             "latitude": -33.4569,
             "longitude": -70.6058
         },
         {
-            "name": "Peluquería Moderna",
+            "name": "Manicurista Móvil",
             "address": "Calle Suecia 345, Providencia, Chile",
             "category": "belleza",
-            "description": "Cortes de cabello y tratamientos capilares",
+            "description": "Manicura y pedicura profesional a domicilio o en mi kit móvil",
             "owner_id": owner_ids[9],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/hair...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/manicurista...",
             "latitude": -33.4289,
             "longitude": -70.6156
         },
         {
-            "name": "Tienda de Electrónicos",
+            "name": "Reparador de Computadoras",
             "address": "Av. Libertador Bernardo O'Higgins 678, Santiago Centro, Chile",
-            "category": "retail",
-            "description": "Electrónicos y gadgets de última generación",
+            "category": "servicios",
+            "description": "Reparación y mantenimiento de computadoras a domicilio o en taller",
             "owner_id": owner_ids[10],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/electronics...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/reparador...",
             "latitude": -33.4422,
             "longitude": -70.6539
         },
         {
-            "name": "Centro de Yoga",
+            "name": "Instructor de Yoga Personal",
             "address": "Calle El Golf 567, Las Condes, Chile",
-            "category": "otros",
-            "description": "Clases de yoga y meditación",
+            "category": "educacion",
+            "description": "Clases de yoga personalizadas a domicilio o en parques locales",
             "owner_id": owner_ids[11],
             "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/yoga...",
             "latitude": -33.4144,
             "longitude": -70.5944
         },
         {
-            "name": "Reparaciones Eléctricas",
+            "name": "Electricista Independiente",
             "address": "Av. La Cisterna 1234, La Cisterna, Chile",
             "category": "servicios",
-            "description": "Reparaciones eléctricas residenciales y comerciales",
+            "description": "Instalaciones y reparaciones eléctricas residenciales a domicilio",
             "owner_id": owner_ids[12],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/electric...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/electricista...",
             "latitude": -33.5350,
             "longitude": -70.6667
         },
         {
-            "name": "Escuela de Música",
+            "name": "Profesor de Música",
             "address": "Calle Merced 890, Santiago Centro, Chile",
             "category": "educacion",
-            "description": "Lecciones de piano, guitarra y otros instrumentos",
+            "description": "Lecciones de guitarra, piano y canto a domicilio",
             "owner_id": owner_ids[13],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/music...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/musica...",
             "latitude": -33.4394,
             "longitude": -70.6472
         },
         {
-            "name": "Servicio de Jardinería",
+            "name": "Jardinero Urbano",
             "address": "Av. Tobalaba 3456, Puente Alto, Chile",
             "category": "hogar",
-            "description": "Diseño y mantenimiento de jardines",
+            "description": "Diseño y cuidado de jardines pequeños a domicilio",
             "owner_id": owner_ids[14],
-            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/gardening...",
+            "profile_pic": "https://storage.googleapis.com/pymap_businesses_pics/profile_pics/jardinero...",
             "latitude": -33.6167,
             "longitude": -70.5667
         }
@@ -191,7 +191,7 @@ async def create_test_businesses():
             del data['_id']
         
         # Insert into DB
-        await db.businesses.insert_one(data)
+        await db.business.insert_one(data)
         print(f"Negocio {business.name} creado exitosamente.")
 
 if __name__ == "__main__":

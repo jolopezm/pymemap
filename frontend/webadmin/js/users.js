@@ -51,7 +51,6 @@ async function loadUsers() {
         showToast('Cargando usuarios...')
 
         allUsers = await getUsers()
-        console.log('Usuarios cargados:', allUsers)
 
         initTable()
         updateMetrics()
@@ -121,6 +120,20 @@ function initTable() {
                 label: 'Foto de Perfil',
                 render: val => [val ? `<a href="${val}" target="_blank">Ver Foto</a>` : 'N/A'],
                 editable: false,
+                searchable: true
+            },
+            {
+                key: 'registered_at',
+                label: 'Creado El',
+                render: val => val ? val : 'N/A',
+                editable: false,
+                searchable: true
+            },
+            {
+                key: 'suspended',
+                label: 'Suspendido',
+                render: val => val ? 'Sí' : 'No',
+                editable: true,
                 searchable: true
             }
         ],

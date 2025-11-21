@@ -89,7 +89,8 @@ body {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    overflow: hidden;
+    overflow-x: auto;
+    width: 100%;
 }
 
 .data-table {

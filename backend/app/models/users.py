@@ -3,6 +3,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field, EmailStr, field_validator, field_serializer
 from pydantic.config import ConfigDict
 from ..utils.password_validator import PasswordValidation
+from datetime import datetime
 
 class User(BaseModel):
     rut: str = Field()
@@ -15,6 +16,8 @@ class User(BaseModel):
     profile_pic: Optional[str] = Field(default="https://storage.googleapis.com/pymap_profile_pics/profile_pics/user-profile.jpg")
     role: str = Field(default="user")
     phone: Optional[str] = Field(default=None)
+    registered_at: Optional[str] = Field(default=datetime.utcnow().strftime("%d/%m/%Y"))
+    suspended: bool = Field(default=False)
     
     @field_validator('password')
     @classmethod
@@ -43,6 +46,8 @@ class UserResponse(BaseModel):
     profile_pic: Optional[str] = Field(default=None)
     role: str = Field(default="user")
     phone: Optional[str] = Field(default=None)
+    registered_at: Optional[str] = Field(default=None)
+    suspended: bool = Field(default=False)
     
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
 
@@ -63,7 +68,7 @@ class UserUpdate(BaseModel):
     profile_pic: str | None = None
     phone: str | None = None
     role: str | None = None
-    
+
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str

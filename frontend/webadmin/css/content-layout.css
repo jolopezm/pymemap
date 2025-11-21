@@ -2,18 +2,11 @@
    Content Layout
    ======================================== */
 .content {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 0;
-    align-items: start;
-    border-top: 1px solid var(--light-gray);
+    width: 100%;
 }
 
 .content > .card {
-    border-right: 1px solid var(--light-gray);
-    border-radius: 0;
-    border-top: none;
-    border-left: none;
+    width: 100%;
 }
 
 .content > .side-top {

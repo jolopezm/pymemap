@@ -37,7 +37,7 @@ function initTable() {
                 searchable: true
             },
             {
-                key: 'owner_name',
+                key: 'owner_id',
                 label: 'Propietario',
                 render: val => val || 'N/A',
                 editable: true
