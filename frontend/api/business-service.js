@@ -151,28 +151,54 @@ export async function payService(serviceId) {
 
 export async function uploadBusinessPicture(businessId, imageUri, filename) {
     try {
+        console.log('📤 Iniciando upload de imagen de negocio:', {
+            businessId,
+            imageUri,
+            filename,
+        })
+
         // Obtener headers de autenticación
         const authHeaders = await getAuthHeaders()
 
         // Crear FormData
         const formData = new FormData()
 
-        // Leer la imagen como blob
-        const response = await fetch(imageUri)
-        const blob = await response.blob()
+        // Obtener extensión y tipo MIME
+        const uriParts = imageUri.split('.')
+        const fileType = uriParts[uriParts.length - 1]
 
-        // Crear un archivo con el blob
-        formData.append('file', blob, filename)
+        const mimeTypes = {
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            png: 'image/png',
+            gif: 'image/gif',
+            webp: 'image/webp',
+        }
+        const mimeType = mimeTypes[fileType.toLowerCase()] || 'image/jpeg'
+
+        // En React Native, FormData necesita este formato especial
+        formData.append('file', {
+            uri: imageUri,
+            type: mimeType,
+            name: filename || `business_${Date.now()}.${fileType}`,
+        })
+
+        console.log('📦 FormData preparado con:', { mimeType, filename })
 
         // Hacer la petición
         const uploadResponse = await fetch(
             `${API_URL}/business/upload-pictures/${businessId}`,
             {
                 method: 'POST',
-                headers: authHeaders,
+                headers: {
+                    ...authHeaders,
+                    // NO incluir Content-Type, FormData lo establece automáticamente
+                },
                 body: formData,
             }
         )
+
+        console.log('📡 Respuesta recibida:', uploadResponse.status)
 
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json().catch(() => ({}))
@@ -186,10 +212,15 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         await invalidateCache('business_list')
         await invalidateCache(`business_${businessId}`)
         console.log('🗑️ Caché de negocios invalidado después de subir imagen')
+        console.log('✅ Upload exitoso:', data)
 
         return data
     } catch (error) {
         console.error('❌ Error al subir imagen:', error)
+        console.error('❌ Detalles del error:', {
+            message: error.message,
+            stack: error.stack,
+        })
         throw error
     }
 }

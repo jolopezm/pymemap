@@ -14,11 +14,30 @@ router = APIRouter()
 
 @router.post("/", response_model=Report)
 async def create_report(report: Report, current_user: TokenData = Depends(get_current_user)):
-    report.timestamp = datetime.utcnow().isoformat()
-    report_dict = report.model_dump(by_alias=True)
-    result = await db.reports.insert_one(report_dict)
-    report.id = str(result.inserted_id)
-    return report
+    try:
+        print(f"📥 Recibiendo reporte de usuario: {current_user.username}")
+        print(f"📦 Datos del reporte: {report.model_dump(exclude={'id'})}")
+        
+        report.timestamp = datetime.utcnow().isoformat()
+        report_dict = report.model_dump(by_alias=True)
+        
+        # Remover el _id si es None para que MongoDB genere uno nuevo
+        if report_dict.get('_id') is None:
+            report_dict.pop('_id', None)
+        
+        result = await db.reports.insert_one(report_dict)
+        report.id = str(result.inserted_id)
+        
+        print(f"✅ Reporte creado con ID: {report.id}")
+        return report
+    except Exception as e:
+        print(f"❌ Error al crear reporte: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al crear reporte: {str(e)}"
+        )
 
 @router.get("/", response_model=List[Report])
 async def get_reports(skip: int = 0, limit: int = 100, current_user: TokenData = Depends(get_current_user)):

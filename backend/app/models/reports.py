@@ -5,8 +5,10 @@ from datetime import datetime, timedelta
 
 class Report(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
-    bookingId: str = Field(...)
-    businessId: str = Field(...)
+    bookingId: Optional[str] = Field(default=None)
+    businessId: Optional[str] = Field(default=None)
+    businessName: Optional[str] = Field(default=None)
+    serviceDescription: Optional[str] = Field(default=None)
     reportedBy: str = Field(...)
     reportedByName: Optional[str] = Field(default=None)
     reportedByEmail: Optional[str] = Field(default=None)

@@ -18,6 +18,7 @@ export default function ReportScreen() {
     const params = useSearchParams()
     const [business, setBusiness] = React.useState(null)
     const [loading, setLoading] = React.useState(true)
+    const [submitting, setSubmitting] = React.useState(false)
     const [items, setItems] = React.useState([
         { label: 'Problema con el servicio', value: 'service_issue' },
         { label: 'Bug en la app', value: 'bug' },
@@ -69,16 +70,6 @@ export default function ReportScreen() {
     return (
         <Screen>
             <View>
-                <View style={styles.header}>
-                    <Ionicons
-                        name="flag"
-                        size={48}
-                        color="#FF6B6B"
-                        style={{ alignSelf: 'center', marginBottom: 8 }}
-                    />
-                    <Text style={globalStyles.title}>Reportar Feedback</Text>
-                </View>
-
                 {business && (
                     <View style={styles.businessInfo}>
                         <Text style={styles.infoLabel}>Negocio:</Text>
@@ -151,34 +142,76 @@ export default function ReportScreen() {
                         styles.button,
                         {
                             backgroundColor:
-                                text.length && value
+                                text.length && value && !submitting
                                     ? colors.primary
                                     : colors.gray,
                         },
                     ]}
-                    disabled={!text.length || !value}
+                    disabled={!text.length || !value || submitting}
                     onPress={async () => {
-                        const reportData = {
-                            bookingId,
-                            businessId,
-                            businessName: business?.name || businessName,
-                            serviceDescription,
-                            type: value,
-                            description: text,
-                            state: 'open',
-                            timestamp: new Date().toISOString(),
-                            reportedBy: user?.id || user?._id,
-                            reportedByName: user?.name || 'Usuario',
-                            reportedByEmail: user?.email || '',
-                        }
+                        try {
+                            setSubmitting(true)
+                            console.log('📤 Enviando reporte...')
 
-                        await createReport(reportData)
-                        alert('✅ Gracias por tu feedback!')
-                        setText('')
-                        setValue(null)
+                            // Validar que tenemos los datos mínimos requeridos
+                            if (!user?.id && !user?._id) {
+                                alert(
+                                    '❌ Error: No se pudo identificar al usuario'
+                                )
+                                return
+                            }
+
+                            const reportData = {
+                                bookingId: bookingId || 'N/A',
+                                businessId: businessId || 'N/A',
+                                businessName:
+                                    business?.name ||
+                                    businessName ||
+                                    'Sin negocio',
+                                serviceDescription:
+                                    serviceDescription || 'Sin descripción',
+                                type: value,
+                                description: text,
+                                state: 'open',
+                                timestamp: new Date().toISOString(),
+                                reportedBy: user?.id || user?._id,
+                                reportedByName: user?.name || 'Usuario',
+                                reportedByEmail: user?.email || '',
+                            }
+
+                            console.log('📦 Datos del reporte:', reportData)
+
+                            const result = await createReport(reportData)
+
+                            console.log(
+                                '✅ Reporte enviado exitosamente:',
+                                result
+                            )
+                            alert('✅ Gracias por tu feedback!')
+                            setText('')
+                            setValue(null)
+                        } catch (error) {
+                            console.error('❌ Error al enviar reporte:', error)
+                            console.error('❌ Detalles:', {
+                                message: error.message,
+                                response: error.response?.data,
+                                status: error.response?.status,
+                            })
+
+                            const errorMessage =
+                                error.response?.data?.detail ||
+                                error.message ||
+                                'No se pudo enviar el reporte'
+
+                            alert(`❌ Error: ${errorMessage}`)
+                        } finally {
+                            setSubmitting(false)
+                        }
                     }}
                 >
-                    <Text style={styles.buttonText}>Enviar Reporte</Text>
+                    <Text style={styles.buttonText}>
+                        {submitting ? 'Enviando...' : 'Enviar Reporte'}
+                    </Text>
                 </Pressable>
             </View>
         </Screen>
