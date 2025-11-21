@@ -9,7 +9,7 @@ import {
     REPORT_TYPE_LABELS,
     REPORT_STATE_LABELS,
 } from './api/report-service.js'
-import { getChatByParticipants } from './api/chat.js'
+import { getChatByParticipants, getMessagesByChatId } from './api/chat.js'
 import { getCurrentUser } from './api/auth-service.js'
 
 // ============================================
@@ -247,12 +247,16 @@ function renderReports() {
 
         reportDiv
             .querySelector('[data-action="view-chat"]')
-            .addEventListener('click', () => {
-                const chat = getChatByParticipants(
-                    '68e6b4821ffe0add544fcd1d', //r.reportedBy,
+            .addEventListener('click', async () => {
+                const { _id: chatId } = await getChatByParticipants(
+                    '68e6b4821ffe0add544fcd1d',
                     '68e6d00a04bb4f89f15ced05'
                 )
-                console.log('Chat encontrado:', chat)
+
+                const messages = await getMessagesByChatId(chatId)
+
+                console.log('Chat encontrado:', chatId)
+                console.log('Mensajes del chat:', messages)
             })
 
         const resolveBtn = reportDiv.querySelector(
