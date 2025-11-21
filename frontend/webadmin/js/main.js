@@ -1,5 +1,5 @@
 /**
- * PymeMap Admin Dashboard - Main JavaScript
+ * Pymap Admin Dashboard - Main JavaScript
  * Gestión de comentarios y solicitudes de usuarios
  */
 

@@ -1,5 +1,5 @@
 /**
- * PymeMap Admin - Auth Guard
+ * Pymap Admin - Auth Guard
  * Script que protege las páginas del admin requiriendo autenticación
  *
  * Uso: Incluir este script al inicio de cada página protegida:

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Gestión de Reservas — PymeMap</title>
+        <title>Gestión de Reservas — Pymap</title>
 
         <!-- Tipografía -->
         <link
@@ -87,85 +87,8 @@
                             />
                         </div>
 
-                        <!-- Loading state -->
-                        <div
-                            id="loading"
-                            style="text-align: center; padding: 40px"
-                        >
-                            <p>Cargando reservas...</p>
-                        </div>
-
                         <!-- Tabla de reservas -->
-                        <div id="bookings-table" style="display: none">
-                            <table
-                                style="width: 100%; border-collapse: collapse"
-                            >
-                                <thead>
-                                    <tr
-                                        style="
-                                            border-bottom: 1px solid
-                                                var(--light-gray);
-                                        "
-                                    >
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Usuario
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Negocio
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Fecha/Hora
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Estado
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: center;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bookings-list">
-                                    <!-- Se llenará dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Empty state -->
-                        <div
-                            id="empty-state"
-                            style="
-                                display: none;
-                                text-align: center;
-                                padding: 40px;
-                            "
-                        >
-                            <p>No se encontraron reservas.</p>
-                        </div>
+                        <div id="bookings-table-container"></div>
                     </div>
                 </div>
             </main>

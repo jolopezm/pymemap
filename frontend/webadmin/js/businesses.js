@@ -1,7 +1,8 @@
 import { getBusinesses, deleteBusiness } from './api/businesses.js'
+import { TableComponent } from './table-component.js'
 
 let allBusinesses = []
-let filteredBusinesses = []
+let table
 
 // Cargar negocios al iniciar
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,77 +21,104 @@ function setupEventListeners() {
 
 async function loadBusinesses() {
     try {
-        const loading = document.getElementById('loading')
-        const table = document.getElementById('businesses-table')
-        const emptyState = document.getElementById('empty-state')
-
-        loading.style.display = 'block'
-        table.style.display = 'none'
-        emptyState.style.display = 'none'
+        showToast('Cargando negocios...')
 
         allBusinesses = await getBusinesses()
-        filteredBusinesses = [...allBusinesses]
 
-        loading.style.display = 'none'
-        renderBusinesses()
+        initTable()
         updateMetrics()
+        showToast('Negocios cargados correctamente')
     } catch (error) {
         console.error('Error loading businesses:', error)
-        document.getElementById('loading').style.display = 'none'
-        showToast(
-            'Error al cargar los negocios. Por favor, intenta de nuevo.',
-            'error'
+        showToast('Error al cargar los negocios', 'error')
+    }
+}
+
+function initTable() {
+    table = new TableComponent({
+        containerId: 'businesses-table-container',
+        data: allBusinesses,
+        columns: [
+            {
+                key: 'name',
+                label: 'Nombre',
+                render: (val, item) => `<strong>${val || 'Sin nombre'}</strong>${item.description ? `<br><small style="color: var(--muted);">${item.description.substring(0, 50)}...</small>` : ''}`,
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'owner_name',
+                label: 'Propietario',
+                render: val => val || 'N/A',
+                editable: true
+            },
+            {
+                key: 'category',
+                label: 'Categoría',
+                render: val => getCategoryBadge(val),
+                filterable: true,
+                editable: true
+            },
+            {
+                key: 'average_rating',
+                label: 'Rating',
+                render: (val, item) => val ? `⭐ ${val.toFixed(1)}${item.review_count ? `<br><small style="color: var(--muted);">(${item.review_count} reviews)</small>` : ''}` : '—'
+            }
+        ],
+        actions: [
+            { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
+            { key: 'view', label: 'Ver Detalles', multiple: false }
+        ],
+        onAction: handleAction
+    })
+
+    window.tableInstances['businesses-table-container'] = table
+}
+
+function handleAction(action, ids, updates) {
+    if (action === 'delete') {
+        handleDelete(ids)
+    } else if (action === 'view') {
+        handleView(ids[0])
+    } else if (action === 'save') {
+        handleSave(ids, updates)
+    }
+}
+
+async function handleDelete(ids) {
+    const names = ids.map(id => allBusinesses.find(b => b._id === id || b.id === id)?.name).filter(Boolean)
+    if (confirm(`¿Eliminar ${ids.length} negocio(s): ${names.join(', ')}?`)) {
+        try {
+            for (const id of ids) {
+                await deleteBusiness(id)
+            }
+            showToast(`${ids.length} negocio(s) eliminado(s)`)
+            loadBusinesses()
+        } catch (error) {
+            console.error('Error deleting businesses:', error)
+            showToast('Error al eliminar negocios', 'error')
+        }
+    }
+}
+
+function handleView(id) {
+    const business = allBusinesses.find(b => b._id === id || b.id === id)
+    if (business) {
+        alert(
+            `Negocio: ${business.name}\n` +
+                `Propietario: ${business.owner_name || 'N/A'}\n` +
+                `Categoría: ${business.category || 'N/A'}\n` +
+                `Rating: ${business.average_rating || 'Sin rating'}\n` +
+                `Estado: ${business.is_active ? 'Activo' : 'Inactivo'}\n` +
+                `Descripción: ${business.description || 'Sin descripción'}`
         )
     }
 }
 
-function renderBusinesses() {
-    const tbody = document.getElementById('businesses-list')
-    const table = document.getElementById('businesses-table')
-    const emptyState = document.getElementById('empty-state')
-
-    if (filteredBusinesses.length === 0) {
-        table.style.display = 'none'
-        emptyState.style.display = 'block'
-        return
-    }
-
-    emptyState.style.display = 'none'
-    table.style.display = 'block'
-    tbody.innerHTML = filteredBusinesses
-        .map(
-            business => `
-        <tr style="border-bottom: 1px solid var(--light-gray);">
-            <td style="padding: 12px;">
-                <strong>${business.name || 'Sin nombre'}</strong>
-                ${business.description ? `<br><small style="color: var(--muted);">${business.description.substring(0, 50)}...</small>` : ''}
-            </td>
-            <td style="padding: 12px;">${business.owner_name || business.owner_id || 'N/A'}</td>
-            <td style="padding: 12px;">${getCategoryBadge(business.category)}</td>
-            <td style="padding: 12px;">
-                ${business.average_rating ? `⭐ ${business.average_rating.toFixed(1)}` : '—'}
-                ${business.review_count ? `<br><small style="color: var(--muted);">(${business.review_count} reviews)</small>` : ''}
-            </td>
-            <td style="padding: 12px; text-align: center;">
-                <button 
-                    onclick="viewBusiness('${business._id || business.id}')" 
-                    style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px;" 
-                    title="Ver detalles"
-                >
-                    👁️
-                </button>
-                <button 
-                    onclick="confirmDelete('${business._id || business.id}', '${(business.name || '').replace(/'/g, "\\'")}')" 
-                    style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; color: #dc3545;" 
-                    title="Eliminar"
-                >
-                    🗑️
-                </button>
-            </td>
-        </tr>
-    `
-        )
-        .join('')
+function handleSave(id, updates) {
+    console.log('Guardar negocio:', id, updates)
+    // Aquí iría la llamada a la API para actualizar
+    showToast('Negocio actualizado (simulado)')
 }
 
 function getCategoryBadge(category) {
@@ -105,28 +133,8 @@ function getCategoryBadge(category) {
 }
 
 function applyFilters() {
-    const categoryFilter = document
-        .getElementById('categoryFilter')
-        .value.toLowerCase()
-    const searchQuery = document
-        .getElementById('searchInput')
-        .value.toLowerCase()
-
-    filteredBusinesses = allBusinesses.filter(business => {
-        const matchesCategory =
-            !categoryFilter ||
-            (business.category || '').toLowerCase() === categoryFilter
-        const matchesSearch =
-            !searchQuery ||
-            (business.name || '').toLowerCase().includes(searchQuery) ||
-            (business.description || '').toLowerCase().includes(searchQuery) ||
-            (business.owner_name || '').toLowerCase().includes(searchQuery)
-
-        return matchesCategory && matchesSearch
-    })
-
-    renderBusinesses()
-    updateMetrics()
+    // Los filtros ahora se manejan dentro del TableComponent
+    // Pero podemos mantener compatibilidad si es necesario
 }
 
 function updateMetrics() {
@@ -155,34 +163,4 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         toast.classList.remove('show')
     }, 3000)
-}
-
-// Funciones globales para los botones
-window.viewBusiness = function (id) {
-    const business = allBusinesses.find(b => b._id === id || b.id === id)
-    if (business) {
-        alert(
-            `Negocio: ${business.name}\n` +
-                `Propietario: ${business.owner_name || 'N/A'}\n` +
-                `Categoría: ${business.category || 'N/A'}\n` +
-                `Rating: ${business.average_rating || 'Sin rating'}\n` +
-                `Estado: ${business.is_active ? 'Activo' : 'Inactivo'}\n` +
-                `Descripción: ${business.description || 'Sin descripción'}`
-        )
-    }
-}
-
-window.confirmDelete = async function (id, name) {
-    if (
-        confirm(`¿Estás seguro de que quieres eliminar el negocio "${name}"?`)
-    ) {
-        try {
-            await deleteBusiness(id)
-            showToast(`Negocio "${name}" eliminado correctamente`)
-            loadBusinesses()
-        } catch (error) {
-            console.error('Error deleting business:', error)
-            showToast('Error al eliminar el negocio', 'error')
-        }
-    }
 }

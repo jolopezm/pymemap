@@ -3,9 +3,10 @@ import {
     updateBookingStatus,
     deleteBooking,
 } from './api/bookings.js'
+import { TableComponent } from './table-component.js'
 
 let allBookings = []
-let filteredBookings = []
+let table
 
 // Cargar reservas al iniciar
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,90 +25,121 @@ function setupEventListeners() {
 
 async function loadBookings() {
     try {
-        const loading = document.getElementById('loading')
-        const table = document.getElementById('bookings-table')
-        const emptyState = document.getElementById('empty-state')
-
-        loading.style.display = 'block'
-        table.style.display = 'none'
-        emptyState.style.display = 'none'
+        showToast('Cargando reservas...')
 
         allBookings = await getAllBookings()
-        filteredBookings = [...allBookings]
 
-        loading.style.display = 'none'
-        renderBookings()
+        initTable()
         updateMetrics()
+        showToast('Reservas cargadas correctamente')
     } catch (error) {
         console.error('Error loading bookings:', error)
-        document.getElementById('loading').style.display = 'none'
-        showToast(
-            'Error al cargar las reservas. Por favor, intenta de nuevo.',
-            'error'
+        showToast('Error al cargar las reservas', 'error')
+    }
+}
+
+function initTable() {
+    table = new TableComponent({
+        containerId: 'bookings-table-container',
+        data: allBookings,
+        columns: [
+            {
+                key: 'user_name',
+                label: 'Usuario',
+                render: (val, item) => `<strong>${val || item.user_id || 'N/A'}</strong>${item.user_email ? `<br><small style="color: var(--muted);">${item.user_email}</small>` : ''}`,
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'business_name',
+                label: 'Negocio',
+                render: val => val || 'N/A',
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'booking_date',
+                label: 'Fecha/Hora',
+                render: (val, item) => `� ${formatDate(val)}<br>🕐 ${item.booking_time || 'N/A'}`,
+                editable: true
+            },
+            {
+                key: 'status',
+                label: 'Estado',
+                render: val => getStatusBadge(val),
+                filterable: true,
+                editable: true
+            }
+        ],
+        actions: [
+            { key: 'confirm', label: 'Confirmar Seleccionadas', multiple: true },
+            { key: 'delete', label: 'Eliminar Seleccionadas', multiple: true },
+            { key: 'view', label: 'Ver Detalles', multiple: false }
+        ],
+        onAction: handleAction
+    })
+
+    window.tableInstances['bookings-table-container'] = table
+}
+
+function handleAction(action, ids, updates) {
+    if (action === 'delete') {
+        handleDelete(ids)
+    } else if (action === 'confirm') {
+        handleConfirm(ids)
+    } else if (action === 'view') {
+        handleView(ids[0])
+    } else if (action === 'save') {
+        handleSave(ids, updates)
+    }
+}
+
+async function handleDelete(ids) {
+    if (confirm(`¿Eliminar ${ids.length} reserva(s)?`)) {
+        try {
+            for (const id of ids) {
+                await deleteBooking(id)
+            }
+            showToast(`${ids.length} reserva(s) eliminada(s)`)
+            loadBookings()
+        } catch (error) {
+            console.error('Error deleting bookings:', error)
+            showToast('Error al eliminar reservas', 'error')
+        }
+    }
+}
+
+async function handleConfirm(ids) {
+    try {
+        for (const id of ids) {
+            await updateBookingStatus(id, 'confirmed')
+        }
+        showToast(`${ids.length} reserva(s) confirmada(s)`)
+        loadBookings()
+    } catch (error) {
+        console.error('Error confirming bookings:', error)
+        showToast('Error al confirmar reservas', 'error')
+    }
+}
+
+function handleView(id) {
+    const booking = allBookings.find(b => b._id === id || b.id === id)
+    if (booking) {
+        alert(
+            `Reserva ID: ${id}\n` +
+                `Usuario: ${booking.user_name || 'N/A'}\n` +
+                `Negocio: ${booking.business_name || 'N/A'}\n` +
+                `Fecha: ${formatDate(booking.booking_date)}\n` +
+                `Hora: ${booking.booking_time || 'N/A'}\n` +
+                `Estado: ${booking.status}\n` +
+                `Creada: ${formatDate(booking.created_at)}`
         )
     }
 }
 
-function renderBookings() {
-    const tbody = document.getElementById('bookings-list')
-    const table = document.getElementById('bookings-table')
-    const emptyState = document.getElementById('empty-state')
-
-    if (filteredBookings.length === 0) {
-        table.style.display = 'none'
-        emptyState.style.display = 'block'
-        return
-    }
-
-    emptyState.style.display = 'none'
-    table.style.display = 'block'
-    tbody.innerHTML = filteredBookings
-        .map(
-            booking => `
-        <tr style="border-bottom: 1px solid var(--light-gray);">
-            <td style="padding: 12px;">
-                <strong>${booking.user_name || booking.user_id || 'N/A'}</strong>
-                ${booking.user_email ? `<br><small style="color: var(--muted);">${booking.user_email}</small>` : ''}
-            </td>
-            <td style="padding: 12px;">${booking.business_name || booking.business_id || 'N/A'}</td>
-            <td style="padding: 12px;">
-                📅 ${formatDate(booking.booking_date)}<br>
-                🕐 ${booking.booking_time || 'N/A'}
-            </td>
-            <td style="padding: 12px;">${getStatusBadge(booking.status)}</td>
-            <td style="padding: 12px; text-align: center;">
-                <button 
-                    onclick="viewBooking('${booking._id || booking.id}')" 
-                    style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px;" 
-                    title="Ver detalles"
-                >
-                    👁️
-                </button>
-                ${
-                    booking.status === 'pending'
-                        ? `
-                    <button 
-                        onclick="confirmBooking('${booking._id || booking.id}')" 
-                        style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; color: #28a745;" 
-                        title="Confirmar"
-                    >
-                        ✓
-                    </button>
-                `
-                        : ''
-                }
-                <button 
-                    onclick="confirmDeleteBooking('${booking._id || booking.id}')" 
-                    style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; color: #dc3545;" 
-                    title="Eliminar"
-                >
-                    🗑️
-                </button>
-            </td>
-        </tr>
-    `
-        )
-        .join('')
+function handleSave(id, updates) {
+    console.log('Guardar reserva:', id, updates)
+    showToast('Reserva actualizada (simulado)')
 }
 
 function formatDate(dateString) {
@@ -139,28 +171,7 @@ function getStatusBadge(status) {
 }
 
 function applyFilters() {
-    const statusFilter = document
-        .getElementById('statusFilter')
-        .value.toLowerCase()
-    const searchQuery = document
-        .getElementById('searchInput')
-        .value.toLowerCase()
-
-    filteredBookings = allBookings.filter(booking => {
-        const matchesStatus =
-            !statusFilter ||
-            (booking.status || '').toLowerCase() === statusFilter
-        const matchesSearch =
-            !searchQuery ||
-            (booking.user_name || '').toLowerCase().includes(searchQuery) ||
-            (booking.user_email || '').toLowerCase().includes(searchQuery) ||
-            (booking.business_name || '').toLowerCase().includes(searchQuery)
-
-        return matchesStatus && matchesSearch
-    })
-
-    renderBookings()
-    updateMetrics()
+    // Los filtros ahora se manejan dentro del TableComponent
 }
 
 function updateMetrics() {
@@ -184,44 +195,4 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         toast.classList.remove('show')
     }, 3000)
-}
-
-// Funciones globales para los botones
-window.viewBooking = function (id) {
-    const booking = allBookings.find(b => b._id === id || b.id === id)
-    if (booking) {
-        alert(
-            `Reserva ID: ${id}\n` +
-                `Usuario: ${booking.user_name || 'N/A'}\n` +
-                `Negocio: ${booking.business_name || 'N/A'}\n` +
-                `Fecha: ${formatDate(booking.booking_date)}\n` +
-                `Hora: ${booking.booking_time || 'N/A'}\n` +
-                `Estado: ${booking.status}\n` +
-                `Creada: ${formatDate(booking.created_at)}`
-        )
-    }
-}
-
-window.confirmBooking = async function (id) {
-    try {
-        await updateBookingStatus(id, 'confirmed')
-        showToast('Reserva confirmada correctamente')
-        loadBookings()
-    } catch (error) {
-        console.error('Error confirming booking:', error)
-        showToast('Error al confirmar la reserva', 'error')
-    }
-}
-
-window.confirmDeleteBooking = async function (id) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-        try {
-            await deleteBooking(id)
-            showToast('Reserva eliminada correctamente')
-            loadBookings()
-        } catch (error) {
-            console.error('Error deleting booking:', error)
-            showToast('Error al eliminar la reserva', 'error')
-        }
-    }
 }

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Gestión de Negocios — PymeMap</title>
+        <title>Gestión de Negocios — Pymap</title>
 
         <!-- Tipografía -->
         <link
@@ -90,85 +90,8 @@
                             />
                         </div>
 
-                        <!-- Loading state -->
-                        <div
-                            id="loading"
-                            style="text-align: center; padding: 40px"
-                        >
-                            <p>Cargando negocios...</p>
-                        </div>
-
                         <!-- Tabla de negocios -->
-                        <div id="businesses-table" style="display: none">
-                            <table
-                                style="width: 100%; border-collapse: collapse"
-                            >
-                                <thead>
-                                    <tr
-                                        style="
-                                            border-bottom: 1px solid
-                                                var(--light-gray);
-                                        "
-                                    >
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Nombre
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Propietario
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Categoría
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Rating
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: center;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="businesses-list">
-                                    <!-- Se llenará dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Empty state -->
-                        <div
-                            id="empty-state"
-                            style="
-                                display: none;
-                                text-align: center;
-                                padding: 40px;
-                            "
-                        >
-                            <p>No se encontraron negocios.</p>
-                        </div>
+                        <div id="businesses-table-container"></div>
                     </div>
                 </div>
             </main>

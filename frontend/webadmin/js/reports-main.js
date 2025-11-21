@@ -1,5 +1,5 @@
 /**
- * PymeMap Admin - Reports Management
+ * Pymap Admin - Reports Management
  * Gestión de reportes y casos
  */
 

@@ -1,21 +1,15 @@
 import { getUsers } from './api/users.js'
-
-// ============================================
-// ESTADO GLOBAL
-// ============================================
+import { renderTemplate } from './utils/renderer.js'
+import { TableComponent } from './table-component.js'
 
 let allUsers = []
-let filteredUsers = []
+let table
 
 // ============================================
 // ELEMENTOS DEL DOM
 // ============================================
 
 const elements = {
-    loading: document.getElementById('loading'),
-    usersTable: document.getElementById('users-table'),
-    usersList: document.getElementById('users-list'),
-    emptyState: document.getElementById('empty-state'),
     roleFilter: document.getElementById('roleFilter'),
     searchInput: document.getElementById('searchInput'),
     totalUsers: document.getElementById('total-users'),
@@ -49,71 +43,107 @@ function getRoleBadge(role) {
 }
 
 // ============================================
-// FILTRADO
+// CARGA DE DATOS
 // ============================================
 
-function applyFilters() {
-    const roleFilter = elements.roleFilter.value
-    const searchTerm = elements.searchInput.value.toLowerCase()
+async function loadUsers() {
+    try {
+        showToast('Cargando usuarios...')
 
-    filteredUsers = allUsers.filter(user => {
-        // Filtro por rol
-        const matchesRole = roleFilter === 'all' || user.role === roleFilter
+        allUsers = await getUsers()
 
-        // Filtro por búsqueda
-        const matchesSearch =
-            user.name.toLowerCase().includes(searchTerm) ||
-            user.email.toLowerCase().includes(searchTerm)
-
-        return matchesRole && matchesSearch
-    })
-
-    renderUsers()
+        initTable()
+        updateMetrics()
+        showToast('Usuarios cargados correctamente')
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error)
+        showToast('Error al cargar usuarios', 'error')
+    }
 }
 
-// ============================================
-// RENDERIZADO
-// ============================================
-
-function renderUsers() {
-    const tbody = elements.usersList
-
-    if (filteredUsers.length === 0) {
-        elements.usersTable.style.display = 'none'
-        elements.emptyState.style.display = 'block'
-        return
-    }
-
-    elements.usersTable.style.display = 'block'
-    elements.emptyState.style.display = 'none'
-
-    tbody.innerHTML = filteredUsers
-        .map(
-            user => `
-        <tr style="border-bottom: 1px solid var(--light-gray);">
-            <td style="padding: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
-                        ${user.name.charAt(0).toUpperCase()}
+function initTable() {
+    table = new TableComponent({
+        containerId: 'users-table-container',
+        data: allUsers,
+        columns: [
+            {
+                key: 'name',
+                label: 'Nombre',
+                render: (val, item) => `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                            ${val ? val.charAt(0).toUpperCase() : ''}
+                        </div>
+                        <span>${val || ''}</span>
                     </div>
-                    <span>${user.name}</span>
-                </div>
-            </td>
-            <td style="padding: 12px;">${user.email}</td>
-            <td style="padding: 12px;">${getRoleBadge(user.role)}</td>
-            <td style="padding: 12px;">${user.phone || 'N/A'}</td>
-            <td style="padding: 12px; text-align: center;">
-                <button 
-                    onclick="window.viewUser('${user._id}')"
-                    style="padding: 6px 12px; background: var(--purple); color: white; border: none; border-radius: 4px; cursor: pointer;"
-                >
-                    Ver detalles
-                </button>
-            </td>
-        </tr>
-    `
-        )
-        .join('')
+                `,
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'email',
+                label: 'Email',
+                render: val => val || '',
+                editable: true,
+                searchable: true
+            },
+            {
+                key: 'role',
+                label: 'Rol',
+                render: val => getRoleBadge(val),
+                filterable: true,
+                editable: true
+            },
+            {
+                key: 'phone',
+                label: 'Teléfono',
+                render: val => val || 'N/A',
+                editable: true
+            }
+        ],
+        actions: [
+            { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
+            { key: 'view', label: 'Ver Detalles', multiple: false }
+        ],
+        onAction: handleAction
+    })
+
+    window.tableInstances['users-table-container'] = table
+}
+
+function handleAction(action, ids, updates) {
+    if (action === 'delete') {
+        handleDelete(ids)
+    } else if (action === 'view') {
+        handleView(ids[0])
+    } else if (action === 'save') {
+        handleSave(ids, updates)
+    }
+}
+
+async function handleDelete(ids) {
+    const names = ids.map(id => allUsers.find(u => u._id === id)?.name).filter(Boolean)
+    if (confirm(`¿Eliminar ${ids.length} usuario(s): ${names.join(', ')}?`)) {
+        console.log('Eliminar usuarios (simulado):', ids)
+        showToast(`${ids.length} usuario(s) eliminado(s) (simulado)`)
+        // Aquí iría la llamada a la API
+        // Por ahora, eliminar localmente
+        allUsers = allUsers.filter(u => !ids.includes(u._id))
+        table.updateData(allUsers)
+        updateMetrics()
+    }
+}
+
+function handleView(id) {
+    const user = allUsers.find(u => u._id === id)
+    if (user) {
+        alert(`Usuario: ${user.name}\nEmail: ${user.email}\nRol: ${user.role}`)
+    }
+}
+
+function handleSave(id, updates) {
+    console.log('Guardar usuario:', id, updates)
+    showToast('Usuario actualizado (simulado)')
 }
 
 function updateMetrics() {
@@ -127,54 +157,16 @@ function updateMetrics() {
 }
 
 // ============================================
-// CARGA DE DATOS
-// ============================================
-
-async function loadUsers() {
-    try {
-        elements.loading.style.display = 'block'
-        elements.usersTable.style.display = 'none'
-        elements.emptyState.style.display = 'none'
-
-        // Llamar a la API
-        allUsers = await getUsers()
-        filteredUsers = [...allUsers]
-
-        // Actualizar UI
-        updateMetrics()
-        renderUsers()
-
-        showToast('Usuarios cargados correctamente', 'success')
-    } catch (error) {
-        console.error('Error al cargar usuarios:', error)
-        showToast('Error al cargar usuarios', 'error')
-        elements.emptyState.style.display = 'block'
-        elements.emptyState.innerHTML =
-            '<p>Error al cargar los usuarios. Por favor, intenta nuevamente.</p>'
-    } finally {
-        elements.loading.style.display = 'none'
-    }
-}
-
-// ============================================
-// ACCIONES DE USUARIO
-// ============================================
-
-window.viewUser = function (userId) {
-    const user = allUsers.find(u => u._id === userId)
-    if (user) {
-        alert(`Usuario: ${user.name}\nEmail: ${user.email}\nRol: ${user.role}`)
-        // Aquí podrías abrir un modal con más detalles
-    }
-}
-
-// ============================================
 // EVENT LISTENERS
 // ============================================
 
 function setupEventListeners() {
     elements.roleFilter.addEventListener('change', applyFilters)
     elements.searchInput.addEventListener('input', applyFilters)
+}
+
+function applyFilters() {
+    // Los filtros ahora se manejan dentro del TableComponent
 }
 
 // ============================================

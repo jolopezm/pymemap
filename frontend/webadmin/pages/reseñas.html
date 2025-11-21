@@ -3,30 +3,18 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Gestión de Reseñas — PymeMap</title>
+        <title>Gestión de Reseñas — Pymap</title>
 
-        <!-- Tipografía -->
-        <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-            rel="stylesheet"
-        />
 
         <link rel="stylesheet" href="../css/estilo.css" />
-
-        <!-- Template Include -->
         <script type="module" src="../js/template-include.js"></script>
-
-        <!-- Auth Guard -->
         <script type="module" src="../js/auth-guard.js"></script>
     </head>
     <body>
         <div class="app">
-            <!-- Left Sidebar (cargado dinámicamente) -->
             <div id="sidebar-container"></div>
 
-            <!-- Main content -->
             <main class="main">
-                <!-- Page Title -->
                 <section class="card">
                     <div class="page-title">
                         <h1>Gestión de Reseñas</h1>
@@ -36,7 +24,6 @@
                         </p>
                     </div>
 
-                    <!-- Métricas -->
                     <div class="metrics" style="margin-top: 16px">
                         <div class="metric">
                             <div class="num" id="totalReviews">0</div>
@@ -57,7 +44,6 @@
                     </div>
                 </section>
 
-                <!-- Lista de reseñas -->
                 <div class="content">
                     <div class="card">
                         <h2
@@ -71,7 +57,6 @@
                             Lista de Reseñas
                         </h2>
 
-                        <!-- Controles de filtrado -->
                         <div class="controls">
                             <select class="select" id="ratingFilter">
                                 <option value="">
@@ -94,94 +79,14 @@
                             />
                         </div>
 
-                        <!-- Loading state -->
-                        <div
-                            id="loading"
-                            style="text-align: center; padding: 40px"
-                        >
-                            <p>Cargando reseñas...</p>
-                        </div>
-
                         <!-- Tabla de reseñas -->
-                        <div id="reviews-table" style="display: none">
-                            <table
-                                style="width: 100%; border-collapse: collapse"
-                            >
-                                <thead>
-                                    <tr
-                                        style="
-                                            border-bottom: 1px solid
-                                                var(--light-gray);
-                                        "
-                                    >
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Usuario
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Negocio
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Rating
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: left;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Comentario
-                                        </th>
-                                        <th
-                                            style="
-                                                text-align: center;
-                                                padding: 12px;
-                                            "
-                                        >
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reviews-list">
-                                    <!-- Se llenará dinámicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Empty state -->
-                        <div
-                            id="empty-state"
-                            style="
-                                display: none;
-                                text-align: center;
-                                padding: 40px;
-                            "
-                        >
-                            <p>No se encontraron reseñas.</p>
-                        </div>
+                        <div id="reviews-table-container"></div>  
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- Toast notifications -->
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-        <!-- JavaScript -->
         <script type="module" src="../js/reviews.js"></script>
     </body>
 </html>
