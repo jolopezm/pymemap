@@ -117,7 +117,14 @@
 
         links.forEach(link => {
             const page = link.getAttribute('data-page') + '.html'
-            console.log('Comparando:', page, '===', currentPage, '?', page === currentPage)
+            console.log(
+                'Comparando:',
+                page,
+                '===',
+                currentPage,
+                '?',
+                page === currentPage
+            )
             if (page === currentPage) {
                 link.classList.add('active')
             }
