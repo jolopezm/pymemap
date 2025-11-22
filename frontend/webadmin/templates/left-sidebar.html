@@ -113,8 +113,11 @@
             window.location.pathname.split('/').pop() || 'index.html'
         const links = document.querySelectorAll('.sidebar .nav a')
 
+        console.log('Página actual:', currentPage)
+
         links.forEach(link => {
             const page = link.getAttribute('data-page') + '.html'
+            console.log('Comparando:', page, '===', currentPage, '?', page === currentPage)
             if (page === currentPage) {
                 link.classList.add('active')
             }

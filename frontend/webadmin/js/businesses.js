@@ -48,13 +48,14 @@ function initTable() {
                 filterable: true,
             },
             {
-                key: 'average_rating',
-                label: 'Rating',
+                key: 'profile_pic',
+                label: 'Foto de negocio',
                 render: (val, item) =>
                     val
-                        ? `⭐ ${val.toFixed(1)}${item.review_count ? `<br><small style="color: var(--muted);">(${item.review_count} reviews)</small>` : ''}`
-                        : '—',
+                        ? `<img src="${val}" alt="Foto de ${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`
+                        : 'N/A',
             },
+            {},
         ],
         actions: [
             { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
