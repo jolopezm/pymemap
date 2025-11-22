@@ -128,38 +128,10 @@
                         <div class="pagination" id="pagination"></div>
                     </div>
 
-                    <!-- Chat Panel -->
-                    <div class="card" id="chat-panel" style="display: none">
-                        <div class="chat-panel-header">
-                            <h2
-                                style="
-                                    margin: 0;
-                                    font-size: 16px;
-                                    font-weight: 700;
-                                    color: var(--purple);
-                                "
-                            >
-                                Chat con Usuario
-                            </h2>
-                            <button class="btn ghost" id="close-chat-panel">
-                                ✕
-                            </button>
-                        </div>
-                        <div class="chat-messages" id="chat-messages"></div>
-                        <div class="chat-input-panel">
-                            <textarea
-                                id="chat-input-text"
-                                placeholder="Escribe un mensaje..."
-                                rows="3"
-                            ></textarea>
-                            <button class="btn" id="send-chat-message">
-                                Enviar mensaje
-                            </button>
-                        </div>
-                    </div>
-
+                    <!-- Sidebar derecho: Chats o Chat Activo -->
                     <div class="side-top" id="side-top">
-                        <div class="card">
+                        <!-- Lista de Chats -->
+                        <div class="card" id="chats-list-container">
                             <h3
                                 style="
                                     margin: 0 0 12px;
@@ -168,87 +140,47 @@
                                     color: var(--purple);
                                 "
                             >
-                                Acciones Rápidas
+                                Chats Activos
                             </h3>
                             <div
+                                id="chats-list"
                                 style="
                                     display: flex;
                                     flex-direction: column;
                                     gap: 8px;
                                 "
                             >
-                                <button class="btn ghost" id="filter-urgent">
-                                    ⚠️ Ver urgentes
-                                </button>
-                                <button class="btn ghost" id="filter-today">
-                                    📅 Ver de hoy
-                                </button>
-                                <button
-                                    class="btn ghost"
-                                    id="filter-unattended"
-                                >
-                                    🔔 Ver sin atender
-                                </button>
+                                <!-- Lista de chats se cargará aquí -->
                             </div>
                         </div>
 
-                        <div class="card">
-                            <h3
-                                style="
-                                    margin: 0 0 8px;
-                                    font-size: 14px;
-                                    font-weight: 700;
-                                    color: var(--purple);
-                                "
-                            >
-                                Guía
-                            </h3>
-                            <ul
-                                style="
-                                    margin: 0;
-                                    padding-left: 18px;
-                                    font-size: 13px;
-                                    color: var(--muted);
-                                    line-height: 1.6;
-                                "
-                            >
-                                <li>Revisa los reportes abiertos primero</li>
-                                <li>Responde al usuario de manera clara</li>
-                                <li>Cambia el estado según el progreso</li>
-                                <li>Marca como resuelto cuando se solucione</li>
-                            </ul>
-                        </div>
-
-                        <div class="card">
-                            <h3
-                                style="
-                                    margin: 0 0 12px;
-                                    font-size: 14px;
-                                    font-weight: 700;
-                                    color: var(--purple);
-                                "
-                            >
-                                Tipos de Reportes
-                            </h3>
-                            <div style="font-size: 12px; line-height: 1.8">
-                                <div>
-                                    <span style="color: #f44336">●</span>
-                                    Servicio
-                                </div>
-                                <div>
-                                    <span style="color: #ff9800">●</span> Pago
-                                </div>
-                                <div>
-                                    <span style="color: #9c27b0">●</span>
-                                    Comportamiento
-                                </div>
-                                <div>
-                                    <span style="color: #2196f3">●</span>
-                                    Técnico
-                                </div>
-                                <div>
-                                    <span style="color: #607d8b">●</span> Otro
-                                </div>
+                        <!-- Chat Panel (superpuesto sobre la lista) -->
+                        <div class="card" id="chat-panel" style="display: none">
+                            <div class="chat-panel-header">
+                                <h2
+                                    style="
+                                        margin: 0;
+                                        font-size: 16px;
+                                        font-weight: 700;
+                                        color: var(--purple);
+                                    "
+                                >
+                                    Chat con Usuario
+                                </h2>
+                                <button class="btn ghost" id="close-chat-panel">
+                                    ✕ Volver a chats
+                                </button>
+                            </div>
+                            <div class="chat-messages" id="chat-messages"></div>
+                            <div class="chat-input-panel">
+                                <textarea
+                                    id="chat-input-text"
+                                    placeholder="Escribe un mensaje..."
+                                    rows="3"
+                                ></textarea>
+                                <button class="btn" id="send-chat-message">
+                                    Enviar mensaje
+                                </button>
                             </div>
                         </div>
                     </div>

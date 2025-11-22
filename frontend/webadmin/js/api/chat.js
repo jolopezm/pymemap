@@ -1,5 +1,24 @@
 import { API_URL, getAuthHeaders } from './config.js'
 
+export async function getChatsByUserId(userId) {
+    try {
+        const headers = await getAuthHeaders()
+        const response = await fetch(`${API_URL}/chat/?user_id=${userId}`, {
+            method: 'GET',
+            headers,
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error fetching chats by user ID:', error)
+        throw error
+    }
+}
+
 export async function createChat(chatData) {
     try {
         const headers = await getAuthHeaders()

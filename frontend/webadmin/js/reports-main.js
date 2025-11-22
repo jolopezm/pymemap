@@ -9,6 +9,7 @@ import {
     createChat,
     getMessagesByChatId,
     sendMessage,
+    getChatsByUserId,
 } from './api/chat.js'
 import { getCurrentUser } from './api/auth-service.js'
 
@@ -238,7 +239,7 @@ function renderReports() {
             .querySelector('[data-action="reply"]')
             .addEventListener('click', async () => {
                 console.log('Ver chat clicked, reporte:', r)
-                await openReplyBox(reportDiv, r)
+                await openChatForReport(r)
             })
 
         reportDiv
@@ -386,7 +387,65 @@ function showStateSelector(container, report) {
 }
 
 /**
- * Abre el chat para un reporte
+ * Abre el chat para un reporte desde la lista de reportes
+ */
+async function openChatForReport(report) {
+    try {
+        console.log('Abriendo chat para reporte:', report)
+        showToast('Buscando chat...')
+
+        // Obtener usuario actual
+        const currentUser = await getCurrentUser()
+        if (!currentUser) {
+            showToast('Error: No se pudo obtener el usuario actual.', 'error')
+            return
+        }
+
+        const adminId = currentUser._id
+        const clientId = report.reportedBy
+
+        // Buscar chat existente
+        let chat = null
+        try {
+            chat = await getChatByParticipants(adminId, clientId)
+            console.log('Chat encontrado:', chat)
+
+            if (chat && chat._id) {
+                // Si existe el chat, abrirlo usando la función de la lista
+                await openChatFromList(chat._id)
+                return
+            }
+        } catch (error) {
+            console.log(
+                'No se encontró chat existente, creando uno nuevo',
+                error
+            )
+        }
+
+        // Si no existe, crear uno nuevo
+        if (!chat) {
+            const chatData = {
+                participants: [adminId, clientId],
+            }
+            chat = await createChat(chatData)
+            console.log('Chat creado:', chat)
+
+            // Recargar la lista de chats para que aparezca el nuevo
+            await loadChats()
+
+            // Abrir el chat recién creado
+            if (chat && chat._id) {
+                await openChatFromList(chat._id)
+            }
+        }
+    } catch (error) {
+        console.error('Error al abrir chat para reporte:', error)
+        showToast('Error al abrir el chat', 'error')
+    }
+}
+
+/**
+ * Abre el chat para un reporte (función legacy)
  */
 async function openReplyBox(container, report) {
     try {
@@ -487,14 +546,11 @@ function setupChatEventListeners() {
     // Agregar nuevos listeners
     newCloseBtn.onclick = () => {
         const chatPanel = $('chat-panel')
-        const reportsCard = $('reports-card')
-        const sideTop = $('side-top')
+        const chatsListContainer = $('chats-list-container')
 
         chatPanel.style.display = 'none'
-        reportsCard.classList.remove('with-chat')
-        sideTop.style.display = 'block'
+        chatsListContainer.style.display = 'block'
         currentChat = null
-        currentReport = null
     }
 
     newSendBtn.onclick = async () => {
@@ -741,29 +797,124 @@ function setupEventListeners() {
 
     // Botón refresh
     $('refresh-btn').addEventListener('click', loadReports)
+}
 
-    // Acciones rápidas
-    $('filter-urgent').addEventListener('click', () => {
-        state.stateFilter = 'open'
-        state.page = 1
-        $('stateFilter').value = 'open'
-        renderReports()
-    })
+/**
+ * Carga los chats del admin
+ */
+async function loadChats() {
+    try {
+        console.log('Cargando chats...')
+        const user = await getCurrentUser()
+        console.log('Usuario actual:', user)
 
-    $('filter-today').addEventListener('click', () => {
-        const today = new Date().toISOString().split('T')[0]
-        reports = reports.filter(r => r.timestamp.startsWith(today))
-        state.page = 1
-        renderReports()
-        showToast('Mostrando reportes de hoy')
-    })
+        if (!user || !user._id) {
+            console.error('No se pudo obtener el usuario actual')
+            showToast('No se pudo obtener el usuario actual', 'error')
+            return
+        }
 
-    $('filter-unattended').addEventListener('click', () => {
-        state.stateFilter = 'open'
-        state.page = 1
-        $('stateFilter').value = 'open'
-        renderReports()
+        console.log('Obteniendo chats para usuario:', user._id)
+        const chats = await getChatsByUserId(user._id)
+        console.log('Chats recibidos:', chats)
+
+        renderChatsList(chats, user)
+    } catch (error) {
+        console.error('Error al cargar chats:', error)
+        showToast('Error al cargar chats: ' + error.message, 'error')
+    }
+}
+
+/**
+ * Renderiza la lista de chats en el sidebar
+ */
+function renderChatsList(chats, user) {
+    const $list = $('chats-list')
+
+    console.log('Renderizando chats, elemento encontrado:', $list)
+
+    if (!$list) {
+        console.error('Elemento chats-list no encontrado')
+        return
+    }
+
+    $list.innerHTML = ''
+
+    if (!chats || chats.length === 0) {
+        console.log('No hay chats para mostrar')
+        $list.innerHTML =
+            '<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px;">No hay chats disponibles</div>'
+        return
+    }
+
+    console.log('Renderizando', chats.length, 'chats')
+
+    chats.forEach((chat, index) => {
+        console.log(`Renderizando chat ${index}:`, chat)
+
+        const chatItem = document.createElement('button')
+        chatItem.className = 'btn ghost'
+        chatItem.style.cssText = 'text-align:left;padding:12px;width:100%;'
+        chatItem.dataset.chatId = chat._id
+
+        // Determinar el nombre del otro usuario
+        const otherUser = chat.participants?.find(p => p !== user._id)
+        const userName =
+            chat.other_user_name || chat.otherUserName || otherUser || 'Usuario'
+
+        console.log('Nombre de usuario para chat:', userName)
+
+        chatItem.innerHTML = `
+            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${escapeHtml(userName)}</div>
+            <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${escapeHtml(chat.last_message || chat.lastMessage || 'Sin mensajes')}
+            </div>
+        `
+
+        chatItem.addEventListener('click', async () => {
+            await openChatFromList(chat._id)
+        })
+
+        $list.appendChild(chatItem)
     })
+}
+
+/**
+ * Abre un chat desde la lista del sidebar
+ */
+async function openChatFromList(chatId) {
+    try {
+        showToast('Cargando chat...')
+
+        // Ocultar la lista de chats
+        const $chatsList = $('chats-list-container')
+        if ($chatsList) {
+            $chatsList.style.display = 'none'
+        }
+
+        // Mostrar el panel de chat
+        const $chatPanel = $('chat-panel')
+        $chatPanel.style.display = 'block'
+
+        currentChat = { _id: chatId }
+
+        await loadChatMessages(chatId)
+
+        // Configurar botón de cerrar
+        const closeBtn = $('close-chat-panel')
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                $chatPanel.style.display = 'none'
+                $chatsList.style.display = 'block'
+                currentChat = null
+            }
+        }
+
+        showToast('Chat cargado')
+    } catch (error) {
+        console.error('Error al abrir chat:', error)
+        showToast('Error al abrir chat', 'error')
+    }
 }
 
 /**
@@ -772,6 +923,7 @@ function setupEventListeners() {
 function init() {
     setupEventListeners()
     loadReports()
+    loadChats()
 }
 
 // Ejecutar cuando el DOM esté listo
