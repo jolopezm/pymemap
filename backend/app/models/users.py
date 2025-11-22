@@ -42,6 +42,7 @@ class UserResponse(BaseModel):
     name: str = Field(...)
     email: str = Field(...)
     birthdate: str = Field(...)
+    isAuthenticated: bool = Field(...)
     balance: float = Field(...)
     profile_pic: Optional[str] = Field(default=None)
     role: str = Field(default="user")

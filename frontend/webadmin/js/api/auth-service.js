@@ -39,6 +39,10 @@ export async function getCurrentUser() {
         }
 
         const userData = await response.json()
+        if (userData.role !== 'admin') {
+            throw new Error('No autorizado')
+        }
+
         localStorage.setItem('user', JSON.stringify(userData))
         return userData
     } catch (error) {
@@ -86,9 +90,15 @@ export async function login({ email, password }) {
         const data = await response.json()
 
         if (data.access_token) {
+            // Verificar que el usuario sea admin antes de guardar el token
             localStorage.setItem('token', data.access_token)
-
-            await getCurrentUser()
+            
+            const userData = await getCurrentUser()
+            if (!userData || userData.role !== 'admin') {
+                // Si no es admin, limpiar el token y lanzar error
+                localStorage.removeItem('token')
+                throw new Error('Acceso denegado: Solo administradores pueden acceder')
+            }
         }
 
         return data

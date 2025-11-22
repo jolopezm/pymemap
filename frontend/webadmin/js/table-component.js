@@ -163,8 +163,8 @@ export class TableComponent {
                     )
                     .join('')}
                 <td>
-                    <button class="btn" onclick="window.tableSave('${this.containerId}', '${item._id || item.id}')">Guardar</button>
-                    <button class="btn ghost" onclick="window.tableCancel('${this.containerId}')">Cancelar</button>
+                    <button class="btn" onclick="window.tableSave('${this.containerId}', '${item._id || item.id}')">OK</button>
+                    <button class="btn ghost" onclick="window.tableCancel('${this.containerId}')">X</button>
                 </td>
             </tr>
         `

@@ -9,7 +9,9 @@ const elements = {
     searchInput: document.getElementById('searchInput'),
     totalUsers: document.getElementById('total-users'),
     activeUsers: document.getElementById('active-users'),
+    authenticatedUsers: document.getElementById('authenticated-users'),
     businessUsers: document.getElementById('business-users'),
+    newUsersMonth: document.getElementById('new-users-month'),
     toast: document.getElementById('toast'),
 }
 
@@ -35,9 +37,21 @@ function getRoleBadge(role) {
 
 async function loadUsers() {
     try {
+        // Cargar desde localStorage primero para mostrar datos rápidamente
+        const cachedUsers = localStorage.getItem('cachedUsers')
+        if (cachedUsers) {
+            allUsers = JSON.parse(cachedUsers)
+            initTable()
+            updateMetrics()
+        }
+
         showToast('Cargando usuarios...')
 
         allUsers = await getUsers()
+        console.log('Usuarios cargados:', allUsers)
+
+        // Guardar en localStorage
+        localStorage.setItem('cachedUsers', JSON.stringify(allUsers))
 
         initTable()
         updateMetrics()
@@ -45,6 +59,10 @@ async function loadUsers() {
     } catch (error) {
         console.error('Error al cargar usuarios:', error)
         showToast('Error al cargar usuarios', 'error')
+        // Si hay error y no hay datos en cache, mostrar mensaje
+        if (allUsers.length === 0) {
+            showToast('No se pudieron cargar los usuarios', 'error')
+        }
     }
 }
 
@@ -108,6 +126,11 @@ function initTable() {
                 render: val => (val ? val : 'N/A'),
             },
             {
+                key: 'isAuthenticated',
+                label: 'Autenticado',
+                render: val => (val ? 'Sí' : 'No'),
+            },
+            {
                 key: 'suspended',
                 label: 'Suspendido',
                 render: val => (val ? 'Sí' : 'No'),
@@ -151,6 +174,7 @@ async function handleDelete(ids) {
         // Aquí iría la llamada a la API
         // Por ahora, eliminar localmente
         allUsers = allUsers.filter(u => !ids.includes(u._id))
+        localStorage.setItem('cachedUsers', JSON.stringify(allUsers))
         table.updateData(allUsers)
         updateMetrics()
     }
@@ -213,11 +237,34 @@ async function handleSave(id, updates) {
 function updateMetrics() {
     elements.totalUsers.textContent = allUsers.length
     elements.activeUsers.textContent = allUsers.filter(
-        u => u.role === 'client'
+        u => u.role === 'user' && !u.suspended
+    ).length
+    elements.authenticatedUsers.textContent = allUsers.filter(
+        u => !u.suspended
     ).length
     elements.businessUsers.textContent = allUsers.filter(
         u => u.role === 'business'
     ).length
+
+    // Calcular usuarios nuevos este mes
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    const newUsersThisMonth = allUsers.filter(u => {
+        if (!u.registered_at) return false
+        // Parsear fecha en formato día/mes/año
+        const parts = u.registered_at.split('/')
+        if (parts.length !== 3) return false
+        const day = parseInt(parts[0])
+        const month = parseInt(parts[1]) - 1 // JavaScript months are 0-based
+        const year = parseInt(parts[2])
+        const regDate = new Date(year, month, day)
+        return (
+            regDate.getMonth() === currentMonth &&
+            regDate.getFullYear() === currentYear
+        )
+    }).length
+    elements.newUsersMonth.textContent = newUsersThisMonth
 }
 
 function init() {
