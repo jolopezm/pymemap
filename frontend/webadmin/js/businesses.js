@@ -32,34 +32,49 @@ function initTable() {
             {
                 key: 'name',
                 label: 'Nombre',
-                render: (val, item) => `<strong>${val || 'Sin nombre'}</strong>${item.description ? `<br><small style="color: var(--muted);">${item.description.substring(0, 50)}...</small>` : ''}`,
+                render: (val, item) =>
+                    `<strong>${val || 'Sin nombre'}</strong>${item.description ? `<br><small style="color: var(--muted);">${item.description.substring(0, 50)}...</small>` : ''}`,
                 editable: true,
-                searchable: true
+                searchable: true,
             },
             {
                 key: 'owner_id',
                 label: 'Propietario',
                 render: val => val || 'N/A',
-                editable: true
+                editable: true,
             },
             {
                 key: 'category',
                 label: 'Categoría',
                 render: val => getCategoryBadge(val),
                 filterable: true,
-                editable: true
+                editable: true,
             },
             {
                 key: 'average_rating',
                 label: 'Rating',
-                render: (val, item) => val ? `⭐ ${val.toFixed(1)}${item.review_count ? `<br><small style="color: var(--muted);">(${item.review_count} reviews)</small>` : ''}` : '—'
-            }
+                render: (val, item) =>
+                    val
+                        ? `⭐ ${val.toFixed(1)}${item.review_count ? `<br><small style="color: var(--muted);">(${item.review_count} reviews)</small>` : ''}`
+                        : '—',
+            },
         ],
         actions: [
             { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
-            { key: 'view', label: 'Ver Detalles', multiple: false }
+            {
+                key: 'view',
+                label: 'Ver Detalles',
+                multiple: false,
+                requiresSelection: true,
+            },
+            {
+                key: 'refresh',
+                label: 'Refrescar',
+                multiple: false,
+                requiresSelection: false,
+            },
         ],
-        onAction: handleAction
+        onAction: handleAction,
     })
 
     window.tableInstances['businesses-table-container'] = table
@@ -70,13 +85,17 @@ function handleAction(action, ids, updates) {
         handleDelete(ids)
     } else if (action === 'view') {
         handleView(ids[0])
+    } else if (action === 'refresh') {
+        handleRefresh()
     } else if (action === 'save') {
         handleSave(ids, updates)
     }
 }
 
 async function handleDelete(ids) {
-    const names = ids.map(id => allBusinesses.find(b => b._id === id || b.id === id)?.name).filter(Boolean)
+    const names = ids
+        .map(id => allBusinesses.find(b => b._id === id || b.id === id)?.name)
+        .filter(Boolean)
     if (confirm(`¿Eliminar ${ids.length} negocio(s): ${names.join(', ')}?`)) {
         try {
             for (const id of ids) {

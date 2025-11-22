@@ -36,37 +36,48 @@ function initTable() {
             {
                 key: 'user_name',
                 label: 'Usuario',
-                render: (val, item) => `<strong>${val || item.user_id || 'N/A'}</strong>${item.user_email ? `<br><small style="color: var(--muted);">${item.user_email}</small>` : ''}`,
+                render: (val, item) =>
+                    `<strong>${val || item.user_id || 'N/A'}</strong>${item.user_email ? `<br><small style="color: var(--muted);">${item.user_email}</small>` : ''}`,
                 editable: true,
-                searchable: true
+                searchable: true,
             },
             {
                 key: 'business_name',
                 label: 'Negocio',
                 render: val => val || 'N/A',
                 editable: true,
-                searchable: true
+                searchable: true,
             },
             {
                 key: 'booking_date',
                 label: 'Fecha/Hora',
-                render: (val, item) => `� ${formatDate(val)}<br>🕐 ${item.booking_time || 'N/A'}`,
-                editable: true
+                render: (val, item) =>
+                    `� ${formatDate(val)}<br>🕐 ${item.booking_time || 'N/A'}`,
+                editable: true,
             },
             {
                 key: 'status',
                 label: 'Estado',
                 render: val => getStatusBadge(val),
                 filterable: true,
-                editable: true
-            }
+                editable: true,
+            },
         ],
         actions: [
-            { key: 'confirm', label: 'Confirmar Seleccionadas', multiple: true },
+            {
+                key: 'confirm',
+                label: 'Confirmar Seleccionadas',
+                multiple: true,
+            },
             { key: 'delete', label: 'Eliminar Seleccionadas', multiple: true },
-            { key: 'view', label: 'Ver Detalles', multiple: false }
+            {
+                key: 'view',
+                label: 'Ver Detalles',
+                multiple: false,
+                requiresSelection: true,
+            },
         ],
-        onAction: handleAction
+        onAction: handleAction,
     })
 
     window.tableInstances['bookings-table-container'] = table

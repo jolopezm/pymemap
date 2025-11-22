@@ -45,7 +45,10 @@ export class TableComponent {
                     .filter(col => col.searchable !== false)
                     .some(col => {
                         const val = item[col.key]
-                        return val && val.toString().toLowerCase().includes(searchLower)
+                        return (
+                            val &&
+                            val.toString().toLowerCase().includes(searchLower)
+                        )
                     })
                 if (!searchable) return false
             }
@@ -74,11 +77,15 @@ export class TableComponent {
                     <input type="text" class="input" id="${this.containerId}-search" placeholder="Buscar..." value="${this.state.search}">
                 </div>
                 <div class="table-actions">
-                    ${this.actions.map(action => `
+                    ${this.actions
+                        .map(
+                            action => `
                         <button class="btn ${action.multiple ? 'ghost' : ''}" id="${this.containerId}-action-${action.key}" ${this.state.selected.size === 0 && action.multiple ? 'disabled' : ''}>
                             ${action.label}
                         </button>
-                    `).join('')}
+                    `
+                        )
+                        .join('')}
                     <select class="select" id="${this.containerId}-perPage">
                         ${this.perPageOptions.map(opt => `<option value="${opt}" ${opt === this.state.perPage ? 'selected' : ''}>${opt} por página</option>`).join('')}
                     </select>
@@ -106,15 +113,20 @@ export class TableComponent {
     renderFilters() {
         return this.columns
             .filter(col => col.filterable)
-            .map(col => `
+            .map(
+                col => `
                 <select class="select" id="${this.containerId}-filter-${col.key}">
                     <option value="">Todos</option>
                     ${[...new Set(this.data.map(item => item[col.key]))]
                         .filter(val => val)
-                        .map(val => `<option value="${val}" ${this.state.filters[col.key] === val ? 'selected' : ''}>${val}</option>`)
+                        .map(
+                            val =>
+                                `<option value="${val}" ${this.state.filters[col.key] === val ? 'selected' : ''}>${val}</option>`
+                        )
                         .join('')}
                 </select>
-            `)
+            `
+            )
             .join('')
     }
 
@@ -129,7 +141,7 @@ export class TableComponent {
         return `
             <tr>
                 <td><input type="checkbox" class="row-checkbox" data-id="${item._id || item.id}" ${isSelected ? 'checked' : ''}></td>
-                ${this.columns.map(col => `<td>${col.render ? col.render(item[col.key], item) : (item[col.key] || '—')}</td>`).join('')}
+                ${this.columns.map(col => `<td>${col.render ? col.render(item[col.key], item) : item[col.key] || '—'}</td>`).join('')}
                 <td>
                     <button class="btn ghost" onclick="window.tableEdit('${this.containerId}', '${item._id || item.id}')">Editar</button>
                 </td>
@@ -141,11 +153,15 @@ export class TableComponent {
         return `
             <tr class="editing">
                 <td><input type="checkbox" disabled></td>
-                ${this.columns.map(col => `
+                ${this.columns
+                    .map(
+                        col => `
                     <td>
-                        ${col.editable ? (typeof item[col.key] === 'boolean' ? `<input type="checkbox" ${item[col.key] ? 'checked' : ''} data-field="${col.key}">` : `<input type="text" value="${item[col.key] || ''}" data-field="${col.key}">`) : (col.render ? col.render(item[col.key], item) : item[col.key] || '—')}
+                        ${col.editable ? (typeof item[col.key] === 'boolean' ? `<input type="checkbox" ${item[col.key] ? 'checked' : ''} data-field="${col.key}">` : `<input type="text" value="${item[col.key] || ''}" data-field="${col.key}">`) : col.render ? col.render(item[col.key], item) : item[col.key] || '—'}
                     </td>
-                `).join('')}
+                `
+                    )
+                    .join('')}
                 <td>
                     <button class="btn" onclick="window.tableSave('${this.containerId}', '${item._id || item.id}')">Guardar</button>
                     <button class="btn ghost" onclick="window.tableCancel('${this.containerId}')">Cancelar</button>
@@ -157,7 +173,9 @@ export class TableComponent {
     renderPagination(totalPages) {
         const pages = []
         for (let i = 1; i <= totalPages; i++) {
-            pages.push(`<button class="page-btn ${i === this.state.page ? 'active' : ''}" data-page="${i}">${i}</button>`)
+            pages.push(
+                `<button class="page-btn ${i === this.state.page ? 'active' : ''}" data-page="${i}">${i}</button>`
+            )
         }
         return `<div class="pagination">${pages.join('')}</div>`
     }
@@ -166,9 +184,11 @@ export class TableComponent {
         const container = document.getElementById(this.containerId)
 
         // Search
-        const searchInput = container.querySelector(`#${this.containerId}-search`)
+        const searchInput = container.querySelector(
+            `#${this.containerId}-search`
+        )
         if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
+            searchInput.addEventListener('input', e => {
                 this.state.search = e.target.value
                 this.state.page = 1
                 this.render()
@@ -176,21 +196,27 @@ export class TableComponent {
         }
 
         // Filters
-        this.columns.filter(col => col.filterable).forEach(col => {
-            const filterSelect = container.querySelector(`#${this.containerId}-filter-${col.key}`)
-            if (filterSelect) {
-                filterSelect.addEventListener('change', (e) => {
-                    this.state.filters[col.key] = e.target.value
-                    this.state.page = 1
-                    this.render()
-                })
-            }
-        })
+        this.columns
+            .filter(col => col.filterable)
+            .forEach(col => {
+                const filterSelect = container.querySelector(
+                    `#${this.containerId}-filter-${col.key}`
+                )
+                if (filterSelect) {
+                    filterSelect.addEventListener('change', e => {
+                        this.state.filters[col.key] = e.target.value
+                        this.state.page = 1
+                        this.render()
+                    })
+                }
+            })
 
         // Per page
-        const perPageSelect = container.querySelector(`#${this.containerId}-perPage`)
+        const perPageSelect = container.querySelector(
+            `#${this.containerId}-perPage`
+        )
         if (perPageSelect) {
-            perPageSelect.addEventListener('change', (e) => {
+            perPageSelect.addEventListener('change', e => {
                 this.state.perPage = parseInt(e.target.value)
                 this.state.page = 1
                 this.render()
@@ -198,9 +224,11 @@ export class TableComponent {
         }
 
         // Select all
-        const selectAll = container.querySelector(`#${this.containerId}-select-all`)
+        const selectAll = container.querySelector(
+            `#${this.containerId}-select-all`
+        )
         if (selectAll) {
-            selectAll.addEventListener('change', (e) => {
+            selectAll.addEventListener('change', e => {
                 const checkboxes = container.querySelectorAll('.row-checkbox')
                 checkboxes.forEach(cb => {
                     cb.checked = e.target.checked
@@ -216,7 +244,7 @@ export class TableComponent {
         }
 
         // Row checkboxes
-        container.addEventListener('change', (e) => {
+        container.addEventListener('change', e => {
             if (e.target.classList.contains('row-checkbox')) {
                 const id = e.target.dataset.id
                 if (e.target.checked) {
@@ -230,7 +258,7 @@ export class TableComponent {
         })
 
         // Pagination
-        container.addEventListener('click', (e) => {
+        container.addEventListener('click', e => {
             if (e.target.classList.contains('page-btn')) {
                 this.state.page = parseInt(e.target.dataset.page)
                 this.render()
@@ -239,15 +267,23 @@ export class TableComponent {
 
         // Actions
         this.actions.forEach(action => {
-            const btn = container.querySelector(`#${this.containerId}-action-${action.key}`)
+            const btn = container.querySelector(
+                `#${this.containerId}-action-${action.key}`
+            )
             if (btn) {
                 btn.addEventListener('click', () => {
+                    const selectedArray = Array.from(this.state.selected)
                     if (action.multiple) {
-                        this.onAction(action.key, Array.from(this.state.selected))
+                        if (selectedArray.length > 0) {
+                            this.onAction(action.key, selectedArray)
+                        }
                     } else {
-                        // Para acciones individuales, usar el primer seleccionado o mostrar error
-                        if (this.state.selected.size === 1) {
-                            this.onAction(action.key, Array.from(this.state.selected)[0])
+                        // Para acciones individuales
+                        if (
+                            action.requiresSelection === false ||
+                            selectedArray.length > 0
+                        ) {
+                            this.onAction(action.key, selectedArray)
                         }
                     }
                 })
@@ -257,26 +293,34 @@ export class TableComponent {
 
     updateSelectAll() {
         const container = document.getElementById(this.containerId)
-        const selectAll = container.querySelector(`#${this.containerId}-select-all`)
+        const selectAll = container.querySelector(
+            `#${this.containerId}-select-all`
+        )
         const checkboxes = container.querySelectorAll('.row-checkbox')
         const checkedBoxes = container.querySelectorAll('.row-checkbox:checked')
-        selectAll.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length
-        selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length
+        selectAll.checked =
+            checkboxes.length > 0 && checkedBoxes.length === checkboxes.length
+        selectAll.indeterminate =
+            checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length
     }
 
     updateActionButtons() {
         const container = document.getElementById(this.containerId)
         this.actions.forEach(action => {
-            const btn = container.querySelector(`#${this.containerId}-action-${action.key}`)
+            const btn = container.querySelector(
+                `#${this.containerId}-action-${action.key}`
+            )
             if (btn) {
-                btn.disabled = action.multiple ? this.state.selected.size === 0 : this.state.selected.size !== 1
+                btn.disabled = action.multiple
+                    ? this.state.selected.size === 0
+                    : this.state.selected.size !== 1
             }
         })
     }
 }
 
 // Funciones globales para edición
-window.tableEdit = function(containerId, id) {
+window.tableEdit = function (containerId, id) {
     const table = window.tableInstances[containerId]
     if (table) {
         table.state.editing = id
@@ -284,14 +328,15 @@ window.tableEdit = function(containerId, id) {
     }
 }
 
-window.tableSave = function(containerId, id) {
+window.tableSave = function (containerId, id) {
     const table = window.tableInstances[containerId]
     if (table) {
         const row = document.querySelector(`tr.editing`)
         const inputs = row.querySelectorAll('input[data-field]')
         const updates = {}
         inputs.forEach(input => {
-            updates[input.dataset.field] = input.type === 'checkbox' ? input.checked : input.value
+            updates[input.dataset.field] =
+                input.type === 'checkbox' ? input.checked : input.value
         })
         table.onAction('save', id, updates)
         table.state.editing = null
@@ -299,7 +344,7 @@ window.tableSave = function(containerId, id) {
     }
 }
 
-window.tableCancel = function(containerId) {
+window.tableCancel = function (containerId) {
     const table = window.tableInstances[containerId]
     if (table) {
         table.state.editing = null

@@ -1,13 +1,8 @@
 import { getUsers, deleteUser, updateUser } from './api/users.js'
-import { renderTemplate } from './utils/renderer.js'
 import { TableComponent } from './table-component.js'
 
 let allUsers = []
 let table
-
-// ============================================
-// ELEMENTOS DEL DOM
-// ============================================
 
 const elements = {
     roleFilter: document.getElementById('roleFilter'),
@@ -17,10 +12,6 @@ const elements = {
     businessUsers: document.getElementById('business-users'),
     toast: document.getElementById('toast'),
 }
-
-// ============================================
-// FUNCIONES DE UTILIDAD
-// ============================================
 
 function showToast(message, type = 'info') {
     const toast = elements.toast
@@ -41,10 +32,6 @@ function getRoleBadge(role) {
     }
     return badges[role] || role
 }
-
-// ============================================
-// CARGA DE DATOS
-// ============================================
 
 async function loadUsers() {
     try {
@@ -69,79 +56,74 @@ function initTable() {
             {
                 key: '_id',
                 label: 'ID',
-                render: val => [val ? `<span class="middle-ellipsis">${val}</span>` : 'N/A'],
-                editable: false,
-                searchable: true
+                render: val => [
+                    val ? `<span class="middle-ellipsis">${val}</span>` : 'N/A',
+                ],
+                searchable: true,
             },
             {
                 key: 'name',
                 label: 'Nombre',
                 render: val => val || 'N/A',
-                editable: true,
-                searchable: true
+                searchable: true,
             },
             {
                 key: 'rut',
                 label: 'RUT',
                 render: val => val || 'N/A',
-                editable: false,
-                searchable: true
+                searchable: true,
             },
             {
                 key: 'email',
                 label: 'Email',
                 render: val => val || '',
-                editable: true,
-                searchable: true
             },
             {
                 key: 'phone',
                 label: 'Teléfono',
                 render: val => val || 'N/A',
-                editable: true,
-                searchable: true
             },
             {
                 key: 'role',
                 label: 'Rol',
                 render: val => getRoleBadge(val),
-                filterable: true,
-                editable: true
             },
             {
                 key: 'birthdate',
                 label: 'Fecha de Nacimiento',
                 render: val => val || 'N/A',
-                editable: false,
-                searchable: false
             },
             {
                 key: 'profile_pic',
                 label: 'Foto de Perfil',
-                render: val => [val ? `<a href="${val}" target="_blank">Ver Foto</a>` : 'N/A'],
-                editable: false,
-                searchable: false
+                render: val => [
+                    val
+                        ? `<a href="${val}" target="_blank">Ver Foto</a>`
+                        : 'N/A',
+                ],
             },
             {
                 key: 'registered_at',
                 label: 'Creado El',
-                render: val => val ? val : 'N/A',
-                editable: false,
-                searchable: false
+                render: val => (val ? val : 'N/A'),
             },
             {
                 key: 'suspended',
                 label: 'Suspendido',
-                render: val => val ? 'Sí' : 'No',
+                render: val => (val ? 'Sí' : 'No'),
                 editable: true,
-                searchable: false
-            }
+            },
         ],
         actions: [
             { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
-            { key: 'view', label: 'Ver Detalles', multiple: false }
+            {
+                key: 'refresh',
+                label: 'Refrescar',
+                multiple: false,
+                requiresSelection: false,
+            },
         ],
-        onAction: handleAction
+        onAction: handleAction,
     })
 
     window.tableInstances['users-table-container'] = table
@@ -152,13 +134,17 @@ function handleAction(action, ids, updates) {
         handleDelete(ids)
     } else if (action === 'view') {
         handleView(ids[0])
+    } else if (action === 'refresh') {
+        handleRefresh()
     } else if (action === 'save') {
         handleSave(ids, updates)
     }
 }
 
 async function handleDelete(ids) {
-    const names = ids.map(id => allUsers.find(u => u._id === id)?.name).filter(Boolean)
+    const names = ids
+        .map(id => allUsers.find(u => u._id === id)?.name)
+        .filter(Boolean)
     if (confirm(`¿Eliminar ${ids.length} usuario(s): ${names.join(', ')}?`)) {
         console.log('Eliminar usuarios (simulado):', ids)
         showToast(`${ids.length} usuario(s) eliminado(s) (simulado)`)
@@ -177,28 +163,33 @@ function handleView(id) {
     }
 }
 
+function handleRefresh() {
+    console.log('Refrescando usuarios...')
+    loadUsers()
+}
+
 async function handleSave(id, updates) {
     console.log('Guardar usuario:', id, updates)
-    
+
     // Filtrar solo los campos que cambiaron
     const originalUser = allUsers.find(u => u._id === id || u.id === id)
     if (!originalUser) {
         showToast('Usuario no encontrado', 'error')
         return
     }
-    
+
     const changedUpdates = {}
     for (const [key, value] of Object.entries(updates)) {
         if (originalUser[key] !== value) {
             changedUpdates[key] = value
         }
     }
-    
+
     if (Object.keys(changedUpdates).length === 0) {
         showToast('No hay cambios para guardar')
         return
     }
-    
+
     // Enviar el usuario completo con los cambios aplicados
     const fullUserData = { ...originalUser, ...changedUpdates }
     // Asegurar que _id se mapee a id si es necesario
@@ -206,9 +197,9 @@ async function handleSave(id, updates) {
         fullUserData.id = fullUserData._id
         delete fullUserData._id
     }
-    
+
     console.log('Datos completos a enviar:', fullUserData)
-    
+
     try {
         await updateUser(id, fullUserData)
         showToast('Usuario actualizado correctamente')
@@ -229,15 +220,10 @@ function updateMetrics() {
     ).length
 }
 
-// ============================================
-// INICIALIZACIÓN
-// ============================================
-
 function init() {
     loadUsers()
 }
 
-// Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
 } else {
