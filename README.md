@@ -25,10 +25,13 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 ## 📱 Funcionalidades Principales
 
 - **Geolocalización**: Encuentra PYMEs cercanas basándose en tu ubicación actual
-- **Motor de búsqueda**: Busca servicios específicos por categorías y filtros
-- **Sistema de calificaciones**: Califica y consulta reseñas de otros usuarios
-- **Solicitud de servicios**: Contrata servicios directamente desde la app
-- **Wallet integrada**: Sistema de pagos propio para transacciones seguras
+- **Motor de búsqueda**: Busca servicios específicos por categorías y filtros con autocomplete de Google Maps
+- **Sistema de reseñas**: Califica y consulta opiniones de otros usuarios sobre negocios
+- **Sistema de reservas (Bookings)**: Reserva servicios con gestión de disponibilidad horaria
+- **Gestión de usuarios**: Sistema de balance en backend (sin UI dedicada aún)
+- **Chat en tiempo real**: Mensajería entre clientes y dueños de negocios
+- **Notificaciones**: Sistema de alertas para reservas, mensajes y actualizaciones
+- **Reportes**: Sistema de reportes de usuarios y negocios
 - **Multi-plataforma**: Disponible en iOS, Android y web
 
 ## 🛠️ Stack Tecnológico
@@ -55,6 +58,8 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ### ⚙️DevOps & Tools
 
+- **Testing**: Jest 29.7.0 con React Testing Library
+- **Cobertura**: 41.4% statements (363 tests pasando)
 - **Linting**: ESLint con configuración Expo y Prettier
 - **Formateo**: Prettier
 - **CORS**: Configurado para desarrollo cross-origin
@@ -87,11 +92,45 @@ backend/
 ```
 frontend/
 ├── app/                     # Páginas (Expo Router)
-│   ├── (tabs)/             # Navegación principal
+│   ├── (tabs)/             # Navegación principal (6 tabs)
+│   │   ├── home.js        # Pantalla principal
+│   │   ├── stores.js      # Listado de negocios
+│   │   ├── chat.js        # Mensajería
+│   │   ├── my-bookings.js # Mis reservas
+│   │   ├── notifications.js # Notificaciones
+│   │   └── profile.js     # Perfil de usuario
 │   └── ...                 # Otras pantallas
 ├── api/                     # Servicios de API
+│   ├── auth-service.js    # Autenticación
+│   ├── user-service.js    # Usuarios y balance
+│   ├── business-service.js # Negocios
+│   ├── booking-service.js # Reservas
+│   ├── chat-service.js    # Chat
+│   ├── review-service.js  # Reseñas
+│   └── notifications-service.js # Notificaciones
 ├── components/              # Componentes reutilizables
+│   ├── business/          # Componentes de negocios
+│   ├── home/              # Componentes del home
+│   ├── search/            # Componentes de búsqueda
+│   ├── stores/            # Componentes de tiendas
+│   └── ui/                # Componentes UI reutilizables
+├── context/                 # Contextos de React
+│   ├── auth-context.js    # Autenticación global
+│   ├── chat-context.js    # Estado del chat
+│   ├── location-context.js # Geolocalización
+│   ├── notif-context.js   # Notificaciones
+│   └── service-context.js # Servicios
+├── hooks/                   # Custom hooks
+│   ├── useAsyncStorage.js # Hook de almacenamiento
+│   ├── useBusinessData.js # Hook de negocios
+│   └── useRefresh.js      # Hook de refresco
+├── utils/                   # Utilidades
+│   ├── cache-manager.js   # Gestión de caché
+│   ├── geolocation.js     # Utilidades de ubicación
+│   └── logger.js          # Sistema de logging
+├── __tests__/               # Tests (363 tests, 41.4% coverage)
 └── config/                  # Configuraciones
+    └── api.js             # Config de API (Railway/Local)
 ```
 
 Para más detalles, ver [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)

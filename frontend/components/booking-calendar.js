@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import DateTimePicker from 'react-native-ui-datepicker'
 import { getBusinessAvailability } from '../api/booking-service'
+import logger from '../utils/logger'
 
 /**
  * Calendario específico para reservas de servicios
@@ -34,7 +35,7 @@ export function BookingCalendar({ businessId, onDateSelect, selectedDate }) {
             const dates = data.map(item => item.date)
             setAvailableDates(dates)
         } catch (error) {
-            console.error('Error fetching availability:', error)
+            logger.error('Error fetching availability:', error)
             setAvailableDates([])
         }
     }

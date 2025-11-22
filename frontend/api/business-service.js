@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import logger from '../utils/logger'
 import {
     getCachedOrFetch,
     setCache,
@@ -67,7 +68,7 @@ export async function getBusiness(id) {
 
         return null
     } catch (error) {
-        console.error('❌ Error obteniendo negocios:', error.message)
+        logger.error('❌ Error obteniendo negocios:', error.message)
         throw error
     }
 }
@@ -81,11 +82,11 @@ export async function createBusiness(businessData) {
 
         // Invalidar caché al crear negocio
         await invalidateCache('business_list')
-        console.log('🗑️ Caché de negocios invalidado después de crear')
+        logger.log('🗑️ Caché de negocios invalidado después de crear')
 
         return response.data
     } catch (error) {
-        console.error('❌ Error creando negocio:', error.message)
+        logger.error('❌ Error creando negocio:', error.message)
         throw error
     }
 }
@@ -176,7 +177,7 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
 
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json().catch(() => ({}))
-            console.error('❌ Error del servidor:', errorData)
+            logger.error('❌ Error del servidor:', errorData)
             throw new Error(errorData.detail || `HTTP ${uploadResponse.status}`)
         }
 
@@ -185,11 +186,11 @@ export async function uploadBusinessPicture(businessId, imageUri, filename) {
         // Invalidar caché al subir imagen
         await invalidateCache('business_list')
         await invalidateCache(`business_${businessId}`)
-        console.log('🗑️ Caché de negocios invalidado después de subir imagen')
+        logger.log('🗑️ Caché de negocios invalidado después de subir imagen')
 
         return data
     } catch (error) {
-        console.error('❌ Error al subir imagen:', error)
+        logger.error('❌ Error al subir imagen:', error)
         throw error
     }
 }
@@ -206,11 +207,11 @@ export async function updateBusiness(businessId, updateData) {
         // Invalidar caché al actualizar negocio
         await invalidateCache('business_list')
         await invalidateCache(`business_${businessId}`)
-        console.log('🗑️ Caché de negocios invalidado después de actualizar')
+        logger.log('🗑️ Caché de negocios invalidado después de actualizar')
 
         return response.data
     } catch (error) {
-        console.error('❌ Error actualizando negocio:', error.message)
+        logger.error('❌ Error actualizando negocio:', error.message)
         throw error
     }
 }
@@ -227,13 +228,13 @@ export async function updateBusinessLocation(businessId, latitude, longitude) {
         // Invalidar caché al actualizar ubicación
         await invalidateCache('business_list')
         await invalidateCache(`business_${businessId}`)
-        console.log(
+        logger.log(
             '🗑️ Caché de negocios invalidado después de actualizar ubicación'
         )
 
         return response.data
     } catch (error) {
-        console.error('❌ Error actualizando ubicación:', error.message)
+        logger.error('❌ Error actualizando ubicación:', error.message)
         throw error
     }
 }

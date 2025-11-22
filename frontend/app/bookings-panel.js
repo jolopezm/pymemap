@@ -18,7 +18,8 @@ import {
 } from '../api/booking-service'
 import { createNotification } from '../api/notifications-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors, spacing, borderRadius, shadows } from '../styles/theme'
+import logger from '../utils/logger'
 
 export default function BookingsPanel() {
     const { businessId, businessName } = useLocalSearchParams()
@@ -45,7 +46,7 @@ export default function BookingsPanel() {
             })
             setBookings(sorted)
         } catch (error) {
-            console.error('Error fetching bookings:', error)
+            logger.error('Error fetching bookings:', error)
             Toast.error('Error al cargar reservas')
         } finally {
             setLoading(false)
@@ -81,20 +82,20 @@ export default function BookingsPanel() {
 
                     await createNotification(notifPayload)
                 } catch (notifError) {
-                    console.error('⚠️ Error sending notification:', notifError)
-                    console.error(
+                    logger.error('⚠️ Error sending notification:', notifError)
+                    logger.error(
                         '⚠️ Error details:',
                         notifError.response?.data
                     )
                 }
             } else {
-                console.warn('⚠️ No client_id found in booking')
+                logger.warn('⚠️ No client_id found in booking')
             }
 
             Toast.success('Reserva confirmada')
             fetchBookings()
         } catch (error) {
-            console.error('❌ Error confirming booking:', error)
+            logger.error('❌ Error confirming booking:', error)
             Toast.error('Error al confirmar reserva')
         }
     }
@@ -121,20 +122,20 @@ export default function BookingsPanel() {
 
                     await createNotification(notifPayload)
                 } catch (notifError) {
-                    console.error('⚠️ Error sending notification:', notifError)
-                    console.error(
+                    logger.error('⚠️ Error sending notification:', notifError)
+                    logger.error(
                         '⚠️ Error details:',
                         notifError.response?.data
                     )
                 }
             } else {
-                console.warn('⚠️ No client_id found in booking')
+                logger.warn('⚠️ No client_id found in booking')
             }
 
             Toast.success('Reserva rechazada')
             fetchBookings()
         } catch (error) {
-            console.error('❌ Error rejecting booking:', error)
+            logger.error('❌ Error rejecting booking:', error)
             Toast.error('Error al rechazar reserva')
         }
     }
@@ -380,13 +381,13 @@ const styles = {
     },
     card: {
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 14,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowColor: '#9B59B6',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
         overflow: 'hidden',
     },
     statusBadge: {

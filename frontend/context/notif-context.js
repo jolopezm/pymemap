@@ -4,10 +4,12 @@ import {
     useEffect,
     useContext,
     useCallback,
+    useMemo,
 } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import notificationsService from '../api/notifications-service'
 import { useAuth } from './auth-context'
+import logger from '../utils/logger'
 
 const safeGetNotifications =
     notificationsService?.getNotifications ??
@@ -32,21 +34,23 @@ export const NotifProvider = ({ children }) => {
     const [isFromCache, setIsFromCache] = useState(false)
     const { user } = useAuth()
 
-    const computeUnread = list =>
-        Array.isArray(list) ? list.filter(n => !n.read).length : 0
+    const computeUnread = useCallback(
+        list => (Array.isArray(list) ? list.filter(n => !n.read).length : 0),
+        []
+    )
 
-    const saveToCache = async notifData => {
+    const saveToCache = useCallback(async notifData => {
         try {
             await AsyncStorage.multiSet([
                 [STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifData)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
         } catch (error) {
-            console.error('Error guardando notificaciones:', error)
+            // Error manejado silenciosamente
         }
-    }
+    }, [])
 
-    const loadFromCache = async () => {
+    const loadFromCache = useCallback(async () => {
         try {
             const [[, notifsJson], [, timestamp]] = await AsyncStorage.multiGet(
                 [STORAGE_KEYS.NOTIFICATIONS, STORAGE_KEYS.CACHE_TIMESTAMP]
@@ -65,10 +69,10 @@ export const NotifProvider = ({ children }) => {
 
             return null
         } catch (error) {
-            console.error('Error cargando notificaciones del caché:', error)
+            logger.error('Error cargando notificaciones del caché:', error)
             return null
         }
-    }
+    }, [])
 
     const fetchNotifications = useCallback(
         async (forceRefresh = false) => {
@@ -128,7 +132,7 @@ export const NotifProvider = ({ children }) => {
                 setUnreadCount(0)
                 return []
             } catch (err) {
-                console.error('fetchNotifications error', err)
+                logger.error('fetchNotifications error', err)
 
                 // 3️⃣ Fallback a caché en caso de error
                 const cached = await loadFromCache()
@@ -146,64 +150,77 @@ export const NotifProvider = ({ children }) => {
                 setLoading(false)
             }
         },
-        [user]
+        [user, loadFromCache, computeUnread, saveToCache]
     )
 
     useEffect(() => {
         fetchNotifications()
     }, [fetchNotifications])
 
-    const refreshNotifications = async () => {
+    const refreshNotifications = useCallback(async () => {
         return await fetchNotifications(true)
-    }
+    }, [fetchNotifications])
 
-    const markNotificationReadLocally = async notificationId => {
-        try {
-            setNotifications(prev => {
-                const next = (Array.isArray(prev) ? prev : []).map(n =>
-                    n && (n._id === notificationId || n.id === notificationId)
-                        ? { ...n, read: true }
-                        : n
-                )
-                const unread = computeUnread(next)
-                setUnreadCount(unread)
-
-                // Guardar en caché
-                saveToCache(next).catch(e =>
-                    console.warn(
-                        'Error guardando notificaciones actualizadas',
-                        e
+    const markNotificationReadLocally = useCallback(
+        async notificationId => {
+            try {
+                setNotifications(prev => {
+                    const next = (Array.isArray(prev) ? prev : []).map(n =>
+                        n &&
+                        (n._id === notificationId || n.id === notificationId)
+                            ? { ...n, read: true }
+                            : n
                     )
-                )
+                    const unread = computeUnread(next)
+                    setUnreadCount(unread)
 
-                console.debug('NotifProvider.markNotificationReadLocally', {
-                    notificationId,
-                    nextCount: next.length,
-                    unread,
+                    // Guardar en caché
+                    saveToCache(next).catch(e =>
+                        logger.warn(
+                            'Error guardando notificaciones actualizadas',
+                            e
+                        )
+                    )
+
+                    logger.debug(
+                        'NotifProvider.markNotificationReadLocally',
+                        {
+                            notificationId,
+                            nextCount: next.length,
+                            unread,
+                        }
+                    )
+                    return next
                 })
-                return next
-            })
-            return true
-        } catch (err) {
-            console.error('markNotificationReadLocally error', err)
-            return false
-        }
-    }
-
-    return (
-        <NotifContext.Provider
-            value={{
-                notifications,
-                unreadCount,
-                loading,
-                isFromCache,
-                refreshNotifications,
-                markNotificationReadLocally,
-            }}
-        >
-            {children}
-        </NotifContext.Provider>
+                return true
+            } catch (err) {
+                logger.error('markNotificationReadLocally error', err)
+                return false
+            }
+        },
+        [computeUnread, saveToCache]
     )
+
+    const value = useMemo(
+        () => ({
+            notifications,
+            unreadCount,
+            loading,
+            isFromCache,
+            refreshNotifications,
+            markNotificationReadLocally,
+        }),
+        [
+            notifications,
+            unreadCount,
+            loading,
+            isFromCache,
+            refreshNotifications,
+            markNotificationReadLocally,
+        ]
+    )
+
+    return <NotifContext.Provider value={value}>{children}</NotifContext.Provider>
 }
 
 export const useNotif = () => {
@@ -213,3 +230,4 @@ export const useNotif = () => {
     }
     return context
 }
+

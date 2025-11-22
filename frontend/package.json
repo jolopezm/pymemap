@@ -12,7 +12,8 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "jest"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -26,6 +27,7 @@
     "expo": "^54.0.7",
     "expo-constants": "~17.1.7",
     "expo-file-system": "^19.0.17",
+    "expo-haptics": "^15.0.7",
     "expo-image": "~3.0.8",
     "expo-image-picker": "^17.0.8",
     "expo-linear-gradient": "^15.0.7",
@@ -55,6 +57,7 @@
     "eslint-config-expo": "~9.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "expo-module-scripts": "^5.0.7",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
   },

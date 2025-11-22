@@ -1,6 +1,6 @@
 import React, { use } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import { globalStyles, colors } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import Screen from '../components/screen'
 import DropDownPicker from 'react-native-dropdown-picker'
 import { useSearchParams } from 'expo-router/build/hooks'
@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../context/auth-context'
 import { createReport } from '../api/report-service'
+import logger from '../utils/logger'
 
 export default function ReportScreen() {
     const [open, setOpen] = React.useState(false)
@@ -43,7 +44,7 @@ export default function ReportScreen() {
                 const businessData = await getBusiness(businessId)
                 setBusiness(businessData)
             } catch (error) {
-                console.error('❌ Error obteniendo negocio:', error)
+                logger.error('❌ Error obteniendo negocio:', error)
             } finally {
                 setLoading(false)
             }
@@ -54,7 +55,7 @@ export default function ReportScreen() {
 
     React.useEffect(() => {
         if (user) {
-            console.log('🧾 Usuario cargado para reporte:', user)
+            logger.log('🧾 Usuario cargado para reporte:', user)
         }
     }, [user])
 

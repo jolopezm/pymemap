@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import logger from '../utils/logger'
 
 export async function createChat(chatData) {
     const token = await AsyncStorage.getItem('token')
@@ -15,7 +16,7 @@ export async function createChat(chatData) {
         })
         return response.data
     } catch (error) {
-        console.error('❌ Error creating chat:', {
+        logger.error('❌ Error creating chat:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
@@ -41,7 +42,7 @@ export async function getChats(userId) {
         )
         return response.data
     } catch (error) {
-        console.error('❌ Error fetching chats:', {
+        logger.error('❌ Error fetching chats:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
@@ -71,7 +72,7 @@ export async function getChatByParticipants(user1Id, user2Id) {
         if (error.response?.status === 404) {
             return null
         }
-        console.error('❌ Error buscando chat:', {
+        logger.error('❌ Error buscando chat:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
@@ -96,7 +97,7 @@ export async function sendMessage(messageData) {
         )
         return response.data
     } catch (error) {
-        console.error('❌ Error sending message:', {
+        logger.error('❌ Error sending message:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
@@ -121,7 +122,7 @@ export async function getMessages(chatId) {
         )
         return response.data
     } catch (error) {
-        console.error('❌ Error fetching messages:', {
+        logger.error('❌ Error fetching messages:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
@@ -140,12 +141,12 @@ export async function markChatAsRead(chatId, userId) {
     const cleanUserId = String(userId).trim()
 
     if (cleanChatId.length === 0) {
-        console.error('❌ chatId está vacío después de limpiar')
+        logger.error('❌ chatId está vacío después de limpiar')
         throw new Error('Invalid chatId: empty string')
     }
 
     if (cleanUserId.length === 0) {
-        console.error('❌ userId está vacío después de limpiar')
+        logger.error('❌ userId está vacío después de limpiar')
         throw new Error('Invalid userId: empty string')
     }
 
@@ -169,7 +170,7 @@ export async function markChatAsRead(chatId, userId) {
 
         return response.data
     } catch (error) {
-        console.error('❌ Error marking chat as read:', {
+        logger.error('❌ Error marking chat as read:', {
             message: error.message,
             status: error.response?.status,
             statusText: error.response?.statusText,
@@ -181,7 +182,7 @@ export async function markChatAsRead(chatId, userId) {
 
         // Si el error es 400, mostrar detalles adicionales
         if (error.response?.status === 400) {
-            console.error('🔍 Detalles del error 400:', {
+            logger.error('🔍 Detalles del error 400:', {
                 detail: error.response?.data?.detail,
                 chatIdProvided: cleanChatId,
                 userIdProvided: cleanUserId,
@@ -190,7 +191,7 @@ export async function markChatAsRead(chatId, userId) {
 
         // Si el error es 404 o 500, no es crítico
         if (error.response?.status === 404 || error.response?.status === 500) {
-            console.warn('Error no crítico, continuando...')
+            logger.warn('Error no crítico, continuando...')
             return null
         }
 

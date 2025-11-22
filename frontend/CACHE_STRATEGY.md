@@ -245,7 +245,7 @@ function ChatsScreen() {
                 />
             }
         >
-            {isFromCache && <Text>📦 Mostrando datos guardados</Text>}
+            {isFromCache && <Text>Mostrando datos guardados</Text>}
             {chats.map(chat => (
                 <ChatItem key={chat.id} chat={chat} />
             ))}
@@ -258,13 +258,14 @@ function ChatsScreen() {
 
 ## 🐛 Debugging
 
-Para ver logs del caché, revisa la consola:
+Para ver logs del caché, utiliza el sistema de logging centralizado:
 
-```
-📦 Usando chats del caché (45s antiguo)
-🌐 Obteniendo chats frescos del servidor
-✅ Chats guardados en caché
-🆘 Error de red, usando caché de respaldo
+```javascript
+import logger from '../utils/logger'
+
+// Los logs de caché se registran automáticamente
+// En desarrollo: Visibles en consola
+// En producción: Integrados con servicio de monitoreo
 ```
 
 ---

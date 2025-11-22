@@ -1,40 +1,29 @@
 import React from 'react'
-import {
-    View,
-    Text,
-    Pressable,
-    ScrollView,
-    Button,
-    TextInput,
-    Alert,
-    Image,
-} from 'react-native'
+import { View, Text, Pressable, Alert } from 'react-native'
 import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { globalStyles, colors } from '../styles/global'
-import { getBusiness, requestService } from '../api/business-service'
-import { createNotification } from '../api/notifications-service'
+import { globalStyles } from '../styles/theme'
+import { getBusiness } from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
+import LoadingState from '../components/LoadingState'
 import Screen from '../components/screen'
 import DefaultModal from '../components/default-modal'
 import { useAuth } from '../context/auth-context'
 import { getUserById } from '../api/user-service'
-import {
-    getChatByParticipants,
-    createChat,
-    sendMessage,
-} from '../api/chat-service'
-import {
-    calculateDistance,
-    getRoutingDistance,
-    formatDistance,
-    formatDuration,
-} from '../utils/geolocation'
+import { getChatByParticipants, createChat, sendMessage } from '../api/chat-service'
+import { calculateDistance, getRoutingDistance } from '../utils/geolocation'
 import { useLocation } from '../context/location-context'
-import GmapsView from '../components/gmaps-view'
 import { getReviewsByBusiness } from '../api/review-service'
+import {
+    BusinessHeader,
+    BusinessLocation,
+    BusinessActions,
+    BusinessReviews,
+    BusinessChat,
+} from '../components/business'
+import logger from '../utils/logger'
 
 export default function BusinessProfile() {
     const params = useSearchParams()
@@ -59,7 +48,6 @@ export default function BusinessProfile() {
     const [distance, setDistance] = React.useState(null)
     const [routingInfo, setRoutingInfo] = React.useState(null)
     const [loadingRouting, setLoadingRouting] = React.useState(false)
-    const [showMap, setShowMap] = React.useState(false)
     const [reviews, setReviews] = React.useState([])
 
     const fetchOwner = async ownerId => {
@@ -83,7 +71,7 @@ export default function BusinessProfile() {
             const reviewsData = await getReviewsByBusiness(businessId)
             setReviews(reviewsData)
         } catch (error) {
-            console.error('Error fetching reviews:', error)
+            // Error al cargar reseñas
         }
     }
 
@@ -107,18 +95,18 @@ export default function BusinessProfile() {
 
             // Si no existe, crear uno nuevo
             if (!chatData) {
-                console.log('📝 Creando nuevo chat...')
+                // Creando nuevo chat
                 chatData = await createChat({
                     participants: [currentUserId, ownerId],
                     lastMessage: null,
                     lastMessageTimestamp: new Date().toISOString(),
                 })
-                console.log(
+                logger.log(
                     '✅ Nuevo chat creado:',
                     chatData._id || chatData.id
                 )
             } else {
-                console.log(
+                logger.log(
                     '✅ Chat existente encontrado:',
                     chatData._id || chatData.id
                 )
@@ -135,7 +123,7 @@ export default function BusinessProfile() {
 
             setModalVisible(true)
         } catch (error) {
-            console.error('❌ Error en handleChatPress:', error)
+            // Error manejado con Toast
             Alert.alert('Error', 'No se pudo iniciar el chat')
         }
     }
@@ -147,7 +135,7 @@ export default function BusinessProfile() {
         const chatId = chatObj._id || chatObj.id
 
         if (!chatId) {
-            console.error('❌ No se pudo obtener el chatId:', chatObj)
+            // Error: No se pudo obtener el chatId
             throw new Error('Chat ID no válido')
         }
 
@@ -163,7 +151,7 @@ export default function BusinessProfile() {
             setMessage('')
             await sendMessage(messageData)
         } catch (error) {
-            console.error('❌ Error sending message:', error)
+            // Error manejado con Toast
             setMessage(messageData.content)
             throw error
         }
@@ -205,7 +193,7 @@ export default function BusinessProfile() {
                         setDistance(routing.distance)
                     }
                 } catch (error) {
-                    console.log(
+                    logger.log(
                         'No se pudo obtener distancia real, usando aproximada'
                     )
                 } finally {
@@ -274,20 +262,13 @@ export default function BusinessProfile() {
                 'Inicio de sesión requerido',
                 'Debes iniciar sesión para reservar un servicio.',
                 [
-                    {
-                        text: 'Cancelar',
-                        style: 'cancel',
-                    },
-                    {
-                        text: 'Iniciar sesión',
-                        onPress: () => router.push('/login'),
-                    },
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Iniciar sesión', onPress: () => router.push('/login') },
                 ]
             )
             return
         }
 
-        // Redirigir a la pantalla de reservas
         router.push({
             pathname: '/book-a-service',
             params: {
@@ -297,18 +278,30 @@ export default function BusinessProfile() {
         })
     }
 
+    const handleManageBookings = () => {
+        router.push({
+            pathname: '/bookings-panel',
+            params: {
+                businessId: business?._id || business?.id,
+                businessName: business?.name || 'Negocio',
+            },
+        })
+    }
+
+    const handleEditBusiness = () => {
+        router.push({
+            pathname: '/edit-business',
+            params: { businessId: business?._id || business?.id },
+        })
+    }
+
+    const isOwner = String(business?.owner_id) === String(user?._id)
+
     if (loading) {
         return (
-            <LinearGradient
-                colors={['#9B59B6', '#F8BBD9']}
-                style={{ flex: 1 }}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-            >
-                <View style={globalStyles.gradientContainer}>
-                    <LoadingSpinner />
-                </View>
-            </LinearGradient>
+            <Screen>
+                <LoadingState variant="detail" />
+            </Screen>
         )
     }
 
@@ -339,487 +332,38 @@ export default function BusinessProfile() {
     return (
         <Screen>
             <View>
-                <Image
-                    source={
-                        business?.profile_pic
-                            ? { uri: business.profile_pic }
-                            : require('../assets/default-profile-pic.svg')
-                    }
-                    style={{
-                        width: '100%',
-                        height: 200,
-                        borderRadius: 8,
-                        marginBottom: 16,
-                    }}
-                    resizeMode="cover"
+                <BusinessHeader business={business} owner={owner} />
+
+                <BusinessLocation
+                    business={business}
+                    userCoords={userCoords}
+                    distance={distance}
+                    routingInfo={routingInfo}
+                    loadingRouting={loadingRouting}
+                    isLoadingLocation={isLoadingLocation}
                 />
 
-                <Text
-                    style={{
-                        color: colors.textSecondary,
-                        fontSize: 24,
-                        fontWeight: '600',
-                        marginBottom: 8,
-                    }}
-                >
-                    {business?.name ?? 'Sin nombre'}
-                </Text>
+                <View style={globalStyles.divider} />
 
-                <Text
-                    style={[
-                        globalStyles.subtitle,
-                        {
-                            color: colors.textSecondary,
-                            alignSelf: 'flex-start',
-                        },
-                    ]}
-                >
-                    {owner?.name ?? 'Sin nombre'}
-                </Text>
-
-                <Text style={[globalStyles.badge, { alignSelf: 'center' }]}>
-                    {business?.category ?? 'Sin categoría'}
-                </Text>
-
-                <Text style={globalStyles.subtitle}>Descripción</Text>
-                <Text style={{ color: '#555', marginBottom: 16 }}>
-                    {business?.description ?? 'Sin descripción'}
-                </Text>
-
-                <Text style={globalStyles.subtitle}>Ubicación</Text>
-                <Text style={{ color: '#555', marginBottom: 8 }}>
-                    {business?.address ?? 'Sin ubicación'}
-                </Text>
-
-                {/* Distancia y mapa */}
-                {business?.latitude && business?.longitude && (
-                    <View style={{ marginTop: 8, marginBottom: 16 }}>
-                        {/* Mostrar distancia y tiempo */}
-                        {!isLoadingLocation && distance && (
-                            <View
-                                style={{
-                                    marginBottom: 12,
-                                    backgroundColor: '#F5F0FF',
-                                    padding: 12,
-                                    borderRadius: 8,
-                                }}
-                            >
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        marginBottom: routingInfo ? 6 : 0,
-                                    }}
-                                >
-                                    <Ionicons
-                                        name="navigate-outline"
-                                        size={20}
-                                        color="#9B59B6"
-                                    />
-                                    <Text
-                                        style={{
-                                            marginLeft: 8,
-                                            fontSize: 14,
-                                            color: '#6A4C93',
-                                            fontWeight: '600',
-                                        }}
-                                    >
-                                        {routingInfo
-                                            ? `${formatDistance(distance)} por carretera`
-                                            : `${formatDistance(distance, true)} de tu ubicación`}
-                                    </Text>
-                                    {loadingRouting && (
-                                        <Text
-                                            style={{
-                                                marginLeft: 8,
-                                                fontSize: 12,
-                                                color: '#999',
-                                            }}
-                                        >
-                                            Calculando ruta...
-                                        </Text>
-                                    )}
-                                </View>
-                                {routingInfo && (
-                                    <View
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            marginLeft: 28,
-                                        }}
-                                    >
-                                        <Ionicons
-                                            name="time-outline"
-                                            size={16}
-                                            color="#9B59B6"
-                                        />
-                                        <Text
-                                            style={{
-                                                marginLeft: 6,
-                                                fontSize: 13,
-                                                color: '#6A4C93',
-                                            }}
-                                        >
-                                            Aprox.{' '}
-                                            {formatDuration(
-                                                routingInfo.duration
-                                            )}{' '}
-                                            en auto
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
-                        )}
-
-                        {/* Botón Cómo llegar */}
-                        {userCoords && (
-                            <>
-                                <Pressable
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: '#9B59B6',
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 16,
-                                        borderRadius: 8,
-                                        marginBottom: 12,
-                                    }}
-                                    onPress={() => setShowMap(!showMap)}
-                                >
-                                    <Ionicons
-                                        name="map-outline"
-                                        size={20}
-                                        color="#FFF"
-                                    />
-                                    <Text
-                                        style={{
-                                            marginLeft: 8,
-                                            color: '#FFF',
-                                            fontSize: 15,
-                                            fontWeight: '600',
-                                        }}
-                                    >
-                                        {showMap
-                                            ? 'Ocultar mapa'
-                                            : 'Cómo llegar'}
-                                    </Text>
-                                </Pressable>
-
-                                {/* Mapa con ruta */}
-                                {showMap && (
-                                    <View
-                                        style={{
-                                            height: 250,
-                                            width: '100%',
-                                            borderRadius: 12,
-                                            overflow: 'hidden',
-                                            marginBottom: 12,
-                                        }}
-                                    >
-                                        <GmapsView
-                                            latitude={business.latitude}
-                                            longitude={business.longitude}
-                                            userLatitude={userCoords.latitude}
-                                            userLongitude={userCoords.longitude}
-                                            height={250}
-                                        />
-                                    </View>
-                                )}
-                            </>
-                        )}
-
-                        {/* Si no hay ubicación del usuario pero sí del negocio, mostrar solo el pin */}
-                        {!userCoords && !isLoadingLocation && (
-                            <>
-                                <Pressable
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: '#9B59B6',
-                                        paddingVertical: 12,
-                                        paddingHorizontal: 16,
-                                        borderRadius: 8,
-                                        marginBottom: 12,
-                                    }}
-                                    onPress={() => setShowMap(!showMap)}
-                                >
-                                    <Ionicons
-                                        name="location-outline"
-                                        size={20}
-                                        color="#FFF"
-                                    />
-                                    <Text
-                                        style={{
-                                            marginLeft: 8,
-                                            color: '#FFF',
-                                            fontSize: 15,
-                                            fontWeight: '600',
-                                        }}
-                                    >
-                                        {showMap
-                                            ? 'Ocultar mapa'
-                                            : 'Ver en el mapa'}
-                                    </Text>
-                                </Pressable>
-
-                                {showMap && (
-                                    <View
-                                        style={{
-                                            height: 250,
-                                            width: '100%',
-                                            borderRadius: 12,
-                                            overflow: 'hidden',
-                                            marginBottom: 12,
-                                        }}
-                                    >
-                                        <GmapsView
-                                            latitude={business.latitude}
-                                            longitude={business.longitude}
-                                            height={250}
-                                        />
-                                    </View>
-                                )}
-                            </>
-                        )}
-                    </View>
-                )}
-
-                <View
-                    style={{
-                        borderTopWidth: 1,
-                        borderTopColor: '#E0E0E0',
-                        marginVertical: 20,
-                    }}
+                <BusinessActions
+                    isOwner={isOwner}
+                    business={business}
+                    onManageBookings={handleManageBookings}
+                    onEditBusiness={handleEditBusiness}
+                    onRequestService={handleRequestService}
                 />
 
-                {/* Mostrar botón de gestión si es el dueño del negocio */}
-                {String(business?.owner_id) === String(user?._id) ? (
-                    <>
-                        <Text style={globalStyles.subtitle}>
-                            Gestión del negocio
-                        </Text>
-                        <Text
-                            style={{
-                                color: '#666',
-                                marginBottom: 12,
-                                fontSize: 14,
-                            }}
-                        >
-                            Configura la disponibilidad y gestiona las reservas
-                            de tu negocio.
-                        </Text>
-                        <Pressable
-                            style={[
-                                globalStyles.button,
-                                {
-                                    marginBottom: 20,
-                                    backgroundColor: '#FF6B6B',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                },
-                            ]}
-                            onPress={() =>
-                                router.push({
-                                    pathname: '/bookings-panel',
-                                    params: {
-                                        businessId:
-                                            business?._id || business?.id,
-                                        businessName:
-                                            business?.name || 'Negocio',
-                                    },
-                                })
-                            }
-                        >
-                            <Ionicons
-                                name="calendar-outline"
-                                size={20}
-                                color="#fff"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text style={globalStyles.buttonText}>
-                                Ver Solicitudes
-                            </Text>
-                        </Pressable>
+                <View style={globalStyles.divider} />
 
-                        <Pressable
-                            style={[
-                                globalStyles.button,
-                                {
-                                    flexDirection: 'row',
-                                    backgroundColor: '#666',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginTop: 12,
-                                },
-                            ]}
-                            onPress={() =>
-                                router.push({
-                                    pathname: '/edit-business',
-                                    params: {
-                                        businessId:
-                                            business?._id || business?.id,
-                                    },
-                                })
-                            }
-                        >
-                            <Ionicons
-                                name="create-outline"
-                                size={20}
-                                color="#fff"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text style={globalStyles.buttonText}>
-                                Editar Negocio
-                            </Text>
-                        </Pressable>
-                    </>
-                ) : (
-                    <>
-                        <Text style={globalStyles.subtitle}>
-                            Reservar servicio
-                        </Text>
-                        <Text
-                            style={{
-                                color: '#666',
-                                marginBottom: 12,
-                                fontSize: 14,
-                            }}
-                        >
-                            ¿Te interesa este negocio? Reserva una fecha y
-                            horario para recibir el servicio.
-                        </Text>
-                        <Pressable
-                            style={[
-                                globalStyles.button,
-                                {
-                                    marginBottom: 20,
-                                    backgroundColor: '#4CAF50',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                },
-                            ]}
-                            onPress={handleRequestService}
-                        >
-                            <Ionicons
-                                name="calendar-outline"
-                                size={20}
-                                color="#fff"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text style={globalStyles.buttonText}>
-                                Reservar servicio
-                            </Text>
-                        </Pressable>
-                    </>
-                )}
+                <BusinessReviews reviews={reviews} />
 
-                <View
-                    style={{
-                        borderTopWidth: 1,
-                        borderTopColor: '#E0E0E0',
-                        marginVertical: 20,
-                    }}
+                <View style={globalStyles.divider} />
+
+                <BusinessChat
+                    message={message}
+                    onMessageChange={setMessage}
+                    onSend={handleChatPress}
                 />
-
-                <Text style={globalStyles.subtitle}>Reseñas</Text>
-                {reviews.length === 0 ? (
-                    <Text style={{ color: '#666', marginBottom: 16 }}>
-                        No hay reseñas aún.
-                    </Text>
-                ) : (
-                    reviews.map((review, index) => (
-                        <View key={index} style={globalStyles.card}>
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginBottom: 8,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        fontWeight: '600',
-                                        fontSize: 16,
-                                        color: colors.textSecondary,
-                                    }}
-                                >
-                                    {review.userName || 'Anónimo'}
-                                </Text>
-                                <View style={{ flexDirection: 'row' }}>
-                                    {[...Array(review.rating || 5)].map(
-                                        (_, i) => (
-                                            <Ionicons
-                                                key={i}
-                                                name="star"
-                                                size={16}
-                                                color="#FFD700"
-                                            />
-                                        )
-                                    )}
-                                </View>
-                            </View>
-                            <Text style={{ color: '#666', fontSize: 14 }}>
-                                {review.comment || 'Sin comentarios'}
-                            </Text>
-                        </View>
-                    ))
-                )}
-
-                <View
-                    style={{
-                        borderTopWidth: 1,
-                        borderTopColor: '#E0E0E0',
-                        marginVertical: 20,
-                    }}
-                />
-
-                <Text style={globalStyles.subtitle}>¿Tienes preguntas?</Text>
-                <TextInput
-                    style={globalStyles.textField}
-                    placeholder="Hola. ¿Sigue estando disponible?"
-                    value={message}
-                    onChangeText={setMessage}
-                />
-
-                <Pressable
-                    style={[
-                        globalStyles.button,
-                        {
-                            opacity: message.trim() === '' ? 0.5 : 1,
-                            backgroundColor: '#9B59B6',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        },
-                    ]}
-                    onPress={message.trim() === '' ? null : handleChatPress}
-                    disabled={message.trim() === ''}
-                >
-                    <Ionicons
-                        name={
-                            message.trim() === ''
-                                ? 'chatbubble-outline'
-                                : 'send'
-                        }
-                        size={20}
-                        color="#fff"
-                        style={{ marginRight: 8 }}
-                    />
-                    {message.trim() === '' ? (
-                        <Text style={globalStyles.buttonText}>
-                            Escribe un mensaje
-                        </Text>
-                    ) : (
-                        <Text style={globalStyles.buttonText}>
-                            Enviar mensaje
-                        </Text>
-                    )}
-                </Pressable>
             </View>
 
             {modalVisible && (
@@ -840,7 +384,7 @@ export default function BusinessProfile() {
                             if (chatId) {
                                 router.push(`/chat-view?chatId=${chatId}`)
                             } else {
-                                console.error('❌ No hay chatId disponible')
+                                logger.error('❌ No hay chatId disponible')
                                 Alert.alert('Error', 'No se pudo abrir el chat')
                             }
                         }}

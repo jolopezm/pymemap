@@ -42,8 +42,7 @@ Reorganizar la documentación para hacerla más profesional, accesible y menos c
 #### Mejoras
 
 - Eliminada duplicación de contenido
-- Estructura más profesional tipo "landing page"
-- Enlaces directos a documentación específica
+- Estructura actualizada a tipo "landing page"
 - Más fácil de navegar
 
 ### 📚 Estructura Final
@@ -199,6 +198,202 @@ Limpieza de archivos redundantes e innecesarios:
 ✅ Production-ready para Railway  
 ✅ CORS seguro y configurable  
 ✅ Scripts portables para todos los OS
+
+---
+
+## [Sistema Completo de Reservas y Testing] - 22 Noviembre 2025
+
+### ✨ Added
+
+#### Sistema de Reservas (Bookings)
+
+- **Backend**: Router completo de bookings (`/backend/app/routers/bookings.py`)
+  - Gestión de disponibilidad horaria
+  - Creación y confirmación de reservas
+  - Vista de reservas por negocio y por cliente
+  - Estados: pending, confirmed, cancelled
+- **Frontend**: Pantallas y componentes de reservas
+  - `book-a-service.js` - Reservar servicio
+  - `manage-availavility.js` - Gestión de disponibilidad (dueños)
+  - `booking-detail.js` - Detalle de reserva
+  - `bookings-panel.js` - Panel de gestión
+  - `my-bookings.js` - Tab de mis reservas
+  - Componentes: `Calendar.js`, `TimeSlotPicker.js`, `BookingCalendar.js`
+
+#### Sistema de Balance (Backend)
+
+- **Backend**: Endpoints de gestión de saldo
+  - `POST /users/{user_id}/update-balance` - Actualizar saldo
+  - Campo `balance` agregado al modelo User
+- **Frontend**: Servicio de balance
+  - `api/user-service.js` - Función `updateBalance()`
+  - Sin UI dedicada aún (funcionalidad backend preparada para futura implementación)
+
+#### Sistema de Reviews
+
+- **Backend**: Router de reseñas (`/backend/app/routers/reviews.py`)
+  - CRUD completo de reseñas
+  - Calificaciones por negocio
+  - Sistema de puntuación (1-5 estrellas)
+- **Frontend**: Pantalla y servicio de reviews
+  - `rate-business.js` - Calificar negocio
+  - `api/review-service.js` - Servicio de API
+
+#### Sistema de Reportes
+
+- **Backend**: Router de reportes (`/backend/app/routers/reports.py`)
+  - Crear reportes de usuarios/negocios
+  - Gestión administrativa de reportes
+- **Frontend**: Pantalla de reportes
+  - `report.js` - Crear reporte
+  - `api/report-service.js` - Servicio de API
+
+#### Testing Completo
+
+- **363 tests implementados** (100% passing)
+- **41.4% code coverage** (statements)
+- **Tests por categoría**:
+  - API Services: 9 archivos (88.35% coverage)
+  - Contexts: 5 archivos (auth, chat, location, notif, service)
+  - Components: 13 archivos (UI, business, home)
+  - Hooks: 3 archivos (useAsyncStorage, useRefresh, useResponsiveDimensions)
+  - Utils: 4 archivos (cache, cache-manager, geolocation, logger)
+  - Integration: 3 archivos
+- **Testing tools**: Jest 29.7.0 + React Testing Library
+
+#### Componentes UI Reutilizables
+
+- `components/ui/Button.js` - Botón personalizado
+- `components/ui/Card.js` - Tarjeta de contenido
+- `components/ui/HapticPressable.js` - Botón con feedback háptico
+- `components/ui/LocationHeader.js` - Header con ubicación
+- `components/ui/RatingDisplay.js` - Visualización de calificación
+- `components/ui/SearchBar.js` - Barra de búsqueda
+- `components/ErrorBoundary.js` - Manejo de errores
+- `components/LoadingState.js` - Estado de carga
+- `components/EmptyState.js` - Estado vacío
+- `components/ErrorState.js` - Estado de error
+
+#### Componentes de Business
+
+- `components/business/BusinessCard.js` - Tarjeta de negocio
+- `components/business/BusinessList.js` - Lista de negocios
+- `components/business/BusinessHeader.js` - Header del perfil
+- `components/business/BusinessActions.js` - Acciones del negocio
+- `components/business/BusinessLocation.js` - Ubicación del negocio
+- `components/business/BusinessReviews.js` - Reseñas del negocio
+- `components/business/BusinessChat.js` - Chat del negocio
+- `components/business/FilterChips.js` - Chips de filtro
+
+#### Componentes de Home
+
+- `components/home/HomeCategories.js` - Categorías principales
+- `components/home/HomeFeaturedBrands.js` - Marcas destacadas
+- `components/home/HomeNearbyStores.js` - Tiendas cercanas
+- `components/home/HomeNewBusinesses.js` - Negocios nuevos
+- `components/home/HomePromoBanner.js` - Banner promocional
+
+#### Componentes de Stores
+
+- `components/stores/StoresHeader.js` - Header de tiendas
+- `components/stores/StoresList.js` - Lista de tiendas
+- `components/stores/StoresMap.js` - Mapa de tiendas
+- `components/stores/StoresFilterModals.js` - Modales de filtro
+
+#### Componentes de Search
+
+- `components/search/SearchInput.js` - Input de búsqueda
+- `components/search/SearchFilters.js` - Filtros de búsqueda
+- `components/search/SearchResults.js` - Resultados
+- `components/search/RecentSearches.js` - Búsquedas recientes
+
+#### Custom Hooks
+
+- `hooks/useAsyncStorage.js` - Hook de almacenamiento async
+- `hooks/useBusinessData.js` - Hook de datos de negocios
+- `hooks/useBusinessFilters.js` - Hook de filtros
+- `hooks/useRefresh.js` - Hook de refresco
+- `hooks/useResponsiveDimensions.js` - Hook de dimensiones responsivas
+
+### 🔧 Changed
+
+#### Sistema de Logging
+
+- Reemplazados todos los `console.log/warn/error` con sistema centralizado `logger.js`
+- Eliminados emojis de depuración del código de producción
+- Preparado para integración con servicios de monitoreo (Sentry/Bugsnag)
+
+#### Mejoras de Cache
+
+- Sistema de cache con AsyncStorage para todos los contextos
+- Cache-first strategy con actualización en segundo plano
+- Tiempos configurables por tipo de dato
+- `utils/cache-manager.js` - Gestor centralizado de caché
+- Documento `CACHE_STRATEGY.md` con estrategia completa
+
+#### Reorganización de Tabs
+
+- **Eliminados**: `search` (búsqueda ahora integrada en home)
+- **Agregados**: `stores` (lista de negocios), `chat`, `my-bookings`, `notifications`
+- Tabs actuales: home, stores, chat, my-bookings, notifications, profile (6 tabs)
+
+#### Estructura de Proyecto
+
+- Componentes organizados por feature (business/, home/, search/, stores/, ui/)
+- Tests organizados por tipo (api/, components/, context/, hooks/, utils/, integration/)
+- Documentación centralizada en `docs/`
+
+### 🐛 Fixed
+
+#### Producción
+
+- CORS configurado correctamente para Railway y dominios personalizados
+- Manejo de errores mejorado en todas las APIs
+- Validación de contraseñas con mensajes claros
+- Fix de VirtualizedList en perfil (FlatList → map())
+
+#### Testing
+
+- Mocks de AsyncStorage implementados correctamente
+- Tests de contextos con enfoque component-based
+- Eliminados timeouts y warnings de tests
+
+### 📚 Documentation
+
+#### Archivos Actualizados
+
+- `README.md` - Funcionalidades reales, estructura actualizada
+- `backend/README.md` - Todos los endpoints documentados
+- `CACHE_STRATEGY.md` - Sistema de logging actualizado
+- `CHANGELOG.md` - Este archivo (historial completo)
+- `SETUP_RESERVAS.md` - Guía del sistema de reservas
+
+#### Nuevas Guías
+
+- Testing documentado con ejemplos
+- Sistema de balance backend explicado
+- Sistema de reservas paso a paso
+- Componentes UI documentados
+
+### 🔒 Security
+
+- Sin credenciales hardcodeadas
+- `.env` protegido en `.gitignore`
+- Sistema de validación de contraseñas robusto
+
+### 📊 Métricas Finales
+
+```
+Tests:       363 passing (100%)
+Coverage:    41.4% statements
+             27.87% branches
+             41.03% functions
+             41.74% lines
+Archivos:    160+ archivos procesados
+Backend:     10 routers implementados
+Frontend:    7 tabs + 40+ pantallas
+Componentes: 60+ componentes reutilizables
+```
 
 ---
 

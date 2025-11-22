@@ -12,7 +12,7 @@ import {
     StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import GmapsView from '../components/gmaps-view'
 import { getCurrentLocation } from '../utils/geolocation'
 

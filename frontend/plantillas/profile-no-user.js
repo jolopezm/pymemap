@@ -3,8 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { globalStyles } from '../styles/global';
-import Button from '../components/button';
+import { globalStyles, colors } from '../styles/theme'
+import Button from '../components/ui/Button'
 import BenefitItem from '../components/benefit-item';
 import React from 'react';
 

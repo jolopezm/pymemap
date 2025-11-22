@@ -30,14 +30,17 @@ backend/
 │   │   ├── token.py          # Modelos de tokens
 │   │   └── utility_classes.py # Notificaciones, Chat, Mensajes
 │   │
-│   ├── routers/               # Endpoints de la API
-│   │   ├── __init__.py
-│   │   ├── auth.py           # Autenticación y login
-│   │   ├── users.py          # Gestión de usuarios
-│   │   ├── business.py       # Gestión de negocios
-│   │   ├── gmaps.py          # Integración con Google Maps
-│   │   ├── notifications.py  # Notificaciones
-│   │   └── chat.py           # Sistema de mensajería
+    ├── routers/             # Endpoints de la API
+    │   ├── __init__.py
+    │   ├── auth.py           # Autenticación y login
+    │   ├── users.py          # Gestión de usuarios y balance
+    │   ├── business.py       # Gestión de negocios y servicios
+    │   ├── bookings.py       # Sistema de reservas y disponibilidad
+    │   ├── reviews.py        # Sistema de reseñas y calificaciones
+    │   ├── chat.py           # Sistema de mensajería en tiempo real
+    │   ├── notifications.py  # Notificaciones push
+    │   ├── reports.py        # Sistema de reportes
+    │   └── gmaps.py          # Integración con Google Maps API
 │   │
 │   ├── services/              # Lógica de negocio
 │   │   └── auth_code.py      # Códigos de autenticación
@@ -75,6 +78,7 @@ El backend ya está desplegado en Railway, por lo que el frontend puede conectar
 - ✅ Compartir con otros desarrolladores/evaluadores
 
 **Solo necesitas:**
+
 ```bash
 cd frontend
 npm run web:dev
@@ -252,27 +256,60 @@ Una vez que el servidor esté corriendo:
 - `DELETE /users/{id}` - Eliminar usuario
 - `POST /users/{id}/change-password` - Cambiar contraseña
 - `POST /users/reset-password` - Restablecer contraseña
+- `POST /users/{id}/update-balance` - Actualizar saldo de usuario
 
 #### Negocios
 
 - `GET /business` - Listar negocios
 - `POST /business` - Crear negocio
-- `POST /business/request-service` - Solicitar servicio
+- `GET /business/{id}` - Obtener detalle de negocio
+- `PUT /business/{id}` - Actualizar negocio
+- `DELETE /business/{id}` - Eliminar negocio
 - `GET /business/services` - Listar servicios
+- `POST /business/request-service` - Solicitar servicio
 
-#### Google Maps
+#### Reservas (Bookings)
 
-- `GET /autocomplete/{query}` - Autocompletar direcciones
+- `POST /bookings/business/{business_id}/availability` - Configurar disponibilidad
+- `GET /bookings/business/{business_id}/availability/{year}/{month}` - Ver días disponibles
+- `GET /bookings/business/{business_id}/availability/{date}/slots` - Ver horarios disponibles
+- `POST /bookings` - Crear reserva
+- `GET /bookings/my-bookings` - Ver mis reservas
+- `GET /bookings/business/{business_id}/bookings` - Ver reservas de un negocio
+- `PATCH /bookings/{booking_id}/confirm` - Confirmar reserva
+- `PATCH /bookings/{booking_id}/reject` - Rechazar reserva
 
-#### Notificaciones
+#### Reseñas
 
-- `GET /notifications/{user_id}` - Obtener notificaciones
-- `POST /notifications` - Crear notificación
+- `GET /reviews/business/{business_id}` - Obtener reseñas de un negocio
+- `POST /reviews` - Crear reseña
+- `PUT /reviews/{review_id}` - Actualizar reseña
+- `DELETE /reviews/{review_id}` - Eliminar reseña
 
 #### Chat
 
 - `GET /chat/{user_id}` - Obtener chats de un usuario
+- `POST /chat` - Crear nuevo chat
 - `GET /chat/{chat_id}/messages` - Obtener mensajes de un chat
+- `POST /chat/{chat_id}/messages` - Enviar mensaje
+- `PUT /chat/{chat_id}/mark-read` - Marcar mensajes como leídos
+
+#### Notificaciones
+
+- `GET /notifications/{user_id}` - Obtener notificaciones del usuario
+- `POST /notifications` - Crear notificación
+- `PUT /notifications/{notif_id}/mark-read` - Marcar como leída
+- `DELETE /notifications/{notif_id}` - Eliminar notificación
+
+#### Reportes
+
+- `POST /reports` - Crear reporte
+- `GET /reports` - Listar reportes (admin)
+- `GET /reports/{report_id}` - Ver detalle de reporte
+
+#### Google Maps
+
+- `GET /autocomplete/{query}` - Autocompletar direcciones
 
 ## 🧪 Testing
 
@@ -415,12 +452,14 @@ El backend de PymeMap ya está desplegado y funcionando en Railway:
 Cuando trabajas con el backend desplegado:
 
 **1. Hacer cambios localmente:**
+
 ```bash
 cd backend
 # Editar código...
 ```
 
 **2. Commitear y pushear:**
+
 ```bash
 git add .
 git commit -m "feat: nuevo endpoint de X"
@@ -428,12 +467,14 @@ git push origin issue-despliegue
 ```
 
 **3. Railway auto-deploya:**
+
 - Detecta el push automáticamente
 - Construye la nueva versión (~2-3 minutos)
 - Despliega si no hay errores
 - Puedes ver el progreso en el dashboard de Railway
 
 **4. Probar los cambios:**
+
 ```bash
 curl https://pymemap-production-306f.up.railway.app/
 ```

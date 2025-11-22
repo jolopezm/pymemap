@@ -1,8 +1,15 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react'
+import React, {
+    createContext,
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+} from 'react'
 import { getChats, getMessages } from '../api/chat-service'
 import { getUserById } from '../api/user-service'
 import { useAuth } from './auth-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import logger from '../utils/logger'
 
 const ChatContext = createContext()
 
@@ -33,7 +40,7 @@ export const ChatProvider = ({ children }) => {
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
         } catch (error) {
-            console.error('Error guardando chats en caché:', error)
+            // Error manejado silenciosamente
         }
     }
 
@@ -60,12 +67,12 @@ export const ChatProvider = ({ children }) => {
 
             return null
         } catch (error) {
-            console.error('Error cargando chats del caché:', error)
+            logger.error('Error cargando chats del caché:', error)
             return null
         }
     }
 
-    const clearCache = async () => {
+    const clearCache = useCallback(async () => {
         try {
             await AsyncStorage.multiRemove([
                 STORAGE_KEYS.CHATS,
@@ -73,9 +80,9 @@ export const ChatProvider = ({ children }) => {
                 STORAGE_KEYS.CACHE_TIMESTAMP,
             ])
         } catch (error) {
-            console.error('Error limpiando caché:', error)
+            // Error manejado silenciosamente
         }
-    }
+    }, [])
 
     // ============= FUNCIONES EXISTENTES =============
 
@@ -101,7 +108,10 @@ export const ChatProvider = ({ children }) => {
                         return { chatId: chat.id || chat._id, user: otherUser }
                     }
                 } catch (error) {
-                    console.error('Error fetching other user:', error)
+                    // Silenciosamente manejar 403 (usuario no disponible/sin permisos)
+                    if (error.response?.status !== 403) {
+                        logger.error('Error fetching other user:', error)
+                    }
                     return null
                 }
             })
@@ -167,7 +177,7 @@ export const ChatProvider = ({ children }) => {
 
                 await saveToCache(chatData, usersData)
             } catch (error) {
-                console.error('Error fetching chats:', error)
+                logger.error('Error fetching chats:', error)
 
                 // 4️⃣ FALLBACK: Si falla, intentar usar caché aunque esté obsoleto
                 const cached = await loadFromCache()
@@ -266,27 +276,38 @@ export const ChatProvider = ({ children }) => {
             setLoading(false)
             clearCache() // Limpiar caché al cerrar sesión
         }
-    }, [user, fetchChats])
+    }, [user, fetchChats, clearCache])
 
-    return (
-        <ChatContext.Provider
-            value={{
-                chats,
-                otherUsers,
-                unreadCount,
-                loading,
-                error,
-                isFromCache, // Nuevo: indica si los datos vienen del caché
-                markChatAsRead,
-                updateLastMessage,
-                incrementUnreadCount,
-                refreshChats,
-                clearCache, // Nuevo: exponer función de limpieza
-            }}
-        >
-            {children}
-        </ChatContext.Provider>
+    const value = useMemo(
+        () => ({
+            chats,
+            otherUsers,
+            unreadCount,
+            loading,
+            error,
+            isFromCache,
+            markChatAsRead,
+            updateLastMessage,
+            incrementUnreadCount,
+            refreshChats,
+            clearCache,
+        }),
+        [
+            chats,
+            otherUsers,
+            unreadCount,
+            loading,
+            error,
+            isFromCache,
+            markChatAsRead,
+            updateLastMessage,
+            incrementUnreadCount,
+            refreshChats,
+            clearCache,
+        ]
     )
+
+    return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }
 
 export const useChat = () => {
@@ -296,3 +317,4 @@ export const useChat = () => {
     }
     return context
 }
+

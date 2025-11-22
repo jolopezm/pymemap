@@ -17,12 +17,13 @@ import {
     markChatAsRead as markChatAsReadAPI,
 } from '../api/chat-service'
 import React from 'react'
-import { globalStyles, colors } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Screen from '../components/screen'
 import LoadingSpinner from '../components/loading-spinner'
 import { useRefresh } from '../hooks/useRefresh'
+import logger from '../utils/logger'
 
 export default function ChatView() {
     const { user } = useAuth()
@@ -41,7 +42,7 @@ export default function ChatView() {
             const messageData = await getMessages(validChatId)
             setMessages(messageData)
         } catch (error) {
-            console.error('❌ Error fetching messages on refresh:', error)
+            // Error manejado silenciosamente
         }
     })
 
@@ -55,12 +56,6 @@ export default function ChatView() {
         const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(cleanId)
 
         if (!isValidObjectId) {
-            console.error('❌ chatId inválido:', {
-                chatId,
-                cleanId,
-                length: cleanId.length,
-                format: 'Expected 24 hex characters',
-            })
             return null
         }
 
@@ -82,14 +77,12 @@ export default function ChatView() {
     React.useEffect(() => {
         const fetchMessages = async () => {
             if (!validChatId) {
-                console.error('❌ No valid chat ID provided')
                 setError('ID de chat inválido')
                 setLoading(false)
                 return
             }
 
             if (!user) {
-                console.error('❌ User not authenticated')
                 setError('Usuario no autenticado')
                 setLoading(false)
                 return
@@ -110,7 +103,7 @@ export default function ChatView() {
                     markChatAsRead(validChatId)
                 } catch (markError) {
                     // No bloquear la carga de mensajes si falla marcar como leído
-                    console.error('⚠️ Error marcando chat como leído:', {
+                    logger.error('⚠️ Error marcando chat como leído:', {
                         error: markError.message,
                         status: markError.response?.status,
                         data: markError.response?.data,
@@ -122,13 +115,13 @@ export default function ChatView() {
 
                     // Solo mostrar error si es crítico
                     if (markError.response?.status === 400) {
-                        console.error(
+                        logger.error(
                             '🚨 Error crítico 400 - chatId posiblemente inválido'
                         )
                     }
                 }
             } catch (error) {
-                console.error('❌ Error fetching messages:', {
+                logger.error('❌ Error fetching messages:', {
                     error: error.message,
                     status: error.response?.status,
                     data: error.response?.data,
@@ -192,7 +185,7 @@ export default function ChatView() {
             // Actualizar el último mensaje en el contexto
             updateLastMessage(validChatId, sentMessage)
         } catch (error) {
-            console.error('❌ Error enviando mensaje:', {
+            logger.error('❌ Error enviando mensaje:', {
                 error: error.message,
                 status: error.response?.status,
                 data: error.response?.data,

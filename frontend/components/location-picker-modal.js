@@ -16,6 +16,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { getCurrentLocation, geocodeAddress } from '../utils/geolocation'
+import logger from '../utils/logger'
 
 /**
  * Modal para cambiar la ubicación del usuario
@@ -46,7 +47,7 @@ export default function LocationPickerModal({
                 )
             }
         } catch (error) {
-            console.error('Error obteniendo ubicación:', error)
+            logger.error('Error obteniendo ubicación:', error)
             Alert.alert('Error', 'No se pudo obtener tu ubicación')
         } finally {
             setIsLoading(false)
@@ -78,7 +79,7 @@ export default function LocationPickerModal({
                 )
             }
         } catch (error) {
-            console.error('Error geocodificando dirección:', error)
+            logger.error('Error geocodificando dirección:', error)
             Alert.alert('Error', 'No se pudo buscar esa dirección')
         } finally {
             setIsLoading(false)

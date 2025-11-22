@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import logger from '../utils/logger'
 
 async function getAuthHeaders() {
     const token = await AsyncStorage.getItem('token')
@@ -24,7 +25,7 @@ export async function fetchAddressSuggestions(input, country = 'us') {
         )
         return response.data
     } catch (error) {
-        console.error('Error fetching address suggestions:', error)
+        logger.error('Error fetching address suggestions:', error)
         throw error
     }
 }

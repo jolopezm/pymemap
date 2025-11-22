@@ -11,13 +11,14 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { globalStyles, colors } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { useAuth } from '../context/auth-context'
 import { getBusiness } from '../api/business-service'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
 import DefaultModal from '../components/default-modal'
 import { createReview } from '../api/review-service'
+import logger from '../utils/logger'
 
 export default function RateBusiness() {
     const { businessId, id, bookingId, businessName } = useLocalSearchParams()
@@ -43,7 +44,7 @@ export default function RateBusiness() {
                 const foundBusiness = await getBusiness(actualBusinessId)
                 setBusiness(foundBusiness)
             } catch (error) {
-                console.error('Error fetching business:', error)
+                logger.error('Error fetching business:', error)
                 Alert.alert('Error', 'No se pudo cargar el negocio')
             } finally {
                 setLoading(false)
@@ -104,7 +105,7 @@ export default function RateBusiness() {
             
             await createReview(reviewData)
         } catch (error) {
-            console.error('Error saving review:', error)
+            logger.error('Error saving review:', error)
         }
     }
 

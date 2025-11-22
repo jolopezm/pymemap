@@ -4,17 +4,14 @@ import {
     Pressable,
     StyleSheet,
     Image,
-    RefreshControl,
-    ScrollView,
+    ActivityIndicator,
 } from 'react-native'
 import { useChat } from '../../context/chat-context'
 import React from 'react'
-import { globalStyles } from '../../styles/global'
-import { router } from 'expo-router'
+import { globalStyles, colors } from '../../styles/theme'
+import { router, useFocusEffect } from 'expo-router'
 import Screen from '../../components/screen'
-import LoadingSpinner from '../../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons'
-import { useRefresh } from '../../hooks/useRefresh'
 
 const ChatScreen = () => {
     const {
@@ -27,15 +24,15 @@ const ChatScreen = () => {
         refreshChats,
     } = useChat()
 
-    const { refreshing, onRefresh } = useRefresh(refreshChats)
+    useFocusEffect(
+        React.useCallback(() => {
+            refreshChats()
+        }, [])
+    )
 
     const handleChatPress = chat => {
         const chatId = chat.id || chat._id
         router.push(`/chat-view?chatId=${chatId}`)
-    }
-
-    if (loading && !isFromCache) {
-        return <LoadingSpinner />
     }
 
     if (error && chats.length === 0) {
@@ -65,44 +62,39 @@ const ChatScreen = () => {
 
     return (
         <Screen>
-            <ScrollView
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
-            >
-                <View>
-                    {isFromCache && (
-                        <View style={styles.cacheIndicator}>
-                            <Ionicons
-                                name="cloud-offline"
-                                size={16}
-                                color="#856404"
-                            />
-                            <Text style={styles.cacheText}>
-                                Mostrando datos guardados
+                {loading && !isFromCache && (
+                    <View style={{ paddingVertical: 8, alignItems: 'center' }}>
+                        <ActivityIndicator size="small" color="#9B59B6" />
+                    </View>
+                )}
+                {isFromCache && (
+                    <View style={styles.cacheIndicator}>
+                        <Ionicons
+                            name="cloud-offline"
+                            size={16}
+                            color="#856404"
+                        />
+                        <Text style={styles.cacheText}>
+                            Mostrando datos guardados
+                        </Text>
+                        <Pressable onPress={refreshChats}>
+                            <Text style={styles.refreshText}>
+                                Actualizar
                             </Text>
-                            <Pressable onPress={refreshChats}>
-                                <Text style={styles.refreshText}>
-                                    Actualizar
-                                </Text>
-                            </Pressable>
-                        </View>
-                    )}
+                        </Pressable>
+                    </View>
+                )}
 
-                    {/* Badge de mensajes no leídos */}
-                    {unreadCount > 0 && (
-                        <View style={styles.unreadBadge}>
-                            <Text style={styles.unreadText}>
-                                {unreadCount} mensaje
-                                {unreadCount > 1 ? 's' : ''} sin leer
-                            </Text>
-                        </View>
-                    )}
+                {unreadCount > 0 && (
+                    <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadText}>
+                            {unreadCount} mensaje
+                            {unreadCount > 1 ? 's' : ''} sin leer
+                        </Text>
+                    </View>
+                )}
 
-                    {chats.length === 0 ? (
+                {chats.length === 0 ? (
                         <View style={styles.emptyContainer}>
                             <Ionicons
                                 name="chatbubbles-outline"
@@ -238,10 +230,8 @@ const ChatScreen = () => {
                                     />
                                 </Pressable>
                             )
-                        })
+                        })  
                     )}
-                </View>
-            </ScrollView>
         </Screen>
     )
 }

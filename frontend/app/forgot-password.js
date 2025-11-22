@@ -5,13 +5,14 @@ import { Toast } from 'toastify-react-native'
 import { User } from '../classes/user'
 import { sendAuthCode } from '../api/auth-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { globalStyles } from '../styles/global'
-import Button from '../components/button'
+import { globalStyles, colors } from '../styles/theme'
+import Button from '../components/ui/Button'
 import DismissKeyboard from '../components/dismiss-keyboard'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native'
+import logger from '../utils/logger'
 
 export default function ForgotPassword() {
     const [user, setUser] = useState(new User())
@@ -67,7 +68,7 @@ export default function ForgotPassword() {
                 params: { from: 'forgot-password' },
             })
         } catch (error) {
-            console.error(
+            logger.error(
                 'Error al enviar el correo de restablecimiento:',
                 error
             )

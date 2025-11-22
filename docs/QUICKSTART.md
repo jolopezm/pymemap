@@ -35,6 +35,8 @@ npm install
 ### Paso 3: Ejecutar la Aplicación
 
 ```bash
+npm start
+# o para web directamente
 npm run web:dev
 ```
 
@@ -55,7 +57,7 @@ Abre tu navegador en: **http://localhost:8081**
 
 ### Paso 2: Escanear el QR
 
-Después de ejecutar `npm run web:dev`, verás un QR code en la terminal.
+Después de ejecutar `npm start`, verás un QR code en la terminal.
 
 ### Paso 3: Escanear con Expo Go
 
@@ -102,6 +104,8 @@ También puedes presionar **"🏠 Explorar sin cuenta"** para ver la app sin reg
 
 ```bash
 # Limpiar caché
+npm run dev
+# o
 npx expo start --clear
 
 # Reinstalar dependencias

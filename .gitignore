@@ -213,6 +213,23 @@ frontend/build/
 frontend/android/
 frontend/ios/
 
+# Test coverage
+frontend/coverage/
+coverage/
+
+# Jest
+frontend/__tests__/__snapshots__/
+
+# Backups
+*.backup
+*.bak
+
+# Documentation that shouldn't be committed
+frontend/docs/
+
+# EAS Build
+frontend/eas.json
+
 # OS/Editor noise
 .DS_Store
 Thumbs.db

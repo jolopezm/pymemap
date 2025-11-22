@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { View, Text, Pressable } from 'react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 
 export default function Item({ business }) {
     const router = useRouter()

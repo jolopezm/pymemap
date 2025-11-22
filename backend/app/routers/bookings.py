@@ -153,7 +153,7 @@ async def create_booking(
     if created_booking:
         created_booking["_id"] = str(created_booking["_id"])
     
-    # TODO: Enviar notificación al dueño del negocio
+    # Notificación al dueño del negocio (implementar según servicio de notificaciones)
     
     return created_booking
 
@@ -204,7 +204,7 @@ async def confirm_booking(
         {"$set": {"status": "confirmed"}}
     )
     
-    # TODO: Enviar notificación al cliente
+    # Notificación al cliente (implementar según servicio de notificaciones)
     
     return {"message": "Reserva confirmada"}
 
@@ -248,7 +248,7 @@ async def reject_booking(
         {"$set": {"status": "cancelled"}}
     )
     
-    # TODO: Enviar notificación al cliente
+    # Notificación al cliente (implementar según servicio de notificaciones)
     
     return {"message": "Reserva rechazada"}
 

@@ -31,11 +31,11 @@ export async function requestLocationPermission() {
         if (status === 'granted') {
             return true
         } else {
-            console.warn('⚠️ Permisos de ubicación denegados. Estado:', status)
+            logger.warn('Permisos de ubicación denegados. Estado:', status)
             return false
         }
     } catch (error) {
-        console.error('❌ Error al solicitar permisos de ubicación:', error)
+        logger.error('Error al solicitar permisos de ubicación:', error)
         return false
     }
 }
@@ -61,7 +61,7 @@ export async function getCurrentLocation(forceRefresh = false) {
         const hasPermission = await requestLocationPermission()
 
         if (!hasPermission) {
-            console.warn('⚠️ No se concedieron permisos de ubicación')
+            logger.warn('No se concedieron permisos de ubicación')
             return null
         }
 
@@ -74,8 +74,8 @@ export async function getCurrentLocation(forceRefresh = false) {
                 timeout: 15000,
             })
         } catch (highAccuracyError) {
-            console.warn(
-                '⚠️ Error con alta precisión, intentando con precisión balanceada...',
+            logger.warn(
+                'Error con alta precisión, intentando con precisión balanceada...',
                 highAccuracyError.message
             )
 
@@ -87,8 +87,8 @@ export async function getCurrentLocation(forceRefresh = false) {
                     timeout: 20000,
                 })
             } catch (balancedError) {
-                console.error(
-                    '❌ Error obteniendo ubicación:',
+                logger.error(
+                    'Error obteniendo ubicación:',
                     balancedError.message
                 )
                 throw balancedError
@@ -96,7 +96,7 @@ export async function getCurrentLocation(forceRefresh = false) {
         }
 
         if (!location || !location.coords) {
-            console.error('❌ No se obtuvo ubicación válida')
+            logger.error('No se obtuvo ubicación válida')
             return null
         }
 
@@ -107,7 +107,7 @@ export async function getCurrentLocation(forceRefresh = false) {
         try {
             address = await reverseGeocodeWithNominatim(latitude, longitude)
         } catch (geocodeError) {
-            console.warn(
+            logger.warn(
                 'Error al obtener dirección con Nominatim, usando fallback:',
                 geocodeError
             )
@@ -150,7 +150,7 @@ export async function getCurrentLocation(forceRefresh = false) {
                     address = parts.join(', ') || 'Ubicación actual'
                 }
             } catch (fallbackError) {
-                console.warn(
+                logger.warn(
                     'Error en geocodificación fallback:',
                     fallbackError
                 )
@@ -169,7 +169,7 @@ export async function getCurrentLocation(forceRefresh = false) {
 
         return result
     } catch (error) {
-        console.error('Error al obtener ubicación:', error)
+        logger.error('Error al obtener ubicación:', error)
         return null
     }
 }
@@ -255,11 +255,11 @@ export async function getRoutingDistance(lat1, lon1, lat2, lon2) {
                 duration: durationMin,
             }
         } else {
-            console.warn('⚠️ OSRM no pudo calcular la ruta:', data.code)
+            logger.warn('OSRM no pudo calcular la ruta:', data.code)
             return null
         }
     } catch (error) {
-        console.error('❌ Error al obtener distancia de OSRM:', error)
+        logger.error('Error al obtener distancia de OSRM:', error)
         return null
     }
 }
@@ -404,7 +404,7 @@ async function reverseGeocodeWithNominatim(latitude, longitude) {
 
         return 'Ubicación actual'
     } catch (error) {
-        console.error('Error en Nominatim Geocoding:', error)
+        logger.error('Error en Nominatim Geocoding:', error)
         throw error
     }
 }
@@ -455,7 +455,7 @@ export async function geocodeAddress(address) {
 
         return null
     } catch (error) {
-        console.error('Error al geocodificar dirección:', error)
+        logger.error('Error al geocodificar dirección:', error)
 
         // Intentar fallback nativo
         try {
@@ -465,7 +465,7 @@ export async function geocodeAddress(address) {
                 return { latitude, longitude }
             }
         } catch (fallbackError) {
-            console.error(
+            logger.error(
                 'Error en fallback de geocodificación:',
                 fallbackError
             )

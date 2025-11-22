@@ -15,9 +15,10 @@ import { uploadBusinessPicture, getBusiness } from '../api/business-service'
 import { useRouter } from 'expo-router'
 import { useSearchParams } from 'expo-router/build/hooks'
 import Screen from '../components/screen'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 import LoadingSpinner from '../components/loading-spinner'
+import logger from '../utils/logger'
 
 export default function EditBusiness() {
     const params = useSearchParams()
@@ -52,7 +53,7 @@ export default function EditBusiness() {
                     router.back()
                 }
             } catch (error) {
-                console.error('Error al cargar negocio:', error)
+                logger.error('Error al cargar negocio:', error)
                 Alert.alert('Error', 'No se pudo cargar el negocio')
             } finally {
                 setLoading(false)
@@ -93,7 +94,7 @@ export default function EditBusiness() {
 
             Alert.alert('Éxito', 'Foto del negocio actualizada correctamente')
         } catch (error) {
-            console.error('❌ Error al subir imagen:', error)
+            logger.error('❌ Error al subir imagen:', error)
             Alert.alert(
                 'Error',
                 error.message || 'No se pudo subir la foto del negocio'

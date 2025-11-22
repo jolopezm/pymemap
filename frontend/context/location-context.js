@@ -1,6 +1,14 @@
-import React, { createContext, useState, useContext, useEffect } from 'react'
+import {
+    createContext,
+    useState,
+    useContext,
+    useEffect,
+    useCallback,
+    useMemo,
+} from 'react'
 import { getCurrentLocation } from '../utils/geolocation'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import logger from '../utils/logger'
 
 const LocationContext = createContext()
 
@@ -22,12 +30,7 @@ export function LocationProvider({ children }) {
     const [permissionRequested, setPermissionRequested] = useState(false)
     const [isFromCache, setIsFromCache] = useState(false)
 
-    // Cargar ubicación guardada al inicio
-    useEffect(() => {
-        loadLocationFromCache()
-    }, [])
-
-    const saveToCache = async (coords, address) => {
+    const saveToCache = useCallback(async (coords, address) => {
         try {
             await AsyncStorage.multiSet([
                 [STORAGE_KEYS.USER_LOCATION, address],
@@ -35,11 +38,11 @@ export function LocationProvider({ children }) {
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
         } catch (error) {
-            console.error('Error guardando ubicación:', error)
+            // Error manejado silenciosamente
         }
-    }
+    }, [])
 
-    const loadLocationFromCache = async () => {
+    const loadLocationFromCache = useCallback(async () => {
         try {
             const [[, address], [, coordsJson], [, timestamp]] =
                 await AsyncStorage.multiGet([
@@ -60,73 +63,80 @@ export function LocationProvider({ children }) {
                 }
             }
         } catch (error) {
-            console.error('Error cargando ubicación del caché:', error)
+            logger.error('Error cargando ubicación del caché:', error)
         }
-    }
+    }, [])
 
-    const fetchLocation = async (forceRefresh = false) => {
-        try {
-            setIsLoadingLocation(true)
-            setLocationError(null)
-            setPermissionRequested(true)
+    // Cargar ubicación guardada al inicio
+    useEffect(() => {
+        loadLocationFromCache()
+    }, [loadLocationFromCache])
 
-            const location = await getCurrentLocation(forceRefresh)
+    const fetchLocation = useCallback(
+        async (forceRefresh = false) => {
+            try {
+                setIsLoadingLocation(true)
+                setLocationError(null)
+                setPermissionRequested(true)
 
-            if (location) {
-                setUserLocation(location.address)
-                setUserCoords({
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                })
-                setIsFromCache(false)
+                const location = await getCurrentLocation(forceRefresh)
 
-                // Guardar en caché
-                await saveToCache(
-                    {
+                if (location) {
+                    setUserLocation(location.address)
+                    setUserCoords({
                         latitude: location.latitude,
                         longitude: location.longitude,
-                    },
-                    location.address
+                    })
+                    setIsFromCache(false)
+
+                    // Guardar en caché
+                    await saveToCache(
+                        {
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                        },
+                        location.address
+                    )
+                } else {
+                    logger.warn(
+                        '⚠️ [LocationContext] No se pudo obtener ubicación'
+                    )
+                    setUserLocation('Toca aquí para activar ubicación')
+                    setLocationError(
+                        'No se pudo obtener la ubicación. Verifica los permisos.'
+                    )
+                }
+            } catch (error) {
+                logger.error(
+                    '❌ [LocationContext] Error al obtener ubicación:',
+                    error
                 )
-            } else {
-                console.warn(
-                    '⚠️ [LocationContext] No se pudo obtener ubicación'
-                )
-                setUserLocation('Toca aquí para activar ubicación')
-                setLocationError(
-                    'No se pudo obtener la ubicación. Verifica los permisos.'
-                )
+                setUserLocation('Error al obtener ubicación')
+                setLocationError(error.message)
+            } finally {
+                setIsLoadingLocation(false)
             }
-        } catch (error) {
-            console.error(
-                '❌ [LocationContext] Error al obtener ubicación:',
-                error
-            )
-            setUserLocation('Error al obtener ubicación')
-            setLocationError(error.message)
-        } finally {
-            setIsLoadingLocation(false)
-        }
-    }
+        },
+        [saveToCache]
+    )
 
     // Actualizar ubicación manualmente (ej: cuando el usuario selecciona en el mapa)
-    const updateLocation = async (coords, address) => {
-        setUserCoords(coords)
-        setUserLocation(
-            address ||
+    const updateLocation = useCallback(
+        async (coords, address) => {
+            const locationAddress =
+                address ||
                 `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`
-        )
-        setIsFromCache(false)
+            setUserCoords(coords)
+            setUserLocation(locationAddress)
+            setIsFromCache(false)
 
-        // Guardar en caché
-        await saveToCache(
-            coords,
-            address ||
-                `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`
-        )
-    }
+            // Guardar en caché
+            await saveToCache(coords, locationAddress)
+        },
+        [saveToCache]
+    )
 
-    const clearLocationCache = async () => {
+    const clearLocationCache = useCallback(async () => {
         try {
             await AsyncStorage.multiRemove([
                 STORAGE_KEYS.USER_LOCATION,
@@ -134,21 +144,34 @@ export function LocationProvider({ children }) {
                 STORAGE_KEYS.CACHE_TIMESTAMP,
             ])
         } catch (error) {
-            console.error('Error limpiando caché de ubicación:', error)
+            logger.error('Error limpiando caché de ubicación:', error)
         }
-    }
+    }, [])
 
-    const value = {
-        userLocation,
-        userCoords,
-        isLoadingLocation,
-        locationError,
-        permissionRequested,
-        isFromCache,
-        fetchLocation,
-        updateLocation,
-        clearLocationCache,
-    }
+    const value = useMemo(
+        () => ({
+            userLocation,
+            userCoords,
+            isLoadingLocation,
+            locationError,
+            permissionRequested,
+            isFromCache,
+            fetchLocation,
+            updateLocation,
+            clearLocationCache,
+        }),
+        [
+            userLocation,
+            userCoords,
+            isLoadingLocation,
+            locationError,
+            permissionRequested,
+            isFromCache,
+            fetchLocation,
+            updateLocation,
+            clearLocationCache,
+        ]
+    )
 
     return (
         <LocationContext.Provider value={value}>
@@ -165,3 +188,4 @@ export function useLocation() {
     }
     return context
 }
+

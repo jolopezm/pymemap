@@ -5,6 +5,7 @@ import { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { View, Text, TextInput, Button } from 'react-native'
 import Screen from '../components/screen'
+import logger from '../utils/logger'
 
 export default function AuthCodeForm() {
     const [email, setEmail] = useState('')
@@ -86,7 +87,7 @@ export default function AuthCodeForm() {
                 Toast.success('Correo verificado.', { duration: 3000 })
             }
         } catch (error) {
-            console.error('Error al verificar el código:', error)
+            logger.error('Error al verificar el código:', error)
             Toast.error(
                 error.response?.data?.detail || 'Error al verificar el código.'
             )

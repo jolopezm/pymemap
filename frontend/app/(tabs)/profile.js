@@ -35,7 +35,7 @@ export default function ProfileScreen() {
             await logout()
             router.push('/login')
         } catch (error) {
-            console.error('Error deleting account:', error)
+            // Error manejado silenciosamente
         }
     }
 

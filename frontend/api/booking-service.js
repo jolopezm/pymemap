@@ -1,6 +1,7 @@
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/api'
+import logger from '../utils/logger'
 import {
     getCachedOrFetch,
     setCache,
@@ -30,7 +31,7 @@ export async function getBusinessAvailability(businessId, year, month) {
         )
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error getting business availability:',
             error.response?.data || error.message
         )
@@ -50,7 +51,7 @@ export async function getAvailableSlots(businessId, date) {
         )
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error getting available slots:',
             error.response?.data || error.message
         )
@@ -73,11 +74,11 @@ export async function createBooking(bookingData) {
         // Invalidar caché al crear reserva
         await invalidateCache('my_bookings')
         await invalidateCache('all_my_business_bookings')
-        console.log('🗑️ Caché de reservas invalidado después de crear')
+        logger.log('🗑️ Caché de reservas invalidado después de crear')
 
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             '❌ Error creating booking:',
             error.response?.data || error.message
         )
@@ -100,11 +101,11 @@ export async function confirmBooking(bookingId) {
         // Invalidar caché al confirmar reserva
         await invalidateCache('my_bookings')
         await invalidateCache('all_my_business_bookings')
-        console.log('🗑️ Caché de reservas invalidado después de confirmar')
+        logger.log('🗑️ Caché de reservas invalidado después de confirmar')
 
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error confirming booking:',
             error.response?.data || error.message
         )
@@ -127,11 +128,11 @@ export async function rejectBooking(bookingId) {
         // Invalidar caché al rechazar reserva
         await invalidateCache('my_bookings')
         await invalidateCache('all_my_business_bookings')
-        console.log('🗑️ Caché de reservas invalidado después de rechazar')
+        logger.log('🗑️ Caché de reservas invalidado después de rechazar')
 
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error rejecting booking:',
             error.response?.data || error.message
         )
@@ -171,7 +172,7 @@ export async function getBusinessBookings(businessId) {
         )
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error getting business bookings:',
             error.response?.data || error.message
         )
@@ -210,7 +211,7 @@ export async function setBusinessAvailability(businessId, availabilityData) {
         )
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             'Error setting availability:',
             error.response?.data || error.message
         )
@@ -234,13 +235,13 @@ export async function verifyBookingCode(bookingId, code) {
         // Invalidar caché al verificar código
         await invalidateCache('my_bookings')
         await invalidateCache('all_my_business_bookings')
-        console.log(
+        logger.log(
             '🗑️ Caché de reservas invalidado después de verificar código'
         )
 
         return response.data
     } catch (error) {
-        console.error(
+        logger.error(
             '❌ Error verifying code:',
             error.response?.data || error.message
         )

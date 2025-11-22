@@ -1,9 +1,9 @@
-import axios from 'axios'
-import * as FileSystem from 'expo-file-system'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import axiosInstance from './axios-instance'
 import { API_URL } from '../config/api'
-//comment to pr
+import logger from '../utils/logger'
 
+// Función auxiliar para subidas de archivos (FormData requiere headers personalizados)
 async function getAuthHeaders() {
     const token = await AsyncStorage.getItem('token')
     if (token) {
@@ -15,46 +15,35 @@ async function getAuthHeaders() {
 }
 
 export async function getUsers() {
-    const headers = await getAuthHeaders()
-    const response = await axios.get(`${API_URL}/users`, { headers })
+    const response = await axiosInstance.get('/users')
     return response.data
 }
 
 export async function createUser(userData) {
-    const response = await axios.post(`${API_URL}/users`, userData)
+    const response = await axiosInstance.post('/users', userData)
     return response.data
 }
 
 export async function updateUser(userId, userData) {
-    const headers = await getAuthHeaders()
-    const response = await axios.put(`${API_URL}/users/${userId}`, userData, {
-        headers,
-    })
+    const response = await axiosInstance.put(`/users/${userId}`, userData)
     return response.data
 }
 
 export async function changePassword(userId, passwords) {
-    const headers = await getAuthHeaders()
-    const response = await axios.post(
-        `${API_URL}/users/${userId}/change-password`,
-        passwords,
-        {
-            headers,
-        }
+    const response = await axiosInstance.post(
+        `/users/${userId}/change-password`,
+        passwords
     )
     return response.data
 }
 
 export async function resetPassword(data) {
-    const response = await axios.post(`${API_URL}/users/reset-password`, data)
+    const response = await axiosInstance.post('/users/reset-password', data)
     return response.data
 }
 
 export async function deleteUser(userId) {
-    const headers = await getAuthHeaders()
-    const response = await axios.delete(`${API_URL}/users/${userId}`, {
-        headers,
-    })
+    const response = await axiosInstance.delete(`/users/${userId}`)
     return response.data
 }
 
@@ -105,20 +94,19 @@ export const uploadProfilePicture = async (userId, imageUri, filename) => {
 
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json().catch(() => ({}))
-            console.error('❌ Error del servidor:', errorData)
+            logger.error('Error del servidor al subir imagen:', errorData)
             throw new Error(errorData.detail || `HTTP ${uploadResponse.status}`)
         }
 
         const data = await uploadResponse.json()
         return data
     } catch (error) {
-        console.error('❌ Error al subir imagen:', error)
+        logger.error('Error al subir imagen:', error)
         throw error
     }
 }
 
 export const getUserById = async userId => {
-    const headers = await getAuthHeaders()
-    const response = await axios.get(`${API_URL}/users/${userId}`, { headers })
+    const response = await axiosInstance.get(`/users/${userId}`)
     return response.data
 }

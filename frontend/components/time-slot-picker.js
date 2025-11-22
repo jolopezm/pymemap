@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native'
 import { getAvailableSlots } from '../api/booking-service'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
+import logger from '../utils/logger'
 
 export function TimeSlotPicker({ businessId, date, onSlotSelect }) {
     const [slots, setSlots] = useState([])
@@ -22,7 +23,7 @@ export function TimeSlotPicker({ businessId, date, onSlotSelect }) {
             const data = await getAvailableSlots(businessId, date)
             setSlots(data || [])
         } catch (error) {
-            console.error('Error fetching slots:', error)
+            logger.error('Error fetching slots:', error)
             if (error.response?.status === 404) {
                 setError('No hay horarios configurados para esta fecha')
             } else {
