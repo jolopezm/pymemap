@@ -92,12 +92,14 @@ export async function login({ email, password }) {
         if (data.access_token) {
             // Verificar que el usuario sea admin antes de guardar el token
             localStorage.setItem('token', data.access_token)
-            
+
             const userData = await getCurrentUser()
             if (!userData || userData.role !== 'admin') {
                 // Si no es admin, limpiar el token y lanzar error
                 localStorage.removeItem('token')
-                throw new Error('Acceso denegado: Solo administradores pueden acceder')
+                throw new Error(
+                    'Acceso denegado: Solo administradores pueden acceder'
+                )
             }
         }
 
