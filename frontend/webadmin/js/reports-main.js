@@ -799,9 +799,6 @@ function setupEventListeners() {
     $('refresh-btn').addEventListener('click', loadReports)
 }
 
-/**
- * Carga los chats del admin
- */
 async function loadChats() {
     try {
         console.log('Cargando chats...')
@@ -825,9 +822,6 @@ async function loadChats() {
     }
 }
 
-/**
- * Renderiza la lista de chats en el sidebar
- */
 function renderChatsList(chats, user) {
     const $list = $('chats-list')
 
@@ -853,21 +847,38 @@ function renderChatsList(chats, user) {
         console.log(`Renderizando chat ${index}:`, chat)
 
         const chatItem = document.createElement('button')
-        chatItem.className = 'btn ghost'
+        chatItem.className = 'btn ghost '
         chatItem.style.cssText = 'text-align:left;padding:12px;width:100%;'
         chatItem.dataset.chatId = chat._id
 
-        // Determinar el nombre del otro usuario
         const otherUser = chat.participants?.find(p => p !== user._id)
-        const userName =
-            chat.other_user_name || chat.otherUserName || otherUser || 'Usuario'
+        let userName = 'Usuario'
 
-        console.log('Nombre de usuario para chat:', userName)
+        try {
+            const cachedUsersStr = localStorage.getItem('cachedUsers')
+            if (cachedUsersStr && otherUser) {
+                const cachedUsers = JSON.parse(cachedUsersStr)
+                const foundUser = cachedUsers.find(u => u._id === otherUser)
+                if (foundUser) {
+                    userName = foundUser.name
+                }
+            }
+        } catch (error) {
+            console.error('Error al obtener usuario de cache:', error)
+        }
+
+        if (userName === 'Usuario') {
+            userName =
+                chat.other_user_name ||
+                chat.otherUserName ||
+                otherUser ||
+                'Usuario'
+        }
 
         chatItem.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${escapeHtml(userName)}</div>
             <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                ${escapeHtml(chat.last_message || chat.lastMessage || 'Sin mensajes')}
+                ${escapeHtml(chat.last_message.content || 'Sin mensajes')}
             </div>
         `
 
@@ -879,20 +890,15 @@ function renderChatsList(chats, user) {
     })
 }
 
-/**
- * Abre un chat desde la lista del sidebar
- */
 async function openChatFromList(chatId) {
     try {
         showToast('Cargando chat...')
 
-        // Ocultar la lista de chats
         const $chatsList = $('chats-list-container')
         if ($chatsList) {
             $chatsList.style.display = 'none'
         }
 
-        // Mostrar el panel de chat
         const $chatPanel = $('chat-panel')
         $chatPanel.style.display = 'block'
 
@@ -900,7 +906,6 @@ async function openChatFromList(chatId) {
 
         await loadChatMessages(chatId)
 
-        // Configurar botón de cerrar
         const closeBtn = $('close-chat-panel')
         if (closeBtn) {
             closeBtn.onclick = () => {
@@ -917,14 +922,10 @@ async function openChatFromList(chatId) {
     }
 }
 
-/**
- * Inicializa la aplicación
- */
 function init() {
     setupEventListeners()
     loadReports()
     loadChats()
 }
 
-// Ejecutar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', init)
