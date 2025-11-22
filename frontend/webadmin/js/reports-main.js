@@ -636,14 +636,7 @@ async function changeReportState(reportId, newState) {
     try {
         showToast('Actualizando estado...')
 
-        // TODO: Descomentar cuando el endpoint esté listo
-        // await updateReportState(reportId, newState);
-
-        // Simulación temporal
-        const report = reports.find(r => (r._id || r.bookingId) === reportId)
-        if (report) {
-            report.state = newState
-        }
+        await updateReportState(reportId, newState)
 
         renderReports()
         showToast(`Estado actualizado a: ${REPORT_STATE_LABELS[newState]}`)
