@@ -30,6 +30,12 @@ function initTable() {
         data: allBusinesses,
         columns: [
             {
+                key: '_id',
+                label: 'ID',
+                render: val =>
+                    `<strong class="middle-ellipsis">${val || 'Sin id'}</strong>`,
+            },
+            {
                 key: 'name',
                 label: 'Nombre',
                 render: (val, item) =>
@@ -39,7 +45,8 @@ function initTable() {
             {
                 key: 'owner_id',
                 label: 'Propietario',
-                render: val => val || 'N/A',
+                render: val =>
+                    `<strong class="middle-ellipsis">${val || 'Sin id'}</strong>`,
             },
             {
                 key: 'category',
@@ -49,13 +56,25 @@ function initTable() {
             },
             {
                 key: 'profile_pic',
-                label: 'Foto de negocio',
-                render: (val, item) =>
+                label: 'Foto de Perfil',
+                render: val => [
                     val
-                        ? `<img src="${val}" alt="Foto de ${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`
+                        ? `<a href="${val}" target="_blank">Ver Foto</a>`
                         : 'N/A',
+                ],
             },
-            {},
+            {
+                key: 'address',
+                label: 'Dirección',
+                render: val => val || 'Sin dirección',
+                filterable: true,
+            },
+            {
+                key: 'average_rating',
+                label: 'Rating',
+                render: val => (val ? val.toFixed(1) : 'Sin rating'),
+                filterable: true,
+            },
         ],
         actions: [
             { key: 'delete', label: 'Eliminar Seleccionados', multiple: true },
@@ -130,13 +149,13 @@ function handleSave(id, updates) {
 
 function getCategoryBadge(category) {
     const badges = {
-        restaurant: '🍽️ Restaurante',
-        salon: '💇 Salón',
-        gym: '💪 Gimnasio',
-        clinic: '🏥 Clínica',
-        other: '📦 Otro',
+        restaurant: 'Restaurante',
+        salon: 'Salón',
+        gym: 'Gimnasio',
+        clinic: 'Clínica',
+        other: 'Otro',
     }
-    return badges[category] || '📦 ' + (category || 'Sin categoría')
+    return badges[category] || category || 'Sin categoría'
 }
 
 function updateMetrics() {
