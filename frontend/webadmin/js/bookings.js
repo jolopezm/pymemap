@@ -34,33 +34,36 @@ function initTable() {
         data: allBookings,
         columns: [
             {
+                key: '_id',
+                label: 'ID',
+                render: (val, item) =>
+                    `<strong class='middle-ellipsis'>${val || item._id || 'N/A'}</strong>`,
+                searchable: true,
+            },
+            {
                 key: 'user_name',
                 label: 'Usuario',
                 render: (val, item) =>
                     `<strong>${val || item.user_id || 'N/A'}</strong>${item.user_email ? `<br><small style="color: var(--muted);">${item.user_email}</small>` : ''}`,
-                editable: true,
                 searchable: true,
             },
             {
                 key: 'business_name',
                 label: 'Negocio',
                 render: val => val || 'N/A',
-                editable: true,
                 searchable: true,
             },
             {
-                key: 'booking_date',
+                key: 'date',
                 label: 'Fecha/Hora',
                 render: (val, item) =>
-                    `� ${formatDate(val)}<br>🕐 ${item.booking_time || 'N/A'}`,
-                editable: true,
+                    `${formatDate(val)}<br>${item.start_time || 'N/A'}`,
             },
             {
                 key: 'status',
                 label: 'Estado',
                 render: val => getStatusBadge(val),
                 filterable: true,
-                editable: true,
             },
         ],
         actions: [

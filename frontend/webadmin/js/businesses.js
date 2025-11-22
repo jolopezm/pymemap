@@ -34,21 +34,18 @@ function initTable() {
                 label: 'Nombre',
                 render: (val, item) =>
                     `<strong>${val || 'Sin nombre'}</strong>${item.description ? `<br><small style="color: var(--muted);">${item.description.substring(0, 50)}...</small>` : ''}`,
-                editable: true,
                 searchable: true,
             },
             {
                 key: 'owner_id',
                 label: 'Propietario',
                 render: val => val || 'N/A',
-                editable: true,
             },
             {
                 key: 'category',
                 label: 'Categoría',
                 render: val => getCategoryBadge(val),
                 filterable: true,
-                editable: true,
             },
             {
                 key: 'average_rating',

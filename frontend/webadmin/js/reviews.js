@@ -30,18 +30,24 @@ function initTable() {
         data: allReviews,
         columns: [
             {
-                key: 'user_name',
-                label: 'Usuario',
+                key: '_id',
+                label: 'ID',
                 render: (val, item) =>
-                    `<strong>${val || item.user_id || 'N/A'}</strong>${item.user_email ? `<br><small style="color: var(--muted);">${item.user_email}</small>` : ''}`,
-                editable: true,
+                    `<strong class='middle-ellipsis'>${val || item._id || 'N/A'}</strong>`,
                 searchable: true,
             },
             {
-                key: 'business_name',
-                label: 'Negocio',
-                render: val => val || 'N/A',
-                editable: true,
+                key: 'userId',
+                label: 'ID usuario',
+                render: (val, item) =>
+                    `<strong class='middle-ellipsis'>${val || item.userId || 'N/A'}</strong>`,
+                searchable: true,
+            },
+            {
+                key: 'businessId',
+                label: 'ID negocio',
+                render: val =>
+                    `<strong class='middle-ellipsis'>${val || 'N/A'}</strong>`,
                 searchable: true,
             },
             {
@@ -49,14 +55,17 @@ function initTable() {
                 label: 'Rating',
                 render: val => getStars(val),
                 filterable: true,
-                editable: true,
             },
             {
                 key: 'comment',
                 label: 'Comentario',
                 render: val =>
                     `<div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${val || '<span style="color: var(--muted);">Sin comentario</span>'}</div>`,
-                editable: true,
+            },
+            {
+                key: 'date',
+                label: 'Fecha',
+                render: val => formatDate(val),
                 searchable: true,
             },
         ],
