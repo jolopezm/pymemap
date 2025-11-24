@@ -33,6 +33,12 @@ async def login(user_credentials: UserLogin):
                 detail="Correo electrónico o contraseña incorrectos",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        if user["suspended"] == True:
+            print("Cuenta suspendida")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="La cuenta está suspendida. Para ser atendido, contáctanos al correo: soporte@pymap.com.",
+            )
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
