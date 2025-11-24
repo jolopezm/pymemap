@@ -64,6 +64,55 @@
                             </select>
                         </div>
 
+                        <!-- Filtros personalizados -->
+                        <div
+                            style="
+                                display: flex;
+                                gap: 12px;
+                                align-items: center;
+                                margin-bottom: 16px;
+                                padding: 12px;
+                                background: var(--bg);
+                                border-radius: 8px;
+                            "
+                        >
+                            <select
+                                class="select"
+                                id="filter-field"
+                                style="flex: 0 0 180px"
+                            >
+                                <option value="">Seleccionar campo...</option>
+                            </select>
+
+                            <span style="color: var(--muted); font-size: 14px"
+                                >igual a:</span
+                            >
+
+                            <input
+                                type="text"
+                                id="filter-value"
+                                class="input"
+                                placeholder="Valor..."
+                                style="flex: 1; min-width: 200px"
+                            />
+
+                            <button
+                                class="btn"
+                                id="apply-filter-btn"
+                                style="flex: 0 0 auto"
+                            >
+                                🔍 Filtrar
+                            </button>
+
+                            <button
+                                class="btn ghost"
+                                id="clear-filter-btn"
+                                style="flex: 0 0 auto"
+                            >
+                                ✖️ Limpiar
+                            </button>
+                        </div>
+
                         <div id="data-table-container"></div>
                     </div>
                 </div>

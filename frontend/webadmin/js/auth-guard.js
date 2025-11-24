@@ -1,12 +1,3 @@
-/**
- * Pymap Admin - Auth Guard
- * Script que protege las páginas del admin requiriendo autenticación
- *
- * Uso: Incluir este script al inicio de cada página protegida:
- * <script type="module" src="js/auth-guard.js"></script>
- */
-
-// Detectar si estamos en subcarpeta
 const inSubfolder = window.location.pathname.includes('/pages/')
 const authServicePath = inSubfolder
     ? './api/auth-service.js'
@@ -14,17 +5,11 @@ const authServicePath = inSubfolder
 
 const { isAuthenticated, getStoredUser, logout } = await import(authServicePath)
 
-/**
- * Verifica si el usuario está autenticado
- * Si no lo está, redirige a login
- */
 function checkAuth() {
     if (!isAuthenticated()) {
-        // Guardar la URL actual para redireccionar después del login
         const currentPath = window.location.pathname + window.location.search
         sessionStorage.setItem('redirectAfterLogin', currentPath)
 
-        // Redirigir a login según ubicación
         const loginPath = inSubfolder ? 'login.html' : 'pages/login.html'
         window.location.href = loginPath
         return false
@@ -32,9 +17,6 @@ function checkAuth() {
     return true
 }
 
-/**
- * Inicializa la información del usuario en la UI
- */
 function initUserInfo() {
     const user = getStoredUser()
 
@@ -42,7 +24,6 @@ function initUserInfo() {
         return
     }
 
-    // Actualizar nombre de usuario en el header (si existe)
     const userNameElement = document.querySelector(
         '.profile .name, .profile div:first-child div:first-child'
     )
@@ -50,7 +31,6 @@ function initUserInfo() {
         userNameElement.textContent = user.name || user.email || 'Usuario'
     }
 
-    // Actualizar avatar con iniciales
     const avatarElement = document.querySelector('.profile .avatar')
     if (avatarElement && user.name) {
         const initials = user.name
@@ -62,16 +42,12 @@ function initUserInfo() {
         avatarElement.textContent = initials
     }
 
-    // Actualizar nombre del negocio (si existe)
     const bizNameElement = document.querySelector('.biz .name')
     if (bizNameElement && user.business_name) {
         bizNameElement.textContent = user.business_name
     }
 }
 
-/**
- * Configura el botón de logout
- */
 function setupLogout() {
     // Buscar botón de logout existente o crear uno
     let logoutBtn = document.getElementById('logout-btn')

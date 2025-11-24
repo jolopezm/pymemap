@@ -10,7 +10,9 @@ import { TableComponent } from './table-component.js'
 
 let currentCollection = 'users'
 let allData = []
+let filteredData = []
 let table
+let isLoading = false
 
 const $ = id => document.getElementById(id)
 
@@ -395,13 +397,79 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.classList.remove('show'), 3000)
 }
 
+function setLoading(loading) {
+    isLoading = loading
+    const spinner = document.getElementById('loading-spinner')
+    const tableContainer = document.getElementById('data-table')
+    const metricsContainer = document.querySelector('.metrics')
+
+    if (loading) {
+        spinner.style.display = 'flex'
+        tableContainer.style.opacity = '0.5'
+        tableContainer.style.pointerEvents = 'none'
+        if (metricsContainer) {
+            metricsContainer.style.opacity = '0.5'
+        }
+    } else {
+        spinner.style.display = 'none'
+        tableContainer.style.opacity = '1'
+        tableContainer.style.pointerEvents = 'auto'
+        if (metricsContainer) {
+            metricsContainer.style.opacity = '1'
+        }
+    }
+}
+
+async function loadData() {
+    setLoading(true)
+
+    try {
+        const config = collections[currentCollection]
+
+        const cached = localStorage.getItem(config.cacheKey)
+        if (cached) {
+            allData = JSON.parse(cached)
+            filteredData = [...allData]
+            updateMetrics()
+            initTable()
+        }
+
+        const data = await config.fetchFn()
+        allData = data
+        filteredData = [...allData]
+
+        localStorage.setItem(config.cacheKey, JSON.stringify(data))
+
+        updateMetrics()
+        initTable()
+    } catch (error) {
+        console.error(`Error cargando ${currentCollection}:`, error)
+        showToast(`Error cargando ${currentCollection}`, 'error')
+
+        const cached = localStorage.getItem(
+            collections[currentCollection].cacheKey
+        )
+        if (cached && allData.length === 0) {
+            allData = JSON.parse(cached)
+            filteredData = [...allData]
+            updateMetrics()
+            initTable()
+            showToast('Mostrando datos en caché', 'warning')
+        }
+    } finally {
+        setLoading(false)
+    }
+}
+
 async function loadCollection(collectionName) {
     try {
         showToast(`Cargando ${collections[collectionName].title}...`)
         currentCollection = collectionName
 
         allData = await collections[collectionName].load()
+        filteredData = [...allData]
 
+        updateFilterFields()
         renderTable()
         updateMetrics()
 
@@ -449,7 +517,7 @@ function renderTable() {
 
     table = new TableComponent({
         containerId: 'data-table-container',
-        data: allData,
+        data: filteredData,
         columns: config.columns,
         actions: actions,
         onAction: handleAction,
@@ -460,7 +528,7 @@ function renderTable() {
 
 function updateMetrics() {
     const config = collections[currentCollection]
-    $('metrics-container').innerHTML = config.metrics(allData)
+    $('metrics-container').innerHTML = config.metrics(filteredData)
 }
 
 async function handleAction(action, ids, updates) {
@@ -558,9 +626,72 @@ async function handleConfirm(ids) {
     }
 }
 
+function updateFilterFields() {
+    const config = collections[currentCollection]
+    const filterFieldSelect = $('filter-field')
+
+    filterFieldSelect.innerHTML =
+        '<option value="">Seleccionar campo...</option>'
+
+    config.columns.forEach(column => {
+        const option = document.createElement('option')
+        option.value = column.key
+        option.textContent = column.label
+        filterFieldSelect.appendChild(option)
+    })
+
+    $('filter-value').value = ''
+}
+
+function applyFilter() {
+    const field = $('filter-field').value
+    const value = $('filter-value').value.trim().toLowerCase()
+
+    if (!field || !value) {
+        showToast('Selecciona un campo y un valor para filtrar', 'error')
+        return
+    }
+
+    filteredData = allData.filter(item => {
+        const itemValue = item[field]
+        if (itemValue === null || itemValue === undefined) return false
+
+        return String(itemValue).toLowerCase().includes(value)
+    })
+
+    if (filteredData.length === 0) {
+        showToast('No se encontraron resultados', 'info')
+    } else {
+        showToast(`${filteredData.length} resultado(s) encontrado(s)`)
+    }
+
+    renderTable()
+    updateMetrics()
+}
+
+function clearFilter() {
+    filteredData = [...allData]
+    $('filter-field').value = ''
+    $('filter-value').value = ''
+
+    renderTable()
+    updateMetrics()
+
+    showToast('Filtros limpiados')
+}
+
 function init() {
     $('collection-selector').addEventListener('change', e => {
         loadCollection(e.target.value)
+    })
+
+    $('apply-filter-btn').addEventListener('click', applyFilter)
+    $('clear-filter-btn').addEventListener('click', clearFilter)
+
+    $('filter-value').addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+            applyFilter()
+        }
     })
 
     loadCollection('users')

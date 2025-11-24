@@ -74,7 +74,6 @@ export class TableComponent {
             <div class="table-controls">
                 <div class="table-filters">
                     ${this.renderFilters()}
-                    <input type="text" class="input" id="${this.containerId}-search" placeholder="Buscar..." value="${this.state.search}">
                 </div>
                 <div class="table-actions">
                     ${this.actions
