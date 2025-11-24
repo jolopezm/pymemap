@@ -3,10 +3,9 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Comentarios y Solicitudes de los Usuarios — Pymap</title>
+        <title>Gestión de Datos — Pymap</title>
         <link rel="stylesheet" href="css/estilo.css" />
         <link rel="icon" href="favicon.ico" type="image/x-icon" />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script type="module" src="js/template-include.js"></script>
         <script type="module" src="js/auth-guard.js"></script>
     </head>
@@ -17,144 +16,55 @@
             <main class="main">
                 <section class="card">
                     <div class="page-title">
-                        <h1>Comentarios y Solicitudes</h1>
+                        <h1>Gestión de Datos</h1>
                         <p>
-                            Gestiona las reseñas y comentarios de tus clientes.
-                            Responde rápidamente para mejorar la satisfacción.
+                            Administra todas las colecciones de la plataforma
+                            desde un solo lugar.
                         </p>
                     </div>
 
-                    <div class="metrics" style="margin-top: 16px">
-                        <div class="metric">
-                            <div class="num" id="total-comments">0</div>
-                            <div class="label">Total comentarios</div>
-                        </div>
-                        <div class="metric">
-                            <div class="num" id="avg-stars">0 ★</div>
-                            <div class="label">Promedio estrellas</div>
-                        </div>
-                        <div class="metric">
-                            <div class="num">
-                                ⏱️
-                                <span
-                                    id="avgTimeSmall"
-                                    style="font-size: 14px; font-weight: 600"
-                                    >N/A</span
-                                >
-                            </div>
-                            <div class="label">Tiempo promedio respuesta</div>
-                        </div>
-                    </div>
+                    <div
+                        class="metrics"
+                        style="margin-top: 16px"
+                        id="metrics-container"
+                    ></div>
                 </section>
 
                 <div class="content">
                     <div class="card">
-                        <h2
+                        <div
                             style="
-                                margin: 0 0 12px;
-                                font-size: 16px;
-                                font-weight: 700;
-                                color: var(--purple);
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                margin-bottom: 16px;
                             "
                         >
-                            Lista de Comentarios
-                        </h2>
-
-                        <div class="controls">
-                            <select class="select" id="statusFilter">
-                                <option value="all">Todos los estados</option>
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="En proceso">En proceso</option>
-                                <option value="Resuelto">Resuelto</option>
-                            </select>
-
-                            <select class="select" id="ratingFilter">
-                                <option value="all">Todas las estrellas</option>
-                                <option value="5">5 estrellas</option>
-                                <option value="4">4 estrellas</option>
-                                <option value="3">3 estrellas</option>
-                                <option value="2">2 estrellas</option>
-                                <option value="1">1 estrella</option>
-                            </select>
-
-                            <input
-                                type="text"
-                                class="input"
-                                id="search"
-                                placeholder="Buscar en comentarios..."
-                                style="flex: 1; min-width: 200px"
-                            />
-
-                            <button class="btn" id="refresh-btn">
-                                🔄 Actualizar
-                            </button>
-                            <button class="btn ghost" id="mark-all-resolved">
-                                ✅ Marcar todos resueltos
-                            </button>
+                            <h2
+                                style="
+                                    margin: 0;
+                                    font-size: 16px;
+                                    font-weight: 700;
+                                    color: var(--purple);
+                                "
+                                id="table-title"
+                            >
+                                Datos
+                            </h2>
 
                             <select
                                 class="select"
-                                id="perPage"
-                                style="margin-left: auto"
+                                id="collection-selector"
+                                style="width: 200px"
                             >
-                                <option value="5">5 por página</option>
-                                <option value="10" selected>
-                                    10 por página
-                                </option>
-                                <option value="20">20 por página</option>
-                                <option value="50">50 por página</option>
+                                <option value="users">Usuarios</option>
+                                <option value="businesses">Negocios</option>
+                                <option value="bookings">Reservas</option>
+                                <option value="reviews">Reseñas</option>
                             </select>
                         </div>
 
-                        <div class="comments" id="commentsList"></div>
-
-                        <div class="pagination" id="pagination"></div>
-                    </div>
-
-                    <div class="side-top">
-                        <div class="card">
-                            <h3
-                                style="
-                                    margin: 0 0 12px;
-                                    font-size: 14px;
-                                    font-weight: 700;
-                                    color: var(--purple);
-                                "
-                            >
-                                Distribución de Satisfacción
-                            </h3>
-                            <canvas
-                                id="satisfactionChart"
-                                width="300"
-                                height="300"
-                            ></canvas>
-                        </div>
-
-                        <div class="card">
-                            <h3
-                                style="
-                                    margin: 0 0 8px;
-                                    font-size: 14px;
-                                    font-weight: 700;
-                                    color: var(--purple);
-                                "
-                            >
-                                Ayuda Rápida
-                            </h3>
-                            <ul
-                                style="
-                                    margin: 0;
-                                    padding-left: 18px;
-                                    font-size: 13px;
-                                    color: var(--muted);
-                                    line-height: 1.6;
-                                "
-                            >
-                                <li>Responde comentarios negativos primero.</li>
-                                <li>Usa plantillas para respuestas comunes.</li>
-                                <li>Marca como resuelto cuando termines.</li>
-                            </ul>
-                        </div>
+                        <div id="data-table-container"></div>
                     </div>
                 </div>
             </main>
@@ -162,6 +72,6 @@
 
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        <script src="js/main.js"></script>
+        <script type="module" src="js/data-manager.js"></script>
     </body>
 </html>
