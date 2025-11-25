@@ -18,10 +18,8 @@
                     </p>
                 </div>
 
-                <!-- Alert -->
                 <div id="alert" class="alert"></div>
 
-                <!-- Login Form -->
                 <form id="loginForm">
                     <div class="form-group">
                         <label class="form-label" for="email"
@@ -85,13 +83,11 @@
         <script type="module">
             import { login } from '../js/api/auth-service.js'
 
-            // Función auxiliar para verificar autenticación
             function isAuthenticated() {
                 const token = localStorage.getItem('token')
                 return !!token
             }
 
-            // Si ya está autenticado, redirigir
             if (isAuthenticated()) {
                 window.location.href = '../index.html'
             }
@@ -103,7 +99,6 @@
             const alert = document.getElementById('alert')
             const togglePasswordBtn = document.getElementById('togglePassword')
 
-            // Toggle password visibility
             togglePasswordBtn.addEventListener('click', () => {
                 const type =
                     passwordInput.type === 'password' ? 'text' : 'password'
@@ -112,7 +107,6 @@
                     type === 'password' ? 'mostrar' : 'ocultar'
             })
 
-            // Show alert
             function showAlert(message, type = 'error') {
                 alert.textContent = message
                 alert.className = `alert alert-${type} show`
@@ -122,7 +116,6 @@
                 }, 5000)
             }
 
-            // Handle form submit
             loginForm.addEventListener('submit', async e => {
                 e.preventDefault()
 
@@ -134,7 +127,6 @@
                     return
                 }
 
-                // Disable button and show loading
                 loginBtn.disabled = true
                 loginBtn.innerHTML =
                     '<span class="loading-spinner"></span>Iniciando sesión...'
@@ -155,15 +147,12 @@
                         'error'
                     )
 
-                    // Re-enable button
                     loginBtn.disabled = false
                     loginBtn.textContent = 'Iniciar Sesión'
 
-                    // Add error class to inputs
                     emailInput.classList.add('error')
                     passwordInput.classList.add('error')
 
-                    // Remove error class after 3 seconds
                     setTimeout(() => {
                         emailInput.classList.remove('error')
                         passwordInput.classList.remove('error')
