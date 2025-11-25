@@ -138,7 +138,7 @@ export async function sendAuthCode(email) {
     }
 }
 
-export async function verifyAuthCode(authData) {
+export async function verifyAuthCode(authData, redirectToIndex = true) {
     try {
         const response = await fetch(`${API_URL}/verify-auth-code`, {
             method: 'POST',
@@ -155,7 +155,7 @@ export async function verifyAuthCode(authData) {
 
         const data = await response.json()
 
-        if (data.access_token) {
+        if (data.access_token && redirectToIndex) {
             localStorage.setItem('token', data.access_token)
             await getCurrentUser()
         }

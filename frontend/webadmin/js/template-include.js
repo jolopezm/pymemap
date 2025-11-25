@@ -88,37 +88,10 @@ function initSidebar() {
         })
     }
 
-    loadUserData()
+    // Removido: loadUserData() - auth-guard.js se encarga de esto
 }
 
 async function loadUserData() {
-    try {
-        const inSubfolder = window.location.pathname.includes('/pages/')
-        const authPath = inSubfolder
-            ? '../js/api/auth-service.js'
-            : './js/api/auth-service.js'
-
-        const { getCurrentUser } = await import(authPath)
-        const user = await getCurrentUser()
-
-        if (user) {
-            const avatar = document.getElementById('sidebar-user-avatar')
-            if (avatar && user.name) {
-                avatar.textContent = user.name.charAt(0).toUpperCase()
-            }
-
-            const userName = document.getElementById('sidebar-user-name')
-            if (userName && user.name) {
-                userName.textContent = user.name
-            }
-
-            const userRole = document.getElementById('sidebar-user-role')
-            if (userRole && user.role) {
-                userRole.textContent =
-                    user.role === 'business' ? 'Negocio' : 'Administrador'
-            }
-        }
-    } catch (error) {
-        console.log('No se pudo cargar datos del usuario:', error)
-    }
+    // Esta función ha sido removida - auth-guard.js maneja la carga de datos del usuario
+    console.log('loadUserData() removida - usando auth-guard.js')
 }

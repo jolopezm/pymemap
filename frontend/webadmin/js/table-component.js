@@ -73,7 +73,6 @@ export class TableComponent {
         container.innerHTML = `
             <div class="table-controls">
                 <div class="table-filters">
-                    ${this.renderFilters()}
                 </div>
                 <div class="table-actions">
                     ${this.actions
@@ -107,26 +106,6 @@ export class TableComponent {
             </div>
             ${totalPages > 1 ? this.renderPagination(totalPages) : ''}
         `
-    }
-
-    renderFilters() {
-        return this.columns
-            .filter(col => col.filterable)
-            .map(
-                col => `
-                <select class="select" id="${this.containerId}-filter-${col.key}">
-                    <option value="">Todos</option>
-                    ${[...new Set(this.data.map(item => item[col.key]))]
-                        .filter(val => val)
-                        .map(
-                            val =>
-                                `<option value="${val}" ${this.state.filters[col.key] === val ? 'selected' : ''}>${val}</option>`
-                        )
-                        .join('')}
-                </select>
-            `
-            )
-            .join('')
     }
 
     renderRow(item) {
@@ -318,7 +297,6 @@ export class TableComponent {
     }
 }
 
-// Funciones globales para edición
 window.tableEdit = function (containerId, id) {
     const table = window.tableInstances[containerId]
     if (table) {
