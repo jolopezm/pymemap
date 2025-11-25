@@ -51,7 +51,10 @@ export default function EditProfile() {
 
             <Pressable
                 style={globalStyles.button}
-                onPress={() => router.push('/change-password')}
+                onPress={() => {
+                    console.log('User auth status:', user) // Agrega esto para verificar si user existe
+                    router.push('/change-password')
+                }}
             >
                 <Text style={{ color: '#fff' }}>Cambiar contraseña</Text>
             </Pressable>

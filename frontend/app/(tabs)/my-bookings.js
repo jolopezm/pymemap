@@ -6,6 +6,8 @@ import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
 import { globalStyles } from '../../styles/global'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 
 export default function MyBookings() {
     const router = useRouter()
@@ -14,15 +16,18 @@ export default function MyBookings() {
     const [refreshing, setRefreshing] = useState(false)
     const [filterStatus, setFilterStatus] = useState('all') // 'all' = mostrar todos
     const [dropdownOpen, setDropdownOpen] = useState(false)
+    const [businesses, setBusinesses] = useState({})
 
     useEffect(() => {
         fetchBookings()
+        fetchBusinessList
     }, [])
 
     // Refrescar cuando la pantalla recibe foco
     useFocusEffect(
         React.useCallback(() => {
             fetchBookings()
+            fetchBusinessList()
         }, [])
     )
 
@@ -43,6 +48,24 @@ export default function MyBookings() {
         }
     }
 
+    const fetchBusinessList = async () => {
+        try {
+            const cachedData = await AsyncStorage.getItem(
+                '@pymemap_cache:business_list'
+            )
+            if (cachedData) {
+                const parsedList = JSON.parse(cachedData)
+                const businessMap = {}
+                parsedList.data.forEach(business => {
+                    businessMap[business._id] = business
+                })
+                setBusinesses(businessMap)
+            }
+        } catch (error) {
+            console.error('Error fetching business list from cache:', error)
+        }
+    }
+
     const onRefresh = async () => {
         setRefreshing(true)
         await fetchBookings()
@@ -52,27 +75,27 @@ export default function MyBookings() {
     const getStatusBadge = status => {
         const badges = {
             pending: {
-                text: '⏳ Pendiente',
+                text: 'Pendiente',
                 color: '#ffc107',
                 textColor: '#000',
             },
             confirmed: {
-                text: '✅ Confirmada',
+                text: 'Confirmada',
                 color: '#28a745',
                 textColor: '#fff',
             },
             cancelled: {
-                text: '❌ Cancelada',
+                text: 'Cancelada',
                 color: '#dc3545',
                 textColor: '#fff',
             },
             completed: {
-                text: '✅ Completada',
+                text: 'Completada',
                 color: '#17a2b8',
                 textColor: '#fff',
             },
             payment_requested: {
-                text: '💳 Pago pendiente',
+                text: 'Pago pendiente',
                 color: '#fd7e14',
                 textColor: '#fff',
             },
@@ -85,7 +108,6 @@ export default function MyBookings() {
 
         return (
             <View style={styles.card}>
-                {/* Badge de estado */}
                 <View
                     style={[
                         styles.statusBadge,
@@ -99,19 +121,26 @@ export default function MyBookings() {
                     </Text>
                 </View>
 
-                {/* Información de la reserva */}
                 <View style={styles.cardContent}>
                     <Text style={styles.cardTitle}>
-                        Negocio ID: {item.business_id}
+                        {businesses[item.business_id]?.name || 'Desconocido'}
                     </Text>
 
                     <View style={styles.infoRow}>
-                        <Text style={styles.icon}>📅</Text>
+                        <Ionicons
+                            name="calendar-outline"
+                            size={16}
+                            style={styles.icon}
+                        />
                         <Text style={styles.infoText}>{item.date}</Text>
                     </View>
 
                     <View style={styles.infoRow}>
-                        <Text style={styles.icon}>🕐</Text>
+                        <Ionicons
+                            name="time-outline"
+                            size={16}
+                            style={styles.icon}
+                        />
                         <Text style={styles.infoText}>
                             Hora de inicio: {item.start_time}
                         </Text>
@@ -119,7 +148,11 @@ export default function MyBookings() {
 
                     {item.created_at && (
                         <View style={styles.infoRow}>
-                            <Text style={styles.icon}>📝</Text>
+                            <Ionicons
+                                name="document-text-outline"
+                                size={16}
+                                style={styles.icon}
+                            />
                             <Text style={styles.infoTextSmall}>
                                 Solicitado:{' '}
                                 {new Date(item.created_at).toLocaleDateString(
@@ -129,7 +162,6 @@ export default function MyBookings() {
                         </View>
                     )}
 
-                    {/* Mensaje según estado */}
                     {item.status === 'pending' && (
                         <View style={styles.messageBox}>
                             <Text style={styles.messageText}>
@@ -150,7 +182,7 @@ export default function MyBookings() {
                                     { color: '#155724' },
                                 ]}
                             >
-                                ✅ ¡Reserva confirmada! El vendedor te espera
+                                ¡Reserva confirmada! El vendedor te espera
                             </Text>
                         </View>
                     )}
@@ -190,7 +222,6 @@ export default function MyBookings() {
                         </View>
                     )}
 
-                    {/* Botón para ver detalle */}
                     <View style={styles.detailSection}>
                         <Pressable
                             style={styles.detailButton}
@@ -202,11 +233,10 @@ export default function MyBookings() {
                             }
                         >
                             <Text style={styles.detailButtonText}>
-                                📋 Ver Detalle
+                                Ver Detalle
                             </Text>
                         </Pressable>
 
-                        {/* Mostrar estado de pago si aplica */}
                         {item.status === 'payment_requested' && (
                             <Pressable
                                 style={styles.payButton}
@@ -217,13 +247,10 @@ export default function MyBookings() {
                                     })
                                 }
                             >
-                                <Text style={styles.payButtonText}>
-                                    💳 Pagar
-                                </Text>
+                                <Text style={styles.payButtonText}>Pagar</Text>
                             </Pressable>
                         )}
 
-                        {/* Botón para calificar si está completada */}
                         {item.status === 'completed' && (
                             <Pressable
                                 style={styles.rateButton}
@@ -234,13 +261,14 @@ export default function MyBookings() {
                                             id: item.business_id,
                                             bookingId: item._id,
                                             businessName:
-                                                item.business_name || 'Negocio',
+                                                businesses[item.business_id]
+                                                    ?.name || 'Negocio',
                                         },
                                     })
                                 }
                             >
                                 <Text style={styles.rateButtonText}>
-                                    ⭐ Calificar
+                                    Calificar
                                 </Text>
                             </Pressable>
                         )}
