@@ -1,30 +1,19 @@
-/**
- * Pymap Admin - Auth Guard
- * Script que protege las páginas del admin requiriendo autenticación
- *
- * Uso: Incluir este script al inicio de cada página protegida:
- * <script type="module" src="js/auth-guard.js"></script>
- */
-
-// Detectar si estamos en subcarpeta
 const inSubfolder = window.location.pathname.includes('/pages/')
 const authServicePath = inSubfolder
     ? './api/auth-service.js'
-    : '../js/api/auth-service.js'
+    : './api/auth-service.js'
+
+console.log('🔐 Auth Guard: Loading from', authServicePath)
 
 const { isAuthenticated, getStoredUser, logout } = await import(authServicePath)
 
-/**
- * Verifica si el usuario está autenticado
- * Si no lo está, redirige a login
- */
+console.log('🔐 Auth Guard: Module loaded successfully')
+
 function checkAuth() {
     if (!isAuthenticated()) {
-        // Guardar la URL actual para redireccionar después del login
         const currentPath = window.location.pathname + window.location.search
         sessionStorage.setItem('redirectAfterLogin', currentPath)
 
-        // Redirigir a login según ubicación
         const loginPath = inSubfolder ? 'login.html' : 'pages/login.html'
         window.location.href = loginPath
         return false
@@ -32,49 +21,86 @@ function checkAuth() {
     return true
 }
 
-/**
- * Inicializa la información del usuario en la UI
- */
 function initUserInfo() {
     const user = getStoredUser()
 
     if (!user) {
+        console.log('No user found in localStorage')
         return
     }
 
-    // Actualizar nombre de usuario en el header (si existe)
-    const userNameElement = document.querySelector(
-        '.profile .name, .profile div:first-child div:first-child'
-    )
-    if (userNameElement) {
-        userNameElement.textContent = user.name || user.email || 'Usuario'
+    console.log('User data:', user) // Debug: ver qué datos tiene el usuario
+
+    // Función para actualizar la info del usuario
+    const updateUserInfo = () => {
+        const userNameElement = document.getElementById('sidebar-user-name')
+
+        if (userNameElement) {
+            const displayName = user.name || user.email || 'Usuario'
+            userNameElement.textContent = displayName
+            console.log('Updated user name to:', displayName)
+        } else {
+            console.log('User name element not found')
+        }
+
+        const avatarElement = document.getElementById('sidebar-user-avatar')
+        if (avatarElement && user.name) {
+            const initials = user.name
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2)
+            avatarElement.textContent = initials
+        }
+
+        const roleElement = document.getElementById('sidebar-user-role')
+        if (roleElement && user.role) {
+            const roleText =
+                user.role === 'admin'
+                    ? 'Administrador'
+                    : user.role === 'business'
+                      ? 'Negocio'
+                      : user.role === 'client'
+                        ? 'Cliente'
+                        : user.role
+            roleElement.textContent = roleText
+        }
     }
 
-    // Actualizar avatar con iniciales
-    const avatarElement = document.querySelector('.profile .avatar')
-    if (avatarElement && user.name) {
-        const initials = user.name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2)
-        avatarElement.textContent = initials
-    }
+    // Si el sidebar ya está cargado, actualizar inmediatamente
+    if (document.getElementById('sidebar-user-name')) {
+        updateUserInfo()
+    } else {
+        // Si no está cargado, esperar a que se cargue con MutationObserver
+        const observer = new MutationObserver(() => {
+            // Verificar si el elemento ya existe en el DOM
+            if (document.getElementById('sidebar-user-name')) {
+                updateUserInfo()
+                observer.disconnect()
+            }
+        })
 
-    // Actualizar nombre del negocio (si existe)
-    const bizNameElement = document.querySelector('.biz .name')
-    if (bizNameElement && user.business_name) {
-        bizNameElement.textContent = user.business_name
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+        })
+
+        // Timeout de seguridad: si después de 3 segundos no se encuentra, reintentar
+        setTimeout(() => {
+            observer.disconnect()
+            if (document.getElementById('sidebar-user-name')) {
+                updateUserInfo()
+            } else {
+                console.warn('Sidebar user element not found after timeout')
+            }
+        }, 3000)
     }
 }
 
-/**
- * Configura el botón de logout
- */
 function setupLogout() {
     // Buscar botón de logout existente o crear uno
-    let logoutBtn = document.getElementById('logout-btn')
+    let logoutBtn = document.getElementById('sidebar-logout-btn')
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
@@ -138,10 +164,9 @@ function init() {
         return
     }
 
-    // Inicializar info del usuario
+    // Inicializar la info del usuario (initUserInfo tiene su propio observer
+    // que espera a que #sidebar-user-name exista en el DOM)
     initUserInfo()
-
-    // Configurar logout
     setupLogout()
 
     // Manejar expiración del token

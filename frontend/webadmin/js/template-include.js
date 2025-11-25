@@ -16,9 +16,6 @@ async function includeHTML(selector, templatePath) {
                 document.body.appendChild(newScript)
             })
 
-            // Ajustar rutas de enlaces en el sidebar cuando el template
-            // fue incluido desde una subcarpeta (por ejemplo pages/)
-            // Evita que hrefs relativos se conviertan en pages/pages/...
             try {
                 const inSubfolder = window.location.pathname.includes('/pages/')
                 if (inSubfolder) {
@@ -27,7 +24,6 @@ async function includeHTML(selector, templatePath) {
                         const href = link.getAttribute('href')
                         if (!href) return
 
-                        // Si el href ya es absoluto o comienza con ../ no tocar
                         if (
                             href.startsWith('http') ||
                             href.startsWith('/') ||
@@ -35,13 +31,9 @@ async function includeHTML(selector, templatePath) {
                         )
                             return
 
-                        // Si apunta a index.html (raíz), prefixar con ../
                         if (href === 'index.html') {
                             link.setAttribute('href', '../index.html')
-                        }
-                        // Si el href comienza con 'pages/' (caso común en template)
-                        // debemos prefixarlo con ../ cuando estamos en /pages/
-                        else if (href.startsWith('pages/')) {
+                        } else if (href.startsWith('pages/')) {
                             link.setAttribute('href', '../' + href)
                         }
                     })
@@ -55,12 +47,9 @@ async function includeHTML(selector, templatePath) {
     }
 }
 
-// Auto-cargar sidebar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', async () => {
-    // Cargar sidebar si existe el contenedor
     const sidebarContainer = document.getElementById('sidebar-container')
     if (sidebarContainer) {
-        // Detectar si estamos en una subcarpeta (pages/)
         const inSubfolder = window.location.pathname.includes('/pages/')
         const templatePath = inSubfolder
             ? '../templates/left-sidebar.html'
@@ -68,22 +57,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await includeHTML('#sidebar-container', templatePath)
 
-        // Inicializar funcionalidad del sidebar después de cargar
         initSidebar()
     }
 })
 
-// Inicializar funcionalidad del sidebar
 function initSidebar() {
-    // Detectar si estamos en subcarpeta
     const inSubfolder = window.location.pathname.includes('/pages/')
 
-    // Manejar logout
     const logoutBtn = document.getElementById('sidebar-logout-btn')
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                // Importar dinámicamente auth-service si existe
                 const authPath = inSubfolder
                     ? '../js/api/auth-service.js'
                     : './js/api/auth-service.js'
@@ -97,7 +81,6 @@ function initSidebar() {
                         window.location.href = loginPath
                     })
                     .catch(() => {
-                        // Fallback si no existe auth-service
                         localStorage.clear()
                         window.location.href = loginPath
                     })
@@ -105,42 +88,10 @@ function initSidebar() {
         })
     }
 
-    // Cargar datos del usuario si está disponible
-    loadUserData()
+    // Removido: loadUserData() - auth-guard.js se encarga de esto
 }
 
-// Cargar datos del usuario en el sidebar
 async function loadUserData() {
-    try {
-        const inSubfolder = window.location.pathname.includes('/pages/')
-        const authPath = inSubfolder
-            ? '../js/api/auth-service.js'
-            : './js/api/auth-service.js'
-
-        const { getCurrentUser } = await import(authPath)
-        const user = await getCurrentUser()
-
-        if (user) {
-            // Actualizar avatar
-            const avatar = document.getElementById('sidebar-user-avatar')
-            if (avatar && user.name) {
-                avatar.textContent = user.name.charAt(0).toUpperCase()
-            }
-
-            // Actualizar nombre
-            const userName = document.getElementById('sidebar-user-name')
-            if (userName && user.name) {
-                userName.textContent = user.name
-            }
-
-            // Actualizar rol
-            const userRole = document.getElementById('sidebar-user-role')
-            if (userRole && user.role) {
-                userRole.textContent =
-                    user.role === 'business' ? 'Negocio' : 'Administrador'
-            }
-        }
-    } catch (error) {
-        console.log('No se pudo cargar datos del usuario:', error)
-    }
+    // Esta función ha sido removida - auth-guard.js maneja la carga de datos del usuario
+    console.log('loadUserData() removida - usando auth-guard.js')
 }

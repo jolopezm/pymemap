@@ -45,11 +45,13 @@ export async function updateReportState(reportId, state) {
     try {
         const headers = await getAuthHeaders()
 
-        const response = await fetch(`${API_URL}/reports/${reportId}`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify({ state }),
-        })
+        const response = await fetch(
+            `${API_URL}/reports/${reportId}/update_state?new_state=${state}`,
+            {
+                method: 'PUT',
+                headers,
+            }
+        )
 
         if (!response.ok) {
             throw new Error('Error al actualizar estado del reporte')

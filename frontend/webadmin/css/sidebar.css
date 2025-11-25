@@ -201,10 +201,12 @@
 /* ========================================
    Chat Panel (lado derecho, al lado de reportes)
    ======================================== */
+#chats-list-container,
 #chat-panel {
     height: 100%;
     display: flex;
     flex-direction: column;
+    width: 350px;
 }
 
 .chat-panel-header {

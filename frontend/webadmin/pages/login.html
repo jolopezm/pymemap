@@ -5,13 +5,7 @@
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Iniciar Sesión — Pymap Admin</title>
         <link rel="stylesheet" href="../css/estilo.css" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-            rel="stylesheet"
-        />
-        
-    <!-- Favicon: usar ruta relativa para evitar problemas con el root del servidor -->
-    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+        <link rel="icon" href="../favicon.ico" type="image/x-icon" />
     </head>
     <body>
         <div class="login-container">
@@ -81,7 +75,7 @@
                 </div>
 
                 <div class="link-secondary">
-                    <a href="#" id="forgotPassword"
+                    <a href="send-auth-code.html" id="forgotPassword"
                         >¿Olvidaste tu contraseña?</a
                     >
                 </div>
@@ -176,17 +170,6 @@
                     }, 3000)
                 }
             })
-
-            // Forgot password
-            document
-                .getElementById('forgotPassword')
-                .addEventListener('click', e => {
-                    e.preventDefault()
-                    showAlert(
-                        'Contacta al administrador para restablecer tu contraseña',
-                        'error'
-                    )
-                })
         </script>
     </body>
 </html>
