@@ -65,6 +65,12 @@ export const updateBalance = async (userId, amount, isPositive = true) => {
 
 export const uploadProfilePicture = async (userId, imageUri, filename) => {
     try {
+        console.log('📤 Iniciando upload de imagen:', {
+            userId,
+            imageUri,
+            filename,
+        })
+
         // Obtener headers de autenticación
         const authHeaders = await getAuthHeaders()
 
@@ -75,22 +81,39 @@ export const uploadProfilePicture = async (userId, imageUri, filename) => {
         const uriParts = imageUri.split('.')
         const fileType = uriParts[uriParts.length - 1]
 
-        // Intentar con fetch y blob
-        const response = await fetch(imageUri)
-        const blob = await response.blob()
+        // Detectar la extensión y tipo MIME correcto
+        const mimeTypes = {
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            png: 'image/png',
+            gif: 'image/gif',
+            webp: 'image/webp',
+        }
+        const mimeType = mimeTypes[fileType.toLowerCase()] || 'image/jpeg'
 
-        // Crear un archivo con el blob
-        formData.append('file', blob, filename)
+        // En React Native, necesitamos un formato especial para FormData
+        formData.append('file', {
+            uri: imageUri,
+            type: mimeType,
+            name: filename || `profile_${Date.now()}.${fileType}`,
+        })
+
+        console.log('📦 FormData preparado con:', { mimeType, filename })
 
         // Hacer la petición
         const uploadResponse = await fetch(
             `${API_URL}/users/upload-profile-picture/${userId}`,
             {
                 method: 'POST',
-                headers: authHeaders,
+                headers: {
+                    ...authHeaders,
+                    // NO incluir Content-Type, FormData lo establece automáticamente
+                },
                 body: formData,
             }
         )
+
+        console.log('📡 Respuesta recibida:', uploadResponse.status)
 
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json().catch(() => ({}))
@@ -99,6 +122,7 @@ export const uploadProfilePicture = async (userId, imageUri, filename) => {
         }
 
         const data = await uploadResponse.json()
+        console.log('✅ Upload exitoso:', data)
         return data
     } catch (error) {
         logger.error('Error al subir imagen:', error)

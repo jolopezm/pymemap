@@ -386,3 +386,36 @@ async def pay_booking(
 ):
     """DEPRECATED - Mantener por compatibilidad pero no hace nada"""
     return {"message": "Endpoint deprecated - usar verify-code"}
+
+@router.get("/")
+async def get_all_bookings(current_user: TokenData = Depends(get_current_user)):
+    """Obtener todas las reservas - Ruta protegida que requiere autenticación"""
+    cursor = db.bookings.find()
+    bookings = []
+    async for booking in cursor:
+        booking["_id"] = str(booking["_id"])
+        
+        # Enriquecer con información del usuario
+        try:
+            user = await db.users.find_one({"_id": ObjectId(booking.get("client_id"))})
+            if user:
+                booking["user_name"] = user.get("name", "Usuario")
+                booking["user_email"] = user.get("email", "")
+        except:
+            pass
+        
+        # Enriquecer con información del negocio
+        try:
+            business_id = booking.get("business_id")
+            if business_id:
+                try:
+                    business = await db.business.find_one({"_id": ObjectId(business_id)})
+                except:
+                    business = await db.business.find_one({"_id": business_id})
+                if business:
+                    booking["business_name"] = business.get("name", "Negocio")
+        except:
+            pass
+        
+        bookings.append(booking)
+    return bookings
