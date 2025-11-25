@@ -30,6 +30,7 @@ const HomeNearbyStores = React.memo(function HomeNearbyStores({ businesses, onPr
                             }}
                             variant="horizontal"
                             onPress={() => onPressBusiness(business.id || business._id)}
+                            style={{ marginBottom: 12 }}
                         />
                     ))}
                 </View>

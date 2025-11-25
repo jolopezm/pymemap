@@ -17,13 +17,13 @@ const HomeNewBusinesses = React.memo(function HomeNewBusinesses({
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Nuevos en PymeMap</Text>
+                <Text style={styles.title}>Nuevos en PyMap</Text>
                 <Pressable>
                     <Text style={styles.seeMore}>Ver más</Text>
                 </Pressable>
             </View>
             <Text style={styles.subtitle}>
-                Conoce los negocios que se unieron recientemente
+                Descubre los nuevos negocios en PyMap
             </Text>
             <ScrollView
                 horizontal
@@ -37,7 +37,7 @@ const HomeNewBusinesses = React.memo(function HomeNewBusinesses({
                         key={business.id || business._id || index}
                         business={{
                             ...business,
-                            rating: business.rating || 3.5 + Math.random() * 1.5,
+                            rating: business.rating || 0,
                         }}
                         variant="vertical"
                         width={cardWidth}

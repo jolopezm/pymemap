@@ -19,19 +19,38 @@ export default function StoresScreen() {
     const [locationModalVisible, setLocationModalVisible] = useState(false)
     const [selectedMapBusiness, setSelectedMapBusiness] = useState(null)
     const [selectedFilters, setSelectedFilters] = useState({
-        domicilio: false,
         categories: [],
-        recoger: false,
+        owners: [],
         distance: null,
     })
     const [showSortModal, setShowSortModal] = useState(false)
     const [showCategoriesModal, setShowCategoriesModal] = useState(false)
+    const [showSellersModal, setShowSellersModal] = useState(false)
     const [sortOption, setSortOption] = useState('Recomendados')
     const slideAnim = useRef(new Animated.Value(300)).current
     const fadeAnim = useRef(new Animated.Value(0)).current
 
     const { businesses: allBusinesses, loading, error, refetch } = useBusinessData()
     const { refreshing, onRefresh } = useRefresh(refetch)
+
+    // Extract unique sellers
+    const sellerOptions = useMemo(() => {
+        const sellersMap = new Map()
+        allBusinesses.forEach(b => {
+            if (b.owner_id) {
+                // Use User.name as label as requested by user
+                // Fallback to owner_name or ID if not present
+                const label = b.User?.name || b.owner_name || `Vendedor ${b.owner_id.substring(0, 6)}...`
+                // Use the business profile pic as the seller image
+                const image = b.profile_pic
+
+                if (!sellersMap.has(b.owner_id)) {
+                    sellersMap.set(b.owner_id, { id: b.owner_id, label, image })
+                }
+            }
+        })
+        return Array.from(sellersMap.values())
+    }, [allBusinesses])
 
     useEffect(() => {
         if (Platform.OS === 'web' && activeView === 'map') {
@@ -76,6 +95,16 @@ export default function StoresScreen() {
         }))
     }, [])
 
+    const handleSellerToggle = useCallback((sellerId) => {
+        setSelectedFilters(prev => {
+            const currentOwners = prev.owners || []
+            const newOwners = currentOwners.includes(sellerId)
+                ? currentOwners.filter(id => id !== sellerId)
+                : [...currentOwners, sellerId]
+            return { ...prev, owners: newOwners }
+        })
+    }, [])
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <StoresHeader
@@ -86,11 +115,12 @@ export default function StoresScreen() {
                 onLocationPress={() => setLocationModalVisible(true)}
                 onSearchPress={() => router.push('/search')}
                 onViewChange={setActiveView}
-                onFilterChange={(key, value) => {
-                    setSelectedFilters(prev => ({ ...prev, [key]: value }))
+                onFilterChange={(newFilters) => {
+                    setSelectedFilters(newFilters)
                 }}
                 onSortPress={() => setShowSortModal(true)}
                 onCategoriesPress={() => setShowCategoriesModal(true)}
+                onOwnersPress={() => setShowSellersModal(true)}
             />
 
             {loading ? (
@@ -137,14 +167,19 @@ export default function StoresScreen() {
             <StoresFilterModals
                 showSortModal={showSortModal}
                 showCategoriesModal={showCategoriesModal}
+                showSellersModal={showSellersModal}
                 sortOption={sortOption}
                 selectedCategories={selectedFilters.categories}
+                selectedSellers={selectedFilters.owners || []}
+                sellerOptions={sellerOptions}
                 slideAnim={slideAnim}
                 fadeAnim={fadeAnim}
                 onSortSelect={handleSortSelect}
                 onCategoryToggle={handleCategoryToggle}
+                onSellerToggle={handleSellerToggle}
                 onCloseSortModal={() => setShowSortModal(false)}
                 onCloseCategoriesModal={() => setShowCategoriesModal(false)}
+                onCloseSellersModal={() => setShowSellersModal(false)}
             />
 
             <LocationPickerModal

@@ -14,7 +14,12 @@ const quickClicks = [
     { id: 6, label: 'Educación', icon: 'school-outline', searchQuery: 'educación' },
 ]
 
-export default function SearchFilters({ nearbyFilter, onToggleNearby, onQuickSearch }) {
+export default function SearchFilters({ nearbyFilter, onToggleNearby, onQuickSearch, userCoords }) {
+    const visibleClicks = quickClicks.filter(click => {
+        if (click.isNearby && !userCoords) return false
+        return true
+    })
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Búsquedas rápidas</Text>
@@ -23,7 +28,7 @@ export default function SearchFilters({ nearbyFilter, onToggleNearby, onQuickSea
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {quickClicks.map(click => {
+                {visibleClicks.map(click => {
                     const isActive = click.isNearby && nearbyFilter
                     return (
                         <Pressable
@@ -57,6 +62,7 @@ SearchFilters.propTypes = {
     nearbyFilter: PropTypes.bool.isRequired,
     onToggleNearby: PropTypes.func.isRequired,
     onQuickSearch: PropTypes.func.isRequired,
+    userCoords: PropTypes.object,
 }
 
 const styles = StyleSheet.create({

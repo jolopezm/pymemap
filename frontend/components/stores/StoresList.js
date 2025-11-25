@@ -29,26 +29,27 @@ export default function StoresList({ businesses, userCoords, selectedFilters, on
                 </Text>
                 {userCoords && businesses.some(b => b.distance) && (
                     <Text style={styles.resultsNote}>
-                        {selectedFilters.distance 
+                        {selectedFilters.distance
                             ? 'Mostrando solo negocios con ubicación. Distancias aproximadas por calles.'
                             : 'Las distancias son aproximadas por calles'}
                     </Text>
                 )}
             </View>
-            
+
             {/* Lista de negocios */}
             {businesses.map((business, index) => (
                 <BusinessCard
                     key={business.id || business._id || index}
                     business={{
                         ...business,
-                        rating: 4.5 + (index % 5) / 10,
+                        rating: business.rating || 0,
                     }}
                     variant="vertical"
                     showBadge={true}
                     badgeText="Disponible"
                     showFavorite={false}
                     showLogo={true}
+                    showDistance={false}
                     onPress={() => onBusinessPress(business)}
                     extraInfo={
                         <View style={styles.businessFooter}>
@@ -62,6 +63,7 @@ export default function StoresList({ businesses, userCoords, selectedFilters, on
                             )}
                         </View>
                     }
+                    style={{ marginBottom: spacing.lg }}
                 />
             ))}
         </View>

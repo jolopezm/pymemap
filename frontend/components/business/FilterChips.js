@@ -10,6 +10,7 @@ const FilterChips = React.memo(function FilterChips({
     onFilterChange,
     onSortPress,
     onCategoriesPress,
+    onOwnersPress,
     showDistanceFilters = false,
 }) {
     const toggleFilter = (key) => {
@@ -64,37 +65,27 @@ const FilterChips = React.memo(function FilterChips({
                     </Text>
                 </Pressable>
 
-                {/* Recoger en tienda */}
+                {/* Vendedor */}
                 <Pressable
-                    style={[styles.chip, filters.recoger && styles.chipActive]}
-                    onPress={() => toggleFilter('recoger')}
+                    style={[
+                        styles.chip,
+                        filters.owners?.length > 0 && styles.chipActive
+                    ]}
+                    onPress={onOwnersPress}
                 >
                     <Ionicons
-                        name="bag-handle-outline"
+                        name="person-outline"
                         size={14}
-                        color={filters.recoger ? colors.white : colors.text}
+                        color={filters.owners?.length > 0 ? colors.white : colors.text}
                     />
                     <Text
-                        style={[styles.chipText, filters.recoger && styles.chipTextActive]}
+                        style={[
+                            styles.chipText,
+                            filters.owners?.length > 0 && styles.chipTextActive
+                        ]}
                     >
-                        Recoger en tienda
-                    </Text>
-                </Pressable>
-
-                {/* Domicilio */}
-                <Pressable
-                    style={[styles.chip, filters.domicilio && styles.chipActive]}
-                    onPress={() => toggleFilter('domicilio')}
-                >
-                    <Ionicons
-                        name="car-outline"
-                        size={14}
-                        color={filters.domicilio ? colors.white : colors.text}
-                    />
-                    <Text
-                        style={[styles.chipText, filters.domicilio && styles.chipTextActive]}
-                    >
-                        Domicilio
+                        Vendedor
+                        {filters.owners?.length > 0 && ` (${filters.owners.length})`}
                     </Text>
                 </Pressable>
 

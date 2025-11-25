@@ -41,8 +41,8 @@ const BusinessCard = React.memo(function BusinessCard({
     ]
 
     return (
-        <HapticPressable 
-            style={cardStyle} 
+        <HapticPressable
+            style={cardStyle}
             onPress={onPress}
             hapticStyle="light"
             accessibilityRole="button"
@@ -61,7 +61,7 @@ const BusinessCard = React.memo(function BusinessCard({
 
             {/* Botón de favoritos */}
             {showFavorite && (
-                <HapticPressable 
+                <HapticPressable
                     style={styles.favoriteButton}
                     onPress={(e) => {
                         e.stopPropagation()
@@ -141,14 +141,22 @@ const BusinessCard = React.memo(function BusinessCard({
             {/* Logo circular */}
             {showLogo && (
                 <View style={styles.logoContainer}>
-                    <LinearGradient
-                        colors={[colors.primary, colors.primaryDark]}
-                        style={styles.logo}
-                    >
-                        <Text style={styles.logoText}>
-                            {business.name.substring(0, 2).toUpperCase()}
-                        </Text>
-                    </LinearGradient>
+                    {business.profile_pic ? (
+                        <OptimizedImage
+                            source={{ uri: business.profile_pic }}
+                            style={styles.logoImage}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <LinearGradient
+                            colors={[colors.primary, colors.primaryDark]}
+                            style={styles.logo}
+                        >
+                            <Text style={styles.logoText}>
+                                {business.name.substring(0, 2).toUpperCase()}
+                            </Text>
+                        </LinearGradient>
+                    )}
                 </View>
             )}
         </HapticPressable>
@@ -297,6 +305,14 @@ const styles = StyleSheet.create({
     logoText: {
         ...typography.h3,
         color: colors.white,
+    },
+
+    logoImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 30,
+        borderWidth: 3,
+        borderColor: colors.white,
     },
 })
 

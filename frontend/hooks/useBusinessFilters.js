@@ -4,17 +4,13 @@ export function useBusinessFilters(businesses, filters, sortOption, userCoords) 
     const filteredBusinesses = useMemo(() => {
         let filtered = [...businesses]
 
-        if (filters.domicilio) {
-            filtered = filtered.filter(business => business.hasDelivery !== false)
-        }
-
-        if (filters.recoger) {
-            filtered = filtered.filter(business => business.hasPickup !== false)
+        if (filters.owners && filters.owners.length > 0) {
+            filtered = filtered.filter(business => filters.owners.includes(business.owner_id))
         }
 
         if (filters.categories && filters.categories.length > 0) {
-            filtered = filtered.filter(business => 
-                filters.categories.some(cat => 
+            filtered = filtered.filter(business =>
+                filters.categories.some(cat =>
                     business.category?.toLowerCase().includes(cat.toLowerCase())
                 )
             )
@@ -22,8 +18,10 @@ export function useBusinessFilters(businesses, filters, sortOption, userCoords) 
 
         if (filters.distance && userCoords) {
             filtered = filtered.filter(business => {
-                const hasDistance = business.distance !== undefined && business.distance !== null
-                const withinRange = hasDistance && business.distance <= filters.distance
+                // Ensure distance is a number and valid
+                const dist = parseFloat(business.distance)
+                const hasDistance = !isNaN(dist)
+                const withinRange = hasDistance && dist <= filters.distance
                 return withinRange
             })
         }
@@ -33,52 +31,52 @@ export function useBusinessFilters(businesses, filters, sortOption, userCoords) 
 
     const sortedBusinesses = useMemo(() => {
         let sorted = [...filteredBusinesses]
-        
-        switch(sortOption) {
+
+        switch (sortOption) {
             case 'Más cercanos':
                 if (userCoords) {
                     sorted.sort((a, b) => {
-                        const distA = a.distance !== undefined ? a.distance : Infinity
-                        const distB = b.distance !== undefined ? b.distance : Infinity
+                        const distA = a.distance !== undefined ? parseFloat(a.distance) : Infinity
+                        const distB = b.distance !== undefined ? parseFloat(b.distance) : Infinity
                         return distA - distB
                     })
                 }
                 break
-            
+
             case 'Mejor calificados':
                 sorted.sort((a, b) => {
-                    const ratingA = a.rating || 4.5 + Math.random() * 0.5
-                    const ratingB = b.rating || 4.5 + Math.random() * 0.5
+                    const ratingA = a.rating || 0
+                    const ratingB = b.rating || 0
                     return ratingB - ratingA
                 })
                 break
-            
+
             case 'Más populares':
                 if (userCoords) {
                     sorted.sort((a, b) => {
-                        const distA = a.distance !== undefined ? a.distance : Infinity
-                        const distB = b.distance !== undefined ? b.distance : Infinity
+                        const distA = a.distance !== undefined ? parseFloat(a.distance) : Infinity
+                        const distB = b.distance !== undefined ? parseFloat(b.distance) : Infinity
                         return distA - distB
                     })
                 }
                 break
-            
+
             case 'Nuevos':
                 sorted.reverse()
                 break
-            
+
             case 'Recomendados':
             default:
                 if (userCoords) {
                     sorted.sort((a, b) => {
-                        const distA = a.distance !== undefined ? a.distance : Infinity
-                        const distB = b.distance !== undefined ? b.distance : Infinity
+                        const distA = a.distance !== undefined ? parseFloat(a.distance) : Infinity
+                        const distB = b.distance !== undefined ? parseFloat(b.distance) : Infinity
                         return distA - distB
                     })
                 }
                 break
         }
-        
+
         return sorted
     }, [filteredBusinesses, sortOption, userCoords])
 

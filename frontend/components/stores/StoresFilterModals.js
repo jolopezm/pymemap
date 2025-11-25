@@ -3,6 +3,7 @@ import { View, Text, Pressable, Modal, Animated, ScrollView, StyleSheet } from '
 import PropTypes from 'prop-types'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, borderRadius, shadows } from '../../styles/theme'
+import OptimizedImage from '../OptimizedImage'
 
 const sortOptions = [
     { id: 1, label: 'Recomendados', icon: 'star-outline' },
@@ -26,14 +27,19 @@ const categoryOptions = [
 export default function StoresFilterModals({
     showSortModal,
     showCategoriesModal,
+    showSellersModal,
     sortOption,
     selectedCategories,
+    selectedSellers = [],
+    sellerOptions = [],
     slideAnim,
     fadeAnim,
     onSortSelect,
     onCategoryToggle,
+    onSellerToggle,
     onCloseSortModal,
     onCloseCategoriesModal,
+    onCloseSellersModal,
 }) {
     useEffect(() => {
         if (showSortModal) {
@@ -75,14 +81,14 @@ export default function StoresFilterModals({
                 animationType="none"
                 onRequestClose={onCloseSortModal}
             >
-                <Animated.View 
+                <Animated.View
                     style={[styles.modalOverlay, { opacity: fadeAnim }]}
                 >
-                    <Pressable 
+                    <Pressable
                         style={styles.modalOverlayTouchable}
                         onPress={onCloseSortModal}
                     />
-                    <Animated.View 
+                    <Animated.View
                         style={[
                             styles.modalContent,
                             { transform: [{ translateY: slideAnim }] }
@@ -106,10 +112,10 @@ export default function StoresFilterModals({
                                     onPress={() => onSortSelect(option.label)}
                                 >
                                     <View style={styles.sortOptionContent}>
-                                        <Ionicons 
-                                            name={option.icon} 
-                                            size={20} 
-                                            color={sortOption === option.label ? colors.primary : colors.textSecondary} 
+                                        <Ionicons
+                                            name={option.icon}
+                                            size={20}
+                                            color={sortOption === option.label ? colors.primary : colors.textSecondary}
                                         />
                                         <Text style={[
                                             styles.sortOptionText,
@@ -135,11 +141,11 @@ export default function StoresFilterModals({
                 animationType="fade"
                 onRequestClose={onCloseCategoriesModal}
             >
-                <Pressable 
+                <Pressable
                     style={styles.modalOverlay}
                     onPress={onCloseCategoriesModal}
                 >
-                    <Pressable 
+                    <Pressable
                         style={styles.modalContent}
                         onPress={(e) => e.stopPropagation()}
                     >
@@ -161,10 +167,10 @@ export default function StoresFilterModals({
                                     onPress={() => onCategoryToggle(category.label)}
                                 >
                                     <View style={styles.categoryOptionContent}>
-                                        <Ionicons 
-                                            name={category.icon} 
-                                            size={20} 
-                                            color={selectedCategories.includes(category.label) ? colors.primary : colors.textSecondary} 
+                                        <Ionicons
+                                            name={category.icon}
+                                            size={20}
+                                            color={selectedCategories.includes(category.label) ? colors.primary : colors.textSecondary}
                                         />
                                         <Text style={[
                                             styles.categoryOptionText,
@@ -182,6 +188,74 @@ export default function StoresFilterModals({
                     </Pressable>
                 </Pressable>
             </Modal>
+
+            {/* Modal de vendedores */}
+            <Modal
+                visible={showSellersModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={onCloseSellersModal}
+            >
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={onCloseSellersModal}
+                >
+                    <Pressable
+                        style={styles.modalContent}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Vendedores</Text>
+                            <Pressable onPress={onCloseSellersModal}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </Pressable>
+                        </View>
+
+                        <ScrollView style={styles.categoryOptions}>
+                            {sellerOptions.map((seller) => (
+                                <Pressable
+                                    key={seller.id}
+                                    style={[
+                                        styles.sellerOption,
+                                        selectedSellers.includes(seller.id) && styles.sellerOptionActive
+                                    ]}
+                                    onPress={() => onSellerToggle(seller.id)}
+                                >
+                                    <View style={styles.sellerOptionContent}>
+                                        <View style={styles.sellerAvatarContainer}>
+                                            {seller.image ? (
+                                                <OptimizedImage
+                                                    source={{ uri: seller.image }}
+                                                    style={styles.sellerAvatar}
+                                                    resizeMode="cover"
+                                                />
+                                            ) : (
+                                                <View style={styles.sellerAvatarPlaceholder}>
+                                                    <Ionicons name="person" size={20} color={colors.white} />
+                                                </View>
+                                            )}
+                                        </View>
+                                        <Text style={[
+                                            styles.sellerOptionText,
+                                            selectedSellers.includes(seller.id) && styles.sellerOptionTextActive
+                                        ]}>
+                                            {seller.label}
+                                        </Text>
+                                    </View>
+                                    {selectedSellers.includes(seller.id) && (
+                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                                    )}
+                                </Pressable>
+                            ))}
+                            {sellerOptions.length === 0 && (
+                                <View style={{ padding: 20, alignItems: 'center' }}>
+                                    <Text style={{ color: colors.textSecondary }}>No hay vendedores disponibles</Text>
+                                </View>
+                            )}
+                        </ScrollView>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </>
     )
 }
@@ -189,14 +263,22 @@ export default function StoresFilterModals({
 StoresFilterModals.propTypes = {
     showSortModal: PropTypes.bool.isRequired,
     showCategoriesModal: PropTypes.bool.isRequired,
+    showSellersModal: PropTypes.bool,
     sortOption: PropTypes.string.isRequired,
     selectedCategories: PropTypes.arrayOf(PropTypes.string).isRequired,
+    selectedSellers: PropTypes.arrayOf(PropTypes.string),
+    sellerOptions: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        label: PropTypes.string,
+    })),
     slideAnim: PropTypes.object.isRequired,
     fadeAnim: PropTypes.object.isRequired,
     onSortSelect: PropTypes.func.isRequired,
     onCategoryToggle: PropTypes.func.isRequired,
+    onSellerToggle: PropTypes.func,
     onCloseSortModal: PropTypes.func.isRequired,
     onCloseCategoriesModal: PropTypes.func.isRequired,
+    onCloseSellersModal: PropTypes.func,
 }
 
 const styles = StyleSheet.create({
@@ -285,5 +367,55 @@ const styles = StyleSheet.create({
     categoryOptionTextActive: {
         color: colors.primary,
         fontWeight: '600',
+    },
+    sellerOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: borderRadius.medium,
+        marginBottom: spacing.sm,
+        backgroundColor: colors.backgroundLight,
+        height: 60,
+    },
+    sellerOptionActive: {
+        backgroundColor: colors.backgroundPurple,
+        borderWidth: 1,
+        borderColor: colors.primaryLight,
+    },
+    sellerOptionContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    sellerAvatarContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        overflow: 'hidden',
+        backgroundColor: colors.gray200,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sellerAvatar: {
+        width: '100%',
+        height: '100%',
+    },
+    sellerAvatarPlaceholder: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: colors.primaryLight,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sellerOptionText: {
+        fontSize: 16,
+        color: colors.text,
+        fontWeight: '500',
+    },
+    sellerOptionTextActive: {
+        color: colors.primary,
+        fontWeight: '700',
     },
 })

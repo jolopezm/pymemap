@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, TextInput, StyleSheet, Pressable } from 'react-native'
+import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, borderRadius, spacing, typography } from '../../styles/theme'
 
@@ -35,16 +35,15 @@ export default function SearchBar({
           {...props}
         />
       ) : (
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textLight}
-          value={value}
-          editable={false}
-        />
+        <Text
+          style={[styles.input, { color: value ? colors.text : colors.textLight }]}
+          numberOfLines={1}
+        >
+          {value || placeholder}
+        </Text>
       )}
       {showClearButton && value && (
-        <Pressable 
+        <Pressable
           onPress={onClear}
           accessibilityRole="button"
           accessibilityLabel="Limpiar búsqueda"
@@ -58,8 +57,8 @@ export default function SearchBar({
 
   if (onPress && !editable) {
     return (
-      <Pressable 
-        style={styles.container} 
+      <Pressable
+        style={styles.container}
         onPress={handlePress}
         accessibilityRole="button"
         accessibilityLabel="Buscar negocios"

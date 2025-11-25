@@ -54,9 +54,12 @@ export default function SearchScreen() {
         if (nearbyFilter && !searchQuery.trim() && userCoords) {
             const nearbyDistance = 3
             return businesses
-                .filter(b => b.distance !== undefined && b.distance <= nearbyDistance)
+                .filter(b => {
+                    const dist = parseFloat(b.distance)
+                    return !isNaN(dist) && dist <= nearbyDistance
+                })
                 .map(b => ({ type: 'business', data: b }))
-                .sort((a, b) => a.data.distance - b.data.distance)
+                .sort((a, b) => parseFloat(a.data.distance) - parseFloat(b.data.distance))
         }
 
         if (!searchQuery.trim()) return []
@@ -71,17 +74,17 @@ export default function SearchScreen() {
             .map(b => ({ type: 'business', data: b }))
 
         if (nearbyFilter && userCoords) {
-            results = results.filter(r =>
-                r.type === 'business' && r.data.distance !== undefined
-                    ? r.data.distance <= 3
-                    : true
-            )
+            results = results.filter(r => {
+                if (r.type !== 'business') return true
+                const dist = parseFloat(r.data.distance)
+                return !isNaN(dist) && dist <= 3
+            })
         }
 
         if (userCoords) {
             results.sort((a, b) => {
-                const distA = a.data.distance || Infinity
-                const distB = b.data.distance || Infinity
+                const distA = a.data.distance !== undefined ? parseFloat(a.data.distance) : Infinity
+                const distB = b.data.distance !== undefined ? parseFloat(b.data.distance) : Infinity
                 return distA - distB
             })
         }

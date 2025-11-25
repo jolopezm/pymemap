@@ -16,6 +16,7 @@ export default function StoresHeader({
     onFilterChange,
     onSortPress,
     onCategoriesPress,
+    onOwnersPress,
 }) {
     return (
         <View>
@@ -60,6 +61,7 @@ export default function StoresHeader({
                     onFilterChange={onFilterChange}
                     onSortPress={onSortPress}
                     onCategoriesPress={onCategoriesPress}
+                    onOwnersPress={onOwnersPress}
                     showDistanceFilters={!!userCoords}
                 />
             </View>
