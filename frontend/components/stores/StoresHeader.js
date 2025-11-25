@@ -21,11 +21,11 @@ export default function StoresHeader({
         <View>
             {/* Header con ubicación y búsqueda */}
             <View style={styles.header}>
-                <LocationHeader 
+                <LocationHeader
                     location={userLocation}
                     onPress={onLocationPress}
                 />
-                <SearchBar 
+                <SearchBar
                     editable={false}
                     onPress={onSearchPress}
                 />
@@ -34,7 +34,7 @@ export default function StoresHeader({
             {/* Tabs: Mapa / Lista */}
             <View style={styles.tabsContainer}>
                 {Platform.OS !== 'web' && (
-                    <Pressable 
+                    <Pressable
                         style={[styles.tab, activeView === 'map' && styles.tabActive]}
                         onPress={() => onViewChange('map')}
                     >
@@ -43,7 +43,7 @@ export default function StoresHeader({
                         </Text>
                     </Pressable>
                 )}
-                <Pressable 
+                <Pressable
                     style={[styles.tab, activeView === 'list' && styles.tabActive]}
                     onPress={() => onViewChange('list')}
                 >
@@ -54,7 +54,7 @@ export default function StoresHeader({
             </View>
 
             {/* Filtros rápidos */}
-            <View style={styles.filtersContainer}>
+            <View style={[styles.filtersContainer, activeView === 'map' && styles.noMarginBottom]}>
                 <FilterChips
                     filters={selectedFilters}
                     onFilterChange={onFilterChange}
@@ -120,5 +120,8 @@ const styles = StyleSheet.create({
     filtersContainer: {
         paddingHorizontal: spacing.lg,
         marginBottom: spacing.md,
+    },
+    noMarginBottom: {
+        marginBottom: 0,
     },
 })
