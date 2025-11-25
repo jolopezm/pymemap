@@ -44,10 +44,10 @@ async def geocode_address_async(address: str, country: str = "Chile"):
         return None
         
     except (GeocoderTimedOut, GeocoderServiceError) as e:
-        print(f"Error geocodificando '{address}': {e}")
+        # print(f"Error geocodificando '{address}': {e}")
         return None
     except Exception as e:
-        print(f"Error inesperado geocodificando '{address}': {e}")
+        # print(f"Error inesperado geocodificando '{address}': {e}")
         return None
 
 
@@ -80,8 +80,8 @@ def geocode_address_sync(address: str, country: str = "Chile"):
         return None
         
     except (GeocoderTimedOut, GeocoderServiceError) as e:
-        print(f"Error geocodificando '{address}': {e}")
+        # print(f"Error geocodificando '{address}': {e}")
         return None
     except Exception as e:
-        print(f"Error inesperado geocodificando '{address}': {e}")
+        # print(f"Error inesperado geocodificando '{address}': {e}")
         return None

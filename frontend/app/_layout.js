@@ -8,16 +8,18 @@ import { NotifProvider } from '../context/notif-context'
 import { LocationProvider } from '../context/location-context'
 import { ChatProvider } from '../context/chat-context'
 import ToastManager from 'toastify-react-native'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 export default function Layout() {
     return (
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <AuthProvider>
-                <ToastManager />
-                <NotifProvider>
-                    <LocationProvider>
-                        <ChatProvider>
-                            <Stack screenOptions={{ headerShown: true }}>
+        <ErrorBoundary>
+            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+                <AuthProvider>
+                    <ToastManager />
+                    <NotifProvider>
+                        <LocationProvider>
+                            <ChatProvider>
+                                <Stack screenOptions={{ headerShown: true }}>
                                 <Stack.Screen
                                     name="(tabs)"
                                     options={{ headerShown: false }}
@@ -48,14 +50,6 @@ export default function Layout() {
                                     options={{
                                         title: 'Código de verificación',
                                     }}
-                                />
-                                <Stack.Screen
-                                    name="profile"
-                                    options={{ title: 'Perfil de usuario' }}
-                                />
-                                <Stack.Screen
-                                    name="business/[id]"
-                                    options={{ title: 'Detalle del negocio' }}
                                 />
                                 <Stack.Screen
                                     name="new-business"
@@ -110,10 +104,11 @@ export default function Layout() {
                                     options={{ title: 'Reportar' }}
                                 />
                             </Stack>
-                        </ChatProvider>
-                    </LocationProvider>
-                </NotifProvider>
-            </AuthProvider>
-        </SafeAreaProvider>
+                            </ChatProvider>
+                        </LocationProvider>
+                    </NotifProvider>
+                </AuthProvider>
+            </SafeAreaProvider>
+        </ErrorBoundary>
     )
 }

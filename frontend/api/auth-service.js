@@ -1,19 +1,7 @@
-import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import axiosInstance from './axios-instance'
 import { API_URL } from '../config/api'
-
-axios.interceptors.request.use(
-    async config => {
-        const token = await AsyncStorage.getItem('token')
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`
-        }
-        return config
-    },
-    error => {
-        return Promise.reject(error)
-    }
-)
+import logger from '../utils/logger'
 
 export async function getCurrentUser() {
     try {
@@ -22,7 +10,7 @@ export async function getCurrentUser() {
             return null
         }
 
-        const response = await axios.get(`${API_URL}/users/me`)
+        const response = await axiosInstance.get('/users/me')
 
         await AsyncStorage.setItem('user', JSON.stringify(response.data))
         return response.data
@@ -44,7 +32,7 @@ export async function getToken() {
 }
 
 export async function login({ email, password }) {
-    const response = await axios.post(`${API_URL}/login`, { email, password })
+    const response = await axiosInstance.post('/login', { email, password })
 
     if (response.data.access_token) {
         await AsyncStorage.setItem('token', response.data.access_token)
@@ -59,27 +47,11 @@ export async function logout() {
 }
 
 export async function sendAuthCode(email) {
-    const response = await axios.post(
-        `${API_URL}/send-auth-code`,
-        JSON.stringify({ email }),
-        {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }
-    )
+    const response = await axiosInstance.post('/send-auth-code', { email })
     return response.data
 }
 
 export async function verifyAuthCode(authData) {
-    const response = await axios.post(
-        `${API_URL}/verify-auth-code`,
-        { ...authData },
-        {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }
-    )
+    const response = await axiosInstance.post('/verify-auth-code', authData)
     return response.data
 }

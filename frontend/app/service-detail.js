@@ -11,7 +11,7 @@ import { useSearchParams } from 'expo-router/build/hooks'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import { globalStyles, colors } from '../styles/global'
+import { globalStyles, colors, spacing, borderRadius, shadows, typography } from '../styles/theme'
 import { useAuth } from '../context/auth-context'
 import {
     getServices,
@@ -23,6 +23,7 @@ import { createChat } from '../api/chat-service'
 import { createNotification } from '../api/notifications-service'
 import LoadingSpinner from '../components/loading-spinner'
 import Screen from '../components/screen'
+import logger from '../utils/logger'
 
 export default function ServiceDetail() {
     const params = useSearchParams()
@@ -74,7 +75,7 @@ export default function ServiceDetail() {
                     )
                 }
             } catch (error) {
-                console.error('Error fetching service:', error)
+                logger.error('Error fetching service:', error)
             } finally {
                 if (mounted) setLoading(false)
             }
@@ -115,7 +116,7 @@ export default function ServiceDetail() {
             setBusiness(foundBusiness)
             alert('Solicitud de cobro enviada')
         } catch (error) {
-            console.error('Error requesting payment:', error)
+            logger.error('Error requesting payment:', error)
             alert('Error al enviar la solicitud de cobro')
         }
     }
@@ -146,7 +147,7 @@ export default function ServiceDetail() {
             )
             alert('Pago realizado con éxito')
         } catch (error) {
-            console.error('Error paying service:', error)
+            logger.error('Error paying service:', error)
             alert('Error al realizar el pago')
         }
     }
@@ -168,7 +169,7 @@ export default function ServiceDetail() {
         try {
             await createNotification(notificationData)
         } catch (error) {
-            console.error('Error creating notification:', error)
+            logger.error('Error creating notification:', error)
         }
     }
 
@@ -189,7 +190,7 @@ export default function ServiceDetail() {
         try {
             await createNotification(notificationData)
         } catch (error) {
-            console.error('Error creating notification:', error)
+            logger.error('Error creating notification:', error)
         }
     }
 
@@ -202,7 +203,7 @@ export default function ServiceDetail() {
             await createChat(chatData)
             router.push('/chat')
         } catch (error) {
-            console.error('Error creating chat:', error)
+            logger.error('Error creating chat:', error)
             alert('Error al crear el chat')
             return
         }
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     },
     input: {
         backgroundColor: '#F5F5F5',
-        borderRadius: 8,
+        borderRadius: 14,
         padding: 12,
         fontSize: 16,
         marginBottom: 16,
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         backgroundColor: '#6A4C93',
-        borderRadius: 8,
+        borderRadius: 14,
         padding: 16,
         alignItems: 'center',
         marginTop: 8,
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#F0E6FF',
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 14,
         marginTop: 16,
     },
     clientInfoText: {

@@ -13,8 +13,9 @@ import * as ImagePicker from 'expo-image-picker'
 import { uploadProfilePicture } from '../api/user-service'
 import { useAuth } from '../context/auth-context'
 import Screen from '../components/screen'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { Ionicons } from '@expo/vector-icons'
+import logger from '../utils/logger'
 
 export default function UploadProfilePic() {
     const { user, refreshUser } = useAuth()
@@ -59,7 +60,7 @@ export default function UploadProfilePic() {
 
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente')
         } catch (error) {
-            console.error('❌ Error al subir imagen:', error)
+            logger.error('❌ Error al subir imagen:', error)
             Alert.alert(
                 'Error',
                 error.response?.data?.detail ||

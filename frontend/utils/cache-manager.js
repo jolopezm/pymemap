@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import logger from './logger'
 
 /**
  * Gestor centralizado de caché para toda la aplicación
@@ -45,7 +46,7 @@ export const clearAllCache = async () => {
         await AsyncStorage.multiRemove(ALL_CACHE_KEYS)
         return true
     } catch (error) {
-        console.error('❌ Error limpiando caché:', error)
+        logger.error('Error limpiando caché:', error)
         return false
     }
 }

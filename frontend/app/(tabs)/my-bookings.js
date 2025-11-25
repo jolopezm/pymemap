@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, FlatList, RefreshControl, Pressable } from 'react-native'
+import { View, Text, FlatList, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import DropDownPicker from 'react-native-dropdown-picker'
 import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles } from '../../styles/global'
+import { globalStyles, colors, spacing, borderRadius, shadows } from '../../styles/theme'
 
 export default function MyBookings() {
     const router = useRouter()
     const [bookings, setBookings] = useState([])
     const [loading, setLoading] = useState(false)
-    const [refreshing, setRefreshing] = useState(false)
     const [filterStatus, setFilterStatus] = useState('all') // 'all' = mostrar todos
     const [dropdownOpen, setDropdownOpen] = useState(false)
 
@@ -36,17 +35,10 @@ export default function MyBookings() {
             )
             setBookings(sorted)
         } catch (error) {
-            console.error('Error fetching my bookings:', error)
             Toast.error('Error al cargar mis reservas')
         } finally {
             setLoading(false)
         }
-    }
-
-    const onRefresh = async () => {
-        setRefreshing(true)
-        await fetchBookings()
-        setRefreshing(false)
     }
 
     const getStatusBadge = status => {
@@ -270,7 +262,12 @@ export default function MyBookings() {
             : bookings.filter(b => b.status === filterStatus)
 
     return (
-        <Screen>
+        <Screen scroll={false}>
+            {loading && (
+                <View style={{ paddingVertical: 8, alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color="#9B59B6" />
+                </View>
+            )}
             <View style={styles.container}>
                 <Text style={globalStyles.title}>Mis Reservas</Text>
 
@@ -293,9 +290,7 @@ export default function MyBookings() {
                 </View>
 
                 {/* Lista de reservas */}
-                {loading && bookings.length === 0 ? (
-                    <Text style={styles.loadingText}>Cargando reservas...</Text>
-                ) : filteredBookings.length === 0 ? (
+                {filteredBookings.length === 0 && !loading ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📅</Text>
                         <Text style={styles.emptyText}>
@@ -323,12 +318,6 @@ export default function MyBookings() {
                         renderItem={renderBookingCard}
                         keyExtractor={item => item._id}
                         contentContainerStyle={styles.listContainer}
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={refreshing}
-                                onRefresh={onRefresh}
-                            />
-                        }
                     />
                 )}
             </View>
@@ -373,13 +362,13 @@ const styles = {
         alignItems: 'center',
     },
     summaryCardActive: {
-        backgroundColor: '#e0e7ff',
+        backgroundColor: '#F5F0FF',
         borderWidth: 2,
-        borderColor: '#6366f1',
-        shadowColor: '#6366f1',
+        borderColor: '#9B59B6',
+        shadowColor: '#9B59B6',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowRadius: 6,
         elevation: 5,
     },
     summaryNumber: {
@@ -397,13 +386,13 @@ const styles = {
     },
     card: {
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 14,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowColor: '#9B59B6',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 4,
         overflow: 'hidden',
     },
     statusBadge: {

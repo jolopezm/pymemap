@@ -179,6 +179,8 @@ Para usar Railway (default), simplemente no crees el archivo `.env`.
 ```bash
 cd frontend
 npm run web:dev
+# o
+npm run web
 ```
 
 Abre: http://localhost:8081
@@ -187,7 +189,7 @@ Abre: http://localhost:8081
 
 ```bash
 cd frontend
-npm run start
+npm start
 ```
 
 Escanea el QR code con Expo Go:
@@ -198,15 +200,18 @@ Escanea el QR code con Expo Go:
 ### Limpiar Caché
 
 ```bash
+npm run dev
+# o manualmente
 npx expo start --clear
 ```
 
 ### Linting y Formateo
 
 ```bash
-npm run lint        # Ver errores
-npm run lint:fix    # Corregir automáticamente
-npm run format      # Formatear con Prettier
+npm run lint          # Ver errores
+npm run lint:fix      # Corregir automáticamente
+npm run format        # Formatear con Prettier
+npm run format:check  # Verificar formato
 ```
 
 ---
@@ -432,11 +437,20 @@ npm outdated
 # Actualizar paquetes
 npm update
 
+# Ejecutar tests
+npm test
+
+# Ejecutar con limpiar caché
+npm run dev
+
 # Ejecutar en iOS (requiere macOS)
 npm run ios
 
 # Ejecutar en Android
 npm run android
+
+# Ejecutar en web
+npm run web:dev
 ```
 
 ### Git

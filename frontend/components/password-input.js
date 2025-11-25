@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, TextInput, Pressable, Text } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 
 /**
  * Componente de entrada de contraseña con toggle de visibilidad y validación

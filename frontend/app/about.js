@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import {globalStyles} from '../styles/global';
-import Button from '../components/button';
+import { useRouter } from 'expo-router';
+import { globalStyles, colors } from '../styles/theme'
+import Button from '../components/ui/Button'
 import DismissKeyboard from '../components/dismiss-keyboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,16 +24,17 @@ export default function About() {
           </View>
 
           {/* Título */}
-          <Text style={globalStyles.title}>Sobre PymeMap</Text>
+          <Text style={styles.title}>Acerca de PyMap</Text>
+          <Text style={styles.version}>Versión 1.0.0</Text>
 
-          {/* Contenido */}
-          <Text style={globalStyles.subtitle}>
-            Encuentra los mejores negocios y servicios cerca de ti
+          <Text style={styles.description}>
+            PyMap es la mejor forma de encontrar negocios locales cerca de ti.
+            Conectamos a vendedores y compradores de manera fácil y rápida.
           </Text>
 
           <View style={{ marginTop: 30, marginBottom: 20 }}>
             <Text style={[globalStyles.linkText, { textAlign: 'center', textDecorationLine: 'none', fontSize: 16 }]}>
-              PymeMap es tu plataforma para descubrir y conectar con negocios locales. 
+              PyMap es tu plataforma para descubrir y conectar con negocios locales.
               Nuestra misión es facilitar la búsqueda de servicios y productos en tu área.
             </Text>
           </View>
@@ -50,4 +51,29 @@ export default function About() {
     </DismissKeyboard>
   );
 }
+
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  version: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  description: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 26,
+    marginBottom: 20,
+  },
+});
 

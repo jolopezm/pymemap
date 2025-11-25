@@ -8,8 +8,9 @@ import { createBooking } from '../api/booking-service'
 import { createNotification } from '../api/notifications-service'
 import { getBusiness } from '../api/business-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { useAuth } from '../context/auth-context'
+import logger from '../utils/logger'
 
 export default function BookService() {
     const { businessId, businessName } = useLocalSearchParams()
@@ -73,7 +74,7 @@ export default function BookService() {
             const businessData = await getBusiness(businessId)
 
             if (!businessData?.owner_id) {
-                console.warn('⚠️ No se encontró owner_id en el negocio')
+                logger.warn('⚠️ No se encontró owner_id en el negocio')
                 Toast.success(
                     'Reserva creada (pero no se pudo notificar al vendedor)'
                 )
@@ -101,8 +102,8 @@ export default function BookService() {
                     '¡Solicitud enviada! El vendedor la revisará pronto'
                 )
             } catch (notifError) {
-                console.error('⚠️ Error sending notification:', notifError)
-                console.error('⚠️ Error details:', notifError.response?.data)
+                logger.error('⚠️ Error sending notification:', notifError)
+                logger.error('⚠️ Error details:', notifError.response?.data)
                 Toast.success(
                     'Reserva creada (pero hubo un problema al notificar)'
                 )
@@ -110,8 +111,8 @@ export default function BookService() {
 
             router.push('/my-bookings')
         } catch (error) {
-            console.error('❌ Error completo:', error)
-            console.error('❌ Error response:', error.response?.data)
+            logger.error('❌ Error completo:', error)
+            logger.error('❌ Error response:', error.response?.data)
             Toast.error(
                 error.response?.data?.detail || 'Error al enviar solicitud'
             )

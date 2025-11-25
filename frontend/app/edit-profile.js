@@ -1,5 +1,5 @@
 import { View, TextInput, Text, Pressable } from 'react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import Screen from '../components/screen'
 import React from 'react'
 import { updateUser } from '../api/user-service'

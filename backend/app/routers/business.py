@@ -29,13 +29,12 @@ async def create_business(business: Business):
     
     # Geocodificar dirección si no tiene coordenadas
     if (not business_dict.get("latitude") or not business_dict.get("longitude")) and business_dict.get("address"):
-        print(f"📍 Geocodificando dirección: {business_dict['address']}")
         coords = await geocode_address_async(business_dict["address"])
         if coords:
-            business_dict.update(coords)
-            print(f"✅ Coordenadas obtenidas: {coords}")
+            business_dict["latitude"] = coords["lat"]
+            business_dict["longitude"] = coords["lng"]
         else:
-            print(f"⚠️ No se pudieron obtener coordenadas")
+            pass
     
     await db.business.insert_one(business_dict)
     created_business = await db.business.find_one({"name": business.name})
@@ -152,9 +151,9 @@ async def pay_service(service_id: str):
 async def upload_pictures(business_id: str, file: UploadFile = File(...)):
     """Sube una nueva foto de perfil para el negocio"""
 
-    business_id = business_id.strip()
-    print(f"🔍 Recibiendo upload para business_id: '{business_id}' (longitud: {len(business_id)})")
-    print(f"📎 Archivo: {file.filename}, Content-Type: {file.content_type}")
+    # Log para debugging
+    # print(f"🔍 Recibiendo upload para business_id: '{business_id}' (longitud: {len(business_id)})")
+    # print(f"📎 Archivo: {file.filename}, Content-Type: {file.content_type}")
 
     if not ObjectId.is_valid(business_id):
         raise HTTPException(
@@ -172,8 +171,7 @@ async def upload_pictures(business_id: str, file: UploadFile = File(...)):
     
     try:
         # Subir imagen a GCP
-        image_url = upload_to_gcp(file, bucket_name="pymap_businesses_pics")
-        print(f"✅ Imagen subida exitosamente: {image_url}")
+        image_url = await run_in_threadpool(upload_to_gcp, file, bucket_name="pymap_profile_pics")
         
         # Actualizar el negocio con la nueva URL
         await db.business.update_one(
@@ -185,7 +183,7 @@ async def upload_pictures(business_id: str, file: UploadFile = File(...)):
         return Business(**updated_business)
         
     except Exception as e:
-        print(f"❌ Error al subir imagen: {str(e)}")
+        # print(f"❌ Error al subir imagen: {str(e)}")
         import traceback
         traceback.print_exc()
         raise HTTPException(
@@ -212,11 +210,9 @@ async def update_business(business_id: str, update_data: dict):
     if "address" in update_data and update_data["address"]:
         # Solo geocodificar si la dirección cambió
         if update_data["address"] != existing.get("address"):
-            print(f"📍 Dirección actualizada, geocodificando: {update_data['address']}")
             coords = await geocode_address_async(update_data["address"])
             if coords:
                 update_data.update(coords)
-                print(f"✅ Nuevas coordenadas: {coords}")
     
     # Actualizar
     result = await db.business.update_one(

@@ -17,9 +17,10 @@ import {
     getBusinessAvailability,
 } from '../api/booking-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from 'react-native-ui-datepicker'
+import logger from '../utils/logger'
 
 export default function ManageAvailability() {
     const { businessId } = useLocalSearchParams()
@@ -44,7 +45,7 @@ export default function ManageAvailability() {
             const data = await getBusinessBookings(businessId)
             setBookings(data || [])
         } catch (error) {
-            console.error('Error fetching bookings:', error)
+            logger.error('Error fetching bookings:', error)
             Toast.error(
                 'El código ha expirado. Por favor, solicita uno nuevo.',
                 { duration: 3000 }
@@ -63,7 +64,7 @@ export default function ManageAvailability() {
             )
             fetchBookings()
         } catch (error) {
-            console.error('Error confirming booking:', error)
+            logger.error('Error confirming booking:', error)
             Toast.error('Error al confirmar reserva', { duration: 3000 })
         }
     }
@@ -125,7 +126,7 @@ export default function ManageAvailability() {
             setSelectedDate(undefined)
             setTimeSlots([])
         } catch (error) {
-            console.error('Error saving availability:', error)
+            logger.error('Error saving availability:', error)
             Alert.alert('Error', 'No se pudo guardar la disponibilidad')
         }
     }

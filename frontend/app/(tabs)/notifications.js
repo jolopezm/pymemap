@@ -1,13 +1,13 @@
-import { Text, View, Pressable } from 'react-native'
+import { Text, View, Pressable, ActivityIndicator } from 'react-native'
 import Screen from '../../components/screen'
 import { useAuth } from '../../context/auth-context'
 import React from 'react'
-import { globalStyles, colors } from '../../styles/global'
+import { useFocusEffect } from 'expo-router'
+import { globalStyles, colors } from '../../styles/theme'
 import * as notificationsService from '../../api/notifications-service'
 import DefaultModal from '../../components/default-modal'
 import { useNotif } from '../../context/notif-context'
 import NotificationFilter from '../../components/notif-filter'
-import LoadingSpinner from '../../components/loading-spinner'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
@@ -21,20 +21,6 @@ const getNotifications =
 const markNotificationAsRead =
     notificationsService?.markNotificationAsRead ??
     notificationsService?.default?.markNotificationAsRead
-
-if (!getNotifications) {
-    console.error(
-        'getNotifications no disponible en notifications-service. Revisa sus exports.'
-    )
-}
-
-if (!markNotificationAsRead) {
-    console.error(
-        'markNotificationAsRead no disponible en notifications-service. Revisa sus exports y la importación.'
-    )
-}
-
-const { getNotifications: _unused1, markNotificationAsRead: _unused2 } = {}
 
 export default function NotificationsScreen() {
     const { user } = useAuth()
@@ -67,13 +53,12 @@ export default function NotificationsScreen() {
                 try {
                     await markNotificationAsRead(notification.id)
                     markNotificationReadLocally(notification.id)
-                    // Refrescar notificaciones
                     const data = await getNotifications(user._id)
                     const sorted = sortNotifications(data)
                     setAllNotifications(sorted)
                     setNotifications(sorted)
                 } catch (error) {
-                    console.error('Error marking notification as read:', error)
+                    // Error manejado silenciosamente
                 }
             }
         }
@@ -105,48 +90,23 @@ export default function NotificationsScreen() {
 
                 await markNotificationAsRead(notificationId)
                 try {
-                    const updated =
-                        await markNotificationReadLocally(notificationId)
-                    if (!updated) {
-                        console.warn(
-                            'markNotificationReadLocally returned falsy'
-                        )
-                    }
+                    await markNotificationReadLocally(notificationId)
                 } catch (e) {
-                    console.warn('markNotificationReadLocally failed', e)
+                    // Error manejado silenciosamente
                 }
 
                 try {
-                    const refreshed = await refreshNotifications()
-                    console.debug(
-                        'notifications: refreshNotifications result',
-                        {
-                            refreshedCount: Array.isArray(refreshed)
-                                ? refreshed.length
-                                : null,
-                            refreshedUnread: Array.isArray(refreshed)
-                                ? refreshed.filter(n => !n.read).length
-                                : null,
-                        }
-                    )
+                    await refreshNotifications()
                 } catch (e) {
-                    console.warn(
-                        'refreshNotifications failed after mark as read',
-                        e
-                    )
+                    // Error manejado silenciosamente
                 }
             } catch (err) {
-                console.error('Error marking notification as read:', err)
                 try {
                     const fresh = await getNotifications(user._id)
                     setAllNotifications(fresh)
                     setNotifications(fresh)
-                    const unread = fresh.filter(n => !n.read).length
                 } catch (e) {
-                    console.error(
-                        'Error refetching notifications after mark failure',
-                        e
-                    )
+                    // Error manejado silenciosamente
                 }
             }
         }
@@ -168,37 +128,42 @@ export default function NotificationsScreen() {
             return tb - ta
         })
 
-    React.useEffect(() => {
-        const fetchNotifications = async () => {
-            if (!user || !user._id) {
-                setLoading(false)
-                return
-            }
-            setLoading(true)
-            setError(null)
-            try {
-                const data = await getNotifications(user._id)
-                const sorted = sortNotifications(data)
-                setAllNotifications(sorted)
-                setNotifications(sorted)
-                const unread = sorted.filter(n => !n.read).length
-            } catch (err) {
-                console.error('getNotifications error', err)
-                if (err?.response?.data) {
-                    console.error('backend response:', err.response.data)
-                    setError(err.response.data)
-                } else {
-                    setError({ message: err.message || 'Unknown error' })
-                }
-                setAllNotifications([])
-                setNotifications([])
-            } finally {
-                setLoading(false)
-            }
+    const fetchNotifications = async () => {
+        if (!user || !user._id) {
+            setLoading(false)
+            return
         }
+        setLoading(true)
+        setError(null)
+        try {
+            const data = await getNotifications(user._id)
+            const sorted = sortNotifications(data)
+            setAllNotifications(sorted)
+            setNotifications(sorted)
+        } catch (err) {
+            if (err?.response?.data) {
+                setError(err.response.data)
+            } else {
+                setError({ message: err.message || 'Unknown error' })
+            }
+            setAllNotifications([])
+            setNotifications([])
+        } finally {
+            setLoading(false)
+        }
+    }
 
+    React.useEffect(() => {
         fetchNotifications()
     }, [user])
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (user?._id) {
+                fetchNotifications()
+            }
+        }, [user])
+    )
 
     const handleFilterChange = newFilter => {
         if (newFilter === 'all') {
@@ -216,6 +181,11 @@ export default function NotificationsScreen() {
         <Screen>
             {user ? (
                 <>
+                    {loading && (
+                        <View style={{ paddingVertical: 8, alignItems: 'center' }}>
+                            <ActivityIndicator size="small" color="#9B59B6" />
+                        </View>
+                    )}
                     <NotificationFilter
                         notifications={notifications}
                         onFilterChange={handleFilterChange}
@@ -433,17 +403,11 @@ export default function NotificationsScreen() {
                             </>
                         ) : null}
                     </DefaultModal>
-                </>
+                </>  
             ) : (
                 <Text style={globalStyles.subtitle}>
                     Please log in to view notifications.
                 </Text>
-            )}
-
-            {loading && (
-                <View style={{ marginTop: 16 }}>
-                    <LoadingSpinner />
-                </View>
             )}
 
             {error && (

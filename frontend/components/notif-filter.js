@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, Button, StyleSheet, Pressable } from 'react-native'
 import { useNotif } from '../context/notif-context'
-import { colors } from '../styles/global'
+import { colors } from '../styles/theme'
 
 function NotificationFilter({ onFilterChange }) {
     const [filter, setFilter] = React.useState('all')
@@ -54,10 +54,6 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
         paddingTop: 8,
         marginBottom: 16,
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        backgroundColor: colors.lightGray,
     },
     title: {
         fontSize: 16,

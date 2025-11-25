@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../context/auth-context'
 import Screen from '../components/screen'
 import LoadingSpinner from '../components/loading-spinner'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import {
     getAllMyBusinessBookings,
     getMyBookings,
@@ -23,6 +23,7 @@ import {
 import { getBusiness } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
 import { getChatByParticipants, createChat } from '../api/chat-service'
+import logger from '../utils/logger'
 
 export default function BookingDetail() {
     const params = useSearchParams()
@@ -83,7 +84,7 @@ export default function BookingDetail() {
                     )
                 }
             } catch (error) {
-                console.error('Error fetching booking:', error)
+                logger.error('Error fetching booking:', error)
             } finally {
                 if (mounted) setLoading(false)
             }
@@ -142,7 +143,7 @@ export default function BookingDetail() {
 
             alert('✅ Código verificado - Servicio completado')
         } catch (error) {
-            console.error('Error verifying code:', error)
+            logger.error('Error verifying code:', error)
             if (error.response?.status === 400) {
                 alert('❌ Código incorrecto. Intenta de nuevo.')
             } else {
@@ -167,7 +168,7 @@ export default function BookingDetail() {
         try {
             await createNotification(notificationData)
         } catch (error) {
-            console.error('Error creating notification:', error)
+            logger.error('Error creating notification:', error)
         }
     }
 
@@ -198,7 +199,7 @@ export default function BookingDetail() {
         try {
             await createNotification(notificationData)
         } catch (error) {
-            console.error('Error creating notification:', error)
+            logger.error('Error creating notification:', error)
         }
     }
 
@@ -231,7 +232,7 @@ export default function BookingDetail() {
             const chatId = chat._id || chat.id
             router.push(`/chat-view?chatId=${chatId}`)
         } catch (error) {
-            console.error('❌ Error al abrir chat:', error)
+            logger.error('❌ Error al abrir chat:', error)
             alert('Error al abrir el chat. Intenta de nuevo.')
         }
     }

@@ -3,9 +3,10 @@ import { useRouter } from 'expo-router'
 import Screen from '../components/screen'
 import Item from '../plantillas/business-item'
 import { View, Text, Pressable } from 'react-native'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { useAuth } from '../context/auth-context'
 import { getBusiness } from '../api/business-service'
+import logger from '../utils/logger'
 
 export default function BusinessesList() {
     const { user } = useAuth()
@@ -18,7 +19,7 @@ export default function BusinessesList() {
                 const data = await getBusiness()
                 setBusinesses(data || [])
             } catch (error) {
-                console.error('Error fetching businesses:', error)
+                logger.error('Error fetching businesses:', error)
             }
         }
 

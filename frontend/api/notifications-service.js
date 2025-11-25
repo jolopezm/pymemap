@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import { API_URL } from '../config/api'
+import logger from '../utils/logger'
 
 export async function createNotification(notificationData) {
     const token = await AsyncStorage.getItem('token')
@@ -15,7 +16,7 @@ export async function createNotification(notificationData) {
 
         return response.data
     } catch (error) {
-        console.error('❌ Error creating notification:', {
+        logger.error('❌ Error creating notification:', {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
@@ -27,7 +28,7 @@ export async function createNotification(notificationData) {
 
 export async function getNotifications(userId) {
     if (!userId) {
-        console.warn('⚠️ No userId provided to getNotifications')
+        logger.warn('⚠️ No userId provided to getNotifications')
         return []
     }
 
@@ -43,14 +44,14 @@ export async function getNotifications(userId) {
         )
         return response.data
     } catch (error) {
-        console.error('❌ Error fetching notifications:', error)
+        logger.error('❌ Error fetching notifications:', error)
         return []
     }
 }
 
 export async function markNotificationAsRead(notificationId) {
     if (!notificationId) {
-        console.warn('⚠️ No notificationId provided')
+        logger.warn('⚠️ No notificationId provided')
         return
     }
 
@@ -65,7 +66,7 @@ export async function markNotificationAsRead(notificationId) {
         )
         return response.data
     } catch (error) {
-        console.error('❌ Error marking notification as read:', error)
+        logger.error('❌ Error marking notification as read:', error)
         throw error
     }
 }

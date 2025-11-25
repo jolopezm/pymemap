@@ -10,7 +10,7 @@ import {
 import { Link, useRouter } from 'expo-router'
 import { handleSignIn } from '../utils/handle-sign-in'
 import { User } from '../classes/user'
-import { globalStyles } from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import { Calendar } from '../components/calendar'
 import { Toast } from 'toastify-react-native'
 import { dateFormatter } from '../utils/date-formatter'
@@ -24,10 +24,11 @@ import {
 } from 'react-native-safe-area-context'
 import { Platform } from 'react-native'
 import PasswordInput from '../components/password-input'
-import Button from '../components/button'
+import Button from '../components/ui/Button'
 import DismissKeyboard from '../components/dismiss-keyboard'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
+import logger from '../utils/logger'
 
 export default function SignIn() {
     const [user, setUser] = useState(new User('', '', '', '', ''))
@@ -105,7 +106,7 @@ export default function SignIn() {
                 setError(result.error)
             }
         } catch (error) {
-            console.error(
+            logger.error(
                 'Error capturado en handleSignInPress:',
                 JSON.stringify(error, null, 2)
             )

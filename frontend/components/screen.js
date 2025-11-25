@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import DismissKeyboard from './dismiss-keyboard'
+import ErrorBoundary from './ErrorBoundary'
 
 export default function Screen({
     children,
@@ -17,6 +18,7 @@ export default function Screen({
     contentContainerStyle,
     maxWidth,
     dismissKeyboard = true,
+    refreshControl,
 }) {
     const { width, height } = Dimensions.get('window')
     const isTablet = Math.min(width, height) >= 600
@@ -30,6 +32,7 @@ export default function Screen({
                   contentContainerStyle,
               ],
               keyboardShouldPersistTaps: 'handled',
+              refreshControl: refreshControl,
           }
         : {
               style: [
@@ -43,28 +46,30 @@ export default function Screen({
     const wrapperProps = dismissKeyboard ? { style: { flex: 1 } } : {}
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                <Wrapper {...wrapperProps}>
-                    <Container {...containerProps}>
-                        <View
-                            style={{
-                                flexGrow: 1,
-                                width: '100%',
-                                alignSelf: resolvedMaxWidth
-                                    ? 'center'
-                                    : 'stretch',
-                                maxWidth: resolvedMaxWidth,
-                            }}
-                        >
-                            {children}
-                        </View>
-                    </Container>
-                </Wrapper>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+        <ErrorBoundary>
+            <SafeAreaView style={{ flex: 1 }}>
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <Wrapper {...wrapperProps}>
+                        <Container {...containerProps}>
+                            <View
+                                style={{
+                                    flexGrow: 1,
+                                    width: '100%',
+                                    alignSelf: resolvedMaxWidth
+                                        ? 'center'
+                                        : 'stretch',
+                                    maxWidth: resolvedMaxWidth,
+                                }}
+                            >
+                                {children}
+                            </View>
+                        </Container>
+                    </Wrapper>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </ErrorBoundary>
     )
 }

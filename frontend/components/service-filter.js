@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import DropDownPicker from 'react-native-dropdown-picker'
-import { colors } from '../styles/global'
+import { colors } from '../styles/theme'
 
 function ServiceFilter({ onFilterChange, services }) {
     const [open, setOpen] = React.useState(false)

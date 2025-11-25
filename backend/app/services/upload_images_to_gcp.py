@@ -40,7 +40,7 @@ def ensure_gcp_credentials():
             raise ValueError("GOOGLE_APPLICATION_CREDENTIALS no es un path válido, JSON, ni base64 decodificable.")
     if credentials_dict:
         temp_path = "/tmp/gcloud_key.json"
-        print(f"Escribiendo credenciales GCP decodificadas en: {temp_path}")
+        # print(f"Escribiendo credenciales GCP decodificadas en: {temp_path}")
         with open(temp_path, "w") as f:
             json.dump(credentials_dict, f)
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path

@@ -1,7 +1,14 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, {
+    createContext,
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+} from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { login as loginService, getCurrentUser } from '../api/auth-service'
 import { clearAllCache } from '../utils/cache-manager'
+import logger from '../utils/logger'
 
 const AuthContext = createContext()
 
@@ -40,13 +47,13 @@ export const AuthProvider = ({ children }) => {
                             setIsFromCache(false)
                         }
                     } catch (error) {
-                        console.log(
+                        logger.log(
                             '⚠️ No se pudo actualizar usuario, usando caché'
                         )
                     }
                 }
             } catch (error) {
-                console.error('Error loading user from storage:', error)
+                logger.error('Error loading user from storage:', error)
             } finally {
                 setLoading(false)
             }
@@ -55,7 +62,7 @@ export const AuthProvider = ({ children }) => {
         loadUser()
     }, [])
 
-    const login = async ({ email, password }) => {
+    const login = useCallback(async ({ email, password }) => {
         try {
             await loginService({ email, password })
             const userData = await getCurrentUser()
@@ -68,23 +75,22 @@ export const AuthProvider = ({ children }) => {
 
             return userData
         } catch (error) {
-            console.error('Error during login:', error)
             throw error
         }
-    }
+    }, [])
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             // Limpiar TODO el caché de la aplicación
             await clearAllCache()
             setUser(null)
             setIsFromCache(false)
         } catch (error) {
-            console.error('Error during logout:', error)
+            // Error manejado silenciosamente
         }
-    }
+    }, [])
 
-    const refreshUser = async () => {
+    const refreshUser = useCallback(async () => {
         try {
             const userData = await getCurrentUser()
             await AsyncStorage.setItem(
@@ -95,25 +101,25 @@ export const AuthProvider = ({ children }) => {
             setIsFromCache(false)
             return userData
         } catch (error) {
-            console.error('Error refreshing user:', error)
+            logger.error('Error refreshing user:', error)
             throw error
         }
-    }
+    }, [])
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                login,
-                logout,
-                refreshUser,
-                loading,
-                isFromCache,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
+    const value = useMemo(
+        () => ({
+            user,
+            login,
+            logout,
+            refreshUser,
+            loading,
+            isFromCache,
+        }),
+        [user, loading, isFromCache, login, logout, refreshUser]
     )
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => React.useContext(AuthContext)
+

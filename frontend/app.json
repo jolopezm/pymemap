@@ -1,12 +1,12 @@
 {
     "expo": {
-        "name": "pymap",
+        "name": "PyMap",
         "slug": "pymap",
         "version": "1.0.0",
+        "scheme": "pymap",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
-        "newArchEnabled": true,
         "splash": {
             "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
@@ -24,11 +24,15 @@
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "edgeToEdgeEnabled": true,
             "permissions": [
                 "ACCESS_FINE_LOCATION",
                 "ACCESS_COARSE_LOCATION"
-            ]
+            ],
+            "config": {
+                "googleMaps": {
+                    "apiKey": "AIzaSyD5jyA0Asz6GD_d-ojqY09FXxfM4VnBkiU"
+                }
+            }
         },
         "web": {
             "favicon": "./assets/favicon.png",
@@ -37,6 +41,8 @@
         "experiments": {
             "turboModules": true
         },
-        "plugins": ["expo-router"]
+        "plugins": [
+            "expo-router"
+        ]
     }
 }
