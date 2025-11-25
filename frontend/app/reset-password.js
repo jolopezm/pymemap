@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuth } from '../context/auth-context'
 import { Toast } from 'toastify-react-native'
 import Screen from '../components/screen'
+import PasswordInput from '../components/password-input'
 
 export default function ResetPassword() {
     const [email, setEmail] = useState('')
@@ -55,20 +56,20 @@ export default function ResetPassword() {
 
     return (
         <Screen>
-            <Text style={globalStyles.title}>Restablecer Contraseña</Text>
-            <TextInput
+            <PasswordInput
                 value={newPassword}
                 onChangeText={setNewPassword}
-                style={globalStyles.textField}
-                placeholder="Nueva contraseña"
-                secureTextEntry
+                placeholder="Nueva Contraseña"
+                showRequirements={true}
+                style={{ marginBottom: 20 }}
             />
-            <TextInput
+            <PasswordInput
                 value={confirmNewPassword}
                 onChangeText={setConfirmNewPassword}
-                style={globalStyles.textField}
-                placeholder="Confirmar nueva contraseña"
-                secureTextEntry
+                placeholder="Confirmar Nueva Contraseña"
+                isConfirmField={true}
+                confirmValue={newPassword}
+                style={{ marginBottom: 20 }}
             />
             {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
             <Pressable

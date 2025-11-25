@@ -109,6 +109,16 @@ export default function Layout() {
                                     name="report"
                                     options={{ title: 'Reportar' }}
                                 />
+                                <Stack.Screen
+                                    name="forgot-password"
+                                    options={{ title: 'Olvidé mi contraseña' }}
+                                />
+                                <Stack.Screen
+                                    name="reset-password"
+                                    options={{
+                                        title: 'Restablecer contraseña',
+                                    }}
+                                />
                             </Stack>
                         </ChatProvider>
                     </LocationProvider>

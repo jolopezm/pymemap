@@ -181,3 +181,25 @@ export function isAdmin() {
 export function isBusiness() {
     return hasRole('business')
 }
+
+export async function resetPassword(data) {
+    try {
+        const response = await fetch(`${API_URL}/users/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.detail || 'Error al restablecer contraseña')
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error en resetPassword:', error)
+        throw error
+    }
+}

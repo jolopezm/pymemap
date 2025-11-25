@@ -159,9 +159,7 @@
                     const data = await verifyAuthCode({ email, code }, false)
 
                     // Guardar email para la página de nueva contraseña
-                    /*
                     sessionStorage.setItem('resetEmail', email)
-                    */
 
                     setMessage('Código verificado correctamente.', 'success')
                     setTimeout(() => {
