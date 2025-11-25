@@ -210,10 +210,6 @@ async def upload_profile_picture_endpoint(user_id: str, file: UploadFile = File(
     # Limpiar el user_id
     user_id = user_id.strip()
     
-    # Log para debugging
-    print(f"🔍 Recibiendo upload para user_id: '{user_id}' (longitud: {len(user_id)})")
-    print(f"📎 Archivo: {file.filename}, Content-Type: {file.content_type}")
-    
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
             status_code=400,
@@ -228,11 +224,10 @@ async def upload_profile_picture_endpoint(user_id: str, file: UploadFile = File(
         )
 
     try:
-        # Subir imagen a GCP (NO es async, no uses await)
-        image_url = upload_to_gcp(file, bucket_name="pymap_profile_pics")
+        # Subir imagen a GCP (Ejecutar en threadpool para no bloquear)
+        from fastapi.concurrency import run_in_threadpool
+        image_url = await run_in_threadpool(upload_to_gcp, file, bucket_name="pymap_profile_pics")
         
-        print(f"✅ Imagen subida exitosamente: {image_url}")
-
         # Actualizar el perfil del usuario con la nueva URL
         await db.users.update_one(
             {"_id": ObjectId(user_id)},
@@ -243,7 +238,6 @@ async def upload_profile_picture_endpoint(user_id: str, file: UploadFile = File(
         return UserResponse(**updated_user)
         
     except Exception as e:
-        print(f"❌ Error al subir imagen: {str(e)}")
         import traceback
         traceback.print_exc()
         raise HTTPException(

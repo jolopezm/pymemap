@@ -5,7 +5,38 @@ import PropTypes from 'prop-types'
 import { BusinessCard } from '../business'
 import { colors, typography } from '../../styles/theme'
 
+import { useLocation } from '../../context/location-context'
+import { Pressable } from 'react-native'
+
 const HomeNearbyStores = React.memo(function HomeNearbyStores({ businesses, onPressBusiness }) {
+    const { userCoords, fetchLocation, isLoadingLocation } = useLocation()
+
+    if (!userCoords) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>Cerca de ti</Text>
+                </View>
+                <View style={styles.empty}>
+                    <Ionicons name="location-outline" size={64} color="#DDD" />
+                    <Text style={styles.emptyText}>Ubicación desactivada</Text>
+                    <Text style={styles.emptySubtext}>
+                        Activa tu ubicación para ver negocios cercanos
+                    </Text>
+                    <Pressable
+                        style={styles.enableButton}
+                        onPress={() => fetchLocation(true)}
+                        disabled={isLoadingLocation}
+                    >
+                        <Text style={styles.enableButtonText}>
+                            {isLoadingLocation ? 'Obteniendo...' : 'Activar Ubicación'}
+                        </Text>
+                    </Pressable>
+                </View>
+            </View>
+        )
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -81,5 +112,19 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#AAA',
         marginTop: 8,
+        textAlign: 'center',
+        paddingHorizontal: 40,
+    },
+    enableButton: {
+        marginTop: 16,
+        backgroundColor: colors.primary,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+    },
+    enableButtonText: {
+        color: '#FFF',
+        fontWeight: '600',
+        fontSize: 14,
     },
 })

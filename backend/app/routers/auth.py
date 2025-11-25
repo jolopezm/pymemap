@@ -17,20 +17,18 @@ router = APIRouter()
 @router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin):
     try:
-        print(f"Intentando login para: {user_credentials.email}")
         user = await db.users.find_one({"email": user_credentials.email})
         if not user:
-            print("Usuario no encontrado")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Correo electrónico o contraseña incorrectos",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         if not verify_password(user_credentials.password, user["password"]):
-            print("Contraseña incorrecta")
+            # print("Contraseña incorrecta")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Correo electrónico o contraseña incorrectos",
+                detail="Credenciales incorrectas",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -39,15 +37,14 @@ async def login(user_credentials: UserLogin):
             data={"sub": user["email"], "name": user["name"]}, 
             expires_delta=access_token_expires
         )
-        print("Login exitoso")
         return Token(access_token=access_token, token_type="bearer")
     except HTTPException as e:
         raise e
     except Exception as e:
-        print("ERROR INTERNO EN /login:", traceback.format_exc())
+        # print("ERROR INTERNO EN /login:", traceback.format_exc())
         raise HTTPException(
-            status_code=500,
-            detail="Error interno del servidor"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
 
 @router.post("/send-auth-code")
@@ -66,7 +63,7 @@ async def send_auth_code(request: dict):
             detail="Usuario no encontrado"
         )
 
-    response = send_auth_code_via_email(email)
+    response = await send_auth_code_via_email(email)
     return response
 
 @router.post("/verify-auth-code")

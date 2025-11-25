@@ -174,10 +174,10 @@ export default function ChatView() {
                 prev.map(msg =>
                     msg.id === tempMessage.id || msg._id === tempMessage._id
                         ? {
-                              ...sentMessage,
-                              id: sentMessage.id || sentMessage._id,
-                              _id: sentMessage._id || sentMessage.id,
-                          }
+                            ...sentMessage,
+                            id: sentMessage.id || sentMessage._id,
+                            _id: sentMessage._id || sentMessage.id,
+                        }
                         : msg
                 )
             )
@@ -434,21 +434,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     myMessage: {
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.primary,
         alignSelf: 'flex-end',
+        borderBottomRightRadius: 4,
     },
     theirMessage: {
-        backgroundColor: colors.white,
+        backgroundColor: '#F2F2F7',
         alignSelf: 'flex-start',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderBottomLeftRadius: 4,
     },
     myMessageText: {
-        color: colors.textPrimary,
+        color: '#FFF',
         fontSize: 15,
     },
     theirMessageText: {
-        color: colors.textSecondary,
+        color: '#000',
         fontSize: 15,
     },
     inputContainer: {

@@ -24,7 +24,7 @@ import logger from '../../utils/logger'
 
 export default function HomeScreen() {
     useAuth()
-    const { userLocation, updateLocation } = useLocation()
+    const { userLocation, updateLocation, fetchLocation, userCoords, isLoadingLocation } = useLocation()
     const { cardWidth, cardImageHeight, featuredSize, categorySize } = useResponsiveDimensions()
     const [, setServices] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
@@ -45,6 +45,11 @@ export default function HomeScreen() {
             }
         }
         fetchServices()
+
+        // Intentar obtener ubicación automáticamente si no tenemos coordenadas
+        if (!userCoords && !isLoadingLocation) {
+            fetchLocation()
+        }
     }, [])
 
     const { refreshing, onRefresh } = useRefresh(refetch)
@@ -64,7 +69,7 @@ export default function HomeScreen() {
             nearbyStoresRef.current.measureLayout(
                 scrollViewRef.current,
                 (_x, y) => scrollViewRef.current.scrollTo({ y: y - 20, animated: true }),
-                () => {}
+                () => { }
             )
         }
     }
