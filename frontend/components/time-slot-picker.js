@@ -7,12 +7,14 @@ import logger from '../utils/logger'
 export function TimeSlotPicker({ businessId, date, onSlotSelect }) {
     const [slots, setSlots] = useState([])
     const [selectedSlot, setSelectedSlot] = useState(null)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
     useEffect(() => {
         if (businessId && date) {
             fetchSlots()
+        } else {
+            setLoading(false)
         }
     }, [businessId, date])
 

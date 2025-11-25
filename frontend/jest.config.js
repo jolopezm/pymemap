@@ -36,6 +36,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
+    'expo/virtual/env': '<rootDir>/__mocks__/expo-virtual-env.js',
   },
   testEnvironment: 'node',
 };

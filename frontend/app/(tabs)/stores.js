@@ -8,6 +8,7 @@ import LocationPickerModal from '../../components/location-picker-modal'
 import { useRefresh } from '../../hooks/useRefresh'
 import { useBusinessFilters } from '../../hooks'
 import { StoresHeader, StoresList, StoresMap, StoresFilterModals } from '../../components/stores'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import { colors, spacing } from '../../styles/theme'
 import LoadingState from '../../components/LoadingState'
 
@@ -92,24 +93,24 @@ export default function StoresScreen() {
                 onCategoriesPress={() => setShowCategoriesModal(true)}
             />
 
-            <ScrollView 
-                style={styles.content} 
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[colors.primary]}
-                        tintColor={colors.primary}
-                        progressBackgroundColor={colors.white}
-                    />
-                }
-            >
-                {loading ? (
-                    <View style={styles.resultsContainer}>
-                        <LoadingState variant="list" count={6} />
-                    </View>
-                ) : activeView === 'list' ? (
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <LoadingState variant="list" count={6} />
+                </View>
+            ) : activeView === 'list' ? (
+                <ScrollView
+                    style={styles.content}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[colors.primary]}
+                            tintColor={colors.primary}
+                            progressBackgroundColor={colors.white}
+                        />
+                    }
+                >
                     <View style={styles.resultsContainer}>
                         <StoresList
                             businesses={businesses}
@@ -118,8 +119,10 @@ export default function StoresScreen() {
                             onBusinessPress={handleSelectBusiness}
                         />
                     </View>
-                ) : (
-                    <View style={styles.mapContainer}>
+                </ScrollView>
+            ) : (
+                <View style={styles.mapContainer}>
+                    <ErrorBoundary>
                         <StoresMap
                             businesses={businesses}
                             userCoords={userCoords}
@@ -127,9 +130,9 @@ export default function StoresScreen() {
                             onMarkerPress={handleMarkerPress}
                             onBusinessSelect={handleSelectBusiness}
                         />
-                    </View>
-                )}
-            </ScrollView>
+                    </ErrorBoundary>
+                </View>
+            )}
 
             <StoresFilterModals
                 showSortModal={showSortModal}
@@ -165,8 +168,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingBottom: spacing.xl,
     },
+    loadingContainer: {
+        flex: 1,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+    },
     mapContainer: {
         flex: 1,
-        minHeight: 500,
+        width: '100%',
+        height: '100%',
     },
 })

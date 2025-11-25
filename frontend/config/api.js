@@ -4,7 +4,7 @@ const API_URLS = {
     production: 'https://pymemap-production-306f.up.railway.app',
 }
 
-const forceEnv = process.env.EXPO_PUBLIC_API_ENV
+const forceEnv = typeof process !== 'undefined' && process['env'] ? process['env']['EXPO_PUBLIC_API_ENV'] : null
 
 export const API_URL =
     forceEnv === 'local' ? API_URLS.local : API_URLS.production

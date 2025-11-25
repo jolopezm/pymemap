@@ -3,7 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native'
 import { TimeSlotPicker } from '../../components/time-slot-picker'
 
 // Mock AsyncStorage
-jest.mock('@react-native-async-storage/async-storage', () => 
+jest.mock('@react-native-async-storage/async-storage', () =>
     require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 )
 
@@ -35,7 +35,7 @@ describe('TimeSlotPicker', () => {
     })
 
     describe('Rendering', () => {
-        it('renders loading state initially', () => {
+        it('renders loading state initially', async () => {
             const { getByText } = render(
                 <TimeSlotPicker
                     businessId="123"
@@ -44,7 +44,9 @@ describe('TimeSlotPicker', () => {
                 />
             )
 
-            expect(getByText(/Cargando horarios/i)).toBeTruthy()
+            await waitFor(() => {
+                expect(getByText(/Cargando horarios/i)).toBeTruthy()
+            })
         })
 
         it('renders slots after loading', async () => {

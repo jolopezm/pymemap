@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, borderRadius } from '../../styles/theme'
 
-export default function RecentSearches({ searches, onSelectSearch, onClear }) {
+export default function RecentSearches({ searches = [], onSelectSearch, onClear }) {
     if (searches.length === 0) return null
 
     return (

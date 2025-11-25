@@ -112,7 +112,7 @@ export default function SearchScreen() {
             <StatusBar style="dark" backgroundColor="#FFF" />
 
             <SearchInput
-                searchQuery={searchQuery}
+                value={searchQuery}
                 onChangeText={setSearchQuery}
                 onClear={() => setSearchQuery('')}
                 onClose={() => router.back()}
@@ -142,7 +142,11 @@ export default function SearchScreen() {
                     />
                 ) : (
                     <>
-                        <RecentSearches onSelectSearch={setSearchQuery} />
+                        <RecentSearches
+                            searches={[]} // TODO: Implement recent searches logic
+                            onSelectSearch={setSearchQuery}
+                            onClear={() => { }} // TODO: Implement clear logic
+                        />
                         <SearchFilters
                             onQuickSearch={handleQuickSearch}
                             nearbyFilter={nearbyFilter}

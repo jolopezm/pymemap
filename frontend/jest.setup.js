@@ -5,10 +5,18 @@ if (!Object.hasOwn) {
   }
 }
 
-// Polyfill para globalThis
 if (typeof globalThis === 'undefined') {
   global.globalThis = global
 }
+
+// Polyfill process.env
+if (!global.process) {
+  global.process = {}
+}
+if (!global.process.env) {
+  global.process.env = {}
+}
+global.process.env.EXPO_PUBLIC_API_ENV = 'test'
 
 // Extend jest matchers
 require('@testing-library/jest-native/extend-expect')
@@ -56,10 +64,10 @@ jest.mock('expo-linear-gradient', () => ({
 
 // Mock expo-location
 jest.mock('expo-location', () => ({
-  requestForegroundPermissionsAsync: jest.fn(() => 
+  requestForegroundPermissionsAsync: jest.fn(() =>
     Promise.resolve({ status: 'granted' })
   ),
-  getCurrentPositionAsync: jest.fn(() => 
+  getCurrentPositionAsync: jest.fn(() =>
     Promise.resolve({
       coords: {
         latitude: 0,
@@ -111,6 +119,15 @@ jest.mock('./context/location-context', () => ({
     isLoadingLocation: false,
   }),
   LocationProvider: ({ children }) => children,
+}))
+
+// Mock config/api.js to avoid process.env issues
+jest.mock('./config/api', () => ({
+  API_URL: 'http://localhost:8000',
+  API_URLS: {
+    local: 'http://localhost:8000',
+    production: 'https://api.example.com',
+  },
 }))
 
 // Silence console warnings in tests
