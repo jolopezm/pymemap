@@ -1,0 +1,408 @@
+import { Text, View, Pressable, ActivityIndicator } from 'react-native'
+import Screen from '../../components/screen'
+import { useAuth } from '../../context/auth-context'
+import React from 'react'
+import { useFocusEffect } from 'expo-router'
+import { globalStyles, colors } from '../../styles/theme'
+import * as notificationsService from '../../api/notifications-service'
+import DefaultModal from '../../components/default-modal'
+import { useNotif } from '../../context/notif-context'
+import NotificationFilter from '../../components/notif-filter'
+import { Ionicons } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
+
+const getNotifications =
+    notificationsService?.getNotifications ??
+    notificationsService?.default ??
+    (typeof notificationsService === 'function'
+        ? notificationsService
+        : undefined)
+
+const markNotificationAsRead =
+    notificationsService?.markNotificationAsRead ??
+    notificationsService?.default?.markNotificationAsRead
+
+export default function NotificationsScreen() {
+    const { user } = useAuth()
+    const { refreshNotifications, markNotificationReadLocally } = useNotif()
+    const [allNotifications, setAllNotifications] = React.useState([])
+    const [notifications, setNotifications] = React.useState([])
+    const [loading, setLoading] = React.useState(false)
+    const [error, setError] = React.useState(null)
+    const [modalVisible, setModalVisible] = React.useState(false)
+    const [selectedNotification, setSelectedNotification] = React.useState(null)
+    const router = useRouter()
+
+    const handleNotificationAction = async notification => {
+        const action = notification.reference?.action
+        const businessId = notification.reference?.businessId
+
+        if (action === 'rate_business' && businessId) {
+            router.push({
+                pathname: '/rate-business',
+                params: {
+                    id: businessId,
+                    bookingId: notification.reference?.bookingId,
+                    businessName: notification.reference?.businessName,
+                },
+            })
+
+            if (markNotificationAsRead && notification.id) {
+                try {
+                    await markNotificationAsRead(notification.id)
+                    markNotificationReadLocally(notification.id)
+                    const data = await getNotifications(user._id)
+                    const sorted = sortNotifications(data)
+                    setAllNotifications(sorted)
+                    setNotifications(sorted)
+                } catch (error) {}
+            }
+        }
+    }
+
+    const openNotification = async notification => {
+        setSelectedNotification(notification)
+        setModalVisible(true)
+
+        if (!notification?.read) {
+            const notificationId = notification?._id || notification?.id
+            if (!notificationId) return
+            try {
+                setAllNotifications(prev =>
+                    prev.map(n =>
+                        n?._id === notificationId || n?.id === notificationId
+                            ? { ...n, read: true }
+                            : n
+                    )
+                )
+                setNotifications(prev =>
+                    prev.map(n =>
+                        n?._id === notificationId || n?.id === notificationId
+                            ? { ...n, read: true }
+                            : n
+                    )
+                )
+                setSelectedNotification(s => (s ? { ...s, read: true } : s))
+
+                await markNotificationAsRead(notificationId)
+                try {
+                    await markNotificationReadLocally(notificationId)
+                } catch (e) {}
+
+                try {
+                    await refreshNotifications()
+                } catch (e) {}
+            } catch (err) {
+                try {
+                    const fresh = await getNotifications(user._id)
+                    setAllNotifications(fresh)
+                    setNotifications(fresh)
+                } catch (e) {}
+            }
+        }
+    }
+
+    const closeModal = () => {
+        setModalVisible(false)
+        setSelectedNotification(null)
+    }
+
+    const sortNotifications = list =>
+        [...(list || [])].sort((a, b) => {
+            if ((a.read ? 1 : 0) !== (b.read ? 1 : 0)) {
+                return a.read ? 1 : -1
+            }
+
+            const ta = new Date(a.date).getTime() || 0
+            const tb = new Date(b.date).getTime() || 0
+            return tb - ta
+        })
+
+    const fetchNotifications = async () => {
+        if (!user || !user._id) {
+            setLoading(false)
+            return
+        }
+        setLoading(true)
+        setError(null)
+        try {
+            const data = await getNotifications(user._id)
+            const sorted = sortNotifications(data)
+            setAllNotifications(sorted)
+            setNotifications(sorted)
+        } catch (err) {
+            if (err?.response?.data) {
+                setError(err.response.data)
+            } else {
+                setError({ message: err.message || 'Unknown error' })
+            }
+            setAllNotifications([])
+            setNotifications([])
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    React.useEffect(() => {
+        fetchNotifications()
+    }, [user])
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (user?._id) {
+                fetchNotifications()
+            }
+        }, [user])
+    )
+
+    const handleFilterChange = newFilter => {
+        if (newFilter === 'all') {
+            setNotifications(sortNotifications(allNotifications))
+        } else if (newFilter === 'unread') {
+            const filtered = allNotifications.filter(n => !n.read)
+            setNotifications(sortNotifications(filtered))
+        } else if (newFilter === 'read') {
+            const filtered = allNotifications.filter(n => n.read)
+            setNotifications(sortNotifications(filtered))
+        }
+    }
+
+    return (
+        <Screen>
+            {user ? (
+                <>
+                    {loading && (
+                        <View
+                            style={{ paddingVertical: 8, alignItems: 'center' }}
+                        >
+                            <ActivityIndicator size="small" color="#9B59B6" />
+                        </View>
+                    )}
+                    <NotificationFilter
+                        notifications={notifications}
+                        onFilterChange={handleFilterChange}
+                    />
+                    <View>
+                        {notifications.length > 0 ? (
+                            <>
+                                {notifications.map((notification, index) => (
+                                    <Pressable
+                                        key={index}
+                                        onPress={() =>
+                                            openNotification(notification)
+                                        }
+                                    >
+                                        <View
+                                            style={[
+                                                globalStyles.card,
+                                                {
+                                                    opacity: notification.read
+                                                        ? 0.5
+                                                        : 1,
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    gap: 8,
+                                                    alignItems: 'flex-start',
+                                                    padding: 12,
+                                                },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name="information-circle"
+                                                size={32}
+                                                color={colors.primary}
+                                            />
+                                            <View>
+                                                <Text
+                                                    style={{
+                                                        fontWeight: '600',
+                                                        fontSize: 16,
+                                                    }}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    {notification.message
+                                                        .length > 30
+                                                        ? `${notification.message.substring(0, 30)}...`
+                                                        : notification.message}
+                                                </Text>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 12,
+                                                        color: colors.gray,
+                                                    }}
+                                                >
+                                                    {new Date(
+                                                        notification.date
+                                                    ).toLocaleString()}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </Pressable>
+                                ))}
+                            </>
+                        ) : (
+                            <Text style={globalStyles.subtitle}>
+                                No notifications found.
+                            </Text>
+                        )}
+                    </View>
+                    <DefaultModal
+                        visible={modalVisible}
+                        onRequestClose={closeModal}
+                    >
+                        {selectedNotification ? (
+                            <>
+                                <Text
+                                    style={{ fontWeight: '700', fontSize: 18 }}
+                                >
+                                    {selectedNotification.type ===
+                                    'service_request'
+                                        ? 'Solicitud de Servicio'
+                                        : selectedNotification.type ===
+                                            'service_review'
+                                          ? 'Califica el Servicio'
+                                          : selectedNotification.type ===
+                                              'service_payment'
+                                            ? 'Pago Recibido'
+                                            : 'Notificación'}
+                                </Text>
+                                <Text style={{ marginTop: 8 }}>
+                                    {selectedNotification.message}
+                                </Text>
+
+                                {selectedNotification.type ===
+                                    'service_request' &&
+                                    selectedNotification.reference
+                                        ?.serviceId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/service-detail?id=${selectedNotification.reference.serviceId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                { marginTop: 16 },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Ver solicitud
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
+                                {selectedNotification.type ===
+                                    'service_review' &&
+                                    selectedNotification.reference
+                                        ?.businessId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/rate-business?businessId=${selectedNotification.reference.businessId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                {
+                                                    marginTop: 16,
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name="star"
+                                                size={20}
+                                                color="#fff"
+                                                style={{ marginRight: 8 }}
+                                            />
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Calificar ahora
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
+                                {selectedNotification.type ===
+                                    'service_payment' &&
+                                    selectedNotification.reference
+                                        ?.serviceId && (
+                                        <Pressable
+                                            onPress={() => {
+                                                closeModal()
+                                                router.push(
+                                                    `/service-detail?id=${selectedNotification.reference.serviceId}`
+                                                )
+                                            }}
+                                            style={[
+                                                globalStyles.button,
+                                                { marginTop: 16 },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={{ color: colors.white }}
+                                            >
+                                                Ver servicio
+                                            </Text>
+                                        </Pressable>
+                                    )}
+
+                                {selectedNotification?.reference?.action ===
+                                    'rate_business' && (
+                                    <Pressable
+                                        onPress={() => {
+                                            closeModal()
+                                            handleNotificationAction(
+                                                selectedNotification
+                                            )
+                                        }}
+                                        style={[
+                                            globalStyles.button,
+                                            {
+                                                marginTop: 16,
+                                                backgroundColor: '#FFD700',
+                                            },
+                                        ]}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: '#000',
+                                                fontWeight: 'bold',
+                                            }}
+                                        >
+                                            ⭐ Calificar Reserva
+                                        </Text>
+                                    </Pressable>
+                                )}
+
+                                <Pressable
+                                    onPress={closeModal}
+                                    style={{ marginTop: 16 }}
+                                >
+                                    <Text style={{ color: 'red' }}>Cerrar</Text>
+                                </Pressable>
+                            </>
+                        ) : null}
+                    </DefaultModal>
+                </>
+            ) : (
+                <Text style={globalStyles.subtitle}>
+                    Please log in to view notifications.
+                </Text>
+            )}
+
+            {error && (
+                <Text style={[globalStyles.subtitle, { color: 'red' }]}>
+                    Error: {error.message || 'An error occurred'}
+                </Text>
+            )}
+        </Screen>
+    )
+}

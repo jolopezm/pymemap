@@ -2,18 +2,41 @@
 
 Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y medianas empresas (PYMEs) cercanas, facilitando la búsqueda, calificación y contratación de servicios locales con un sistema de pagos integrado.
 
+---
+
+## 🚀 Inicio Rápido
+
+¿Quieres ver PymeMap funcionando en 5 minutos?
+
+**👉 Ve a [docs/QUICKSTART.md](docs/QUICKSTART.md)**
+
+---
+
+## 📖 Documentación
+
+- **⚡[Inicio Rápido](docs/QUICKSTART.md)** - Comienza en 5 minutos
+- **🛠️ [Guía de Desarrollo](docs/DEVELOPMENT.md)** - Para desarrolladores y contribuidores
+- **📡 [API Backend](backend/README.md)** - Documentación técnica de la API
+- **🚂 [Guía de Despliegue](docs/DEPLOYMENT.md)** - Desplegar en Railway
+- **📋 [Changelog](docs/CHANGELOG.md)** - Historial de cambios
+
+---
+
 ## 📱 Funcionalidades Principales
 
 - **Geolocalización**: Encuentra PYMEs cercanas basándose en tu ubicación actual
-- **Motor de búsqueda**: Busca servicios específicos por categorías y filtros
-- **Sistema de calificaciones**: Califica y consulta reseñas de otros usuarios
-- **Solicitud de servicios**: Contrata servicios directamente desde la app
-- **Wallet integrada**: Sistema de pagos propio para transacciones seguras
+- **Motor de búsqueda**: Busca servicios específicos por categorías y filtros con autocomplete de Google Maps
+- **Sistema de reseñas**: Califica y consulta opiniones de otros usuarios sobre negocios
+- **Sistema de reservas (Bookings)**: Reserva servicios con gestión de disponibilidad horaria
+- **Gestión de usuarios**: Sistema de balance en backend (sin UI dedicada aún)
+- **Chat en tiempo real**: Mensajería entre clientes y dueños de negocios
+- **Notificaciones**: Sistema de alertas para reservas, mensajes y actualizaciones
+- **Reportes**: Sistema de reportes de usuarios y negocios
 - **Multi-plataforma**: Disponible en iOS, Android y web
 
 ## 🛠️ Stack Tecnológico
 
-### Backend
+### 🛡️Backend
 
 - **Framework**: FastAPI 0.111.0
 - **Base de datos**: MongoDB con Motor 3.7.1 (driver asíncrono)
@@ -23,7 +46,7 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **Servidor**: Uvicorn 0.29.0
 - **Validación**: Pydantic 2.11.9 para validación de datos
 
-### Frontend (Mobile & Web)
+### 🖥️📱Frontend (Mobile & Web)
 
 - **Framework**: Expo 54.0.7 con React Native 0.81.4
 - **Lenguaje**: JavaScript
@@ -33,8 +56,10 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 - **HTTP Client**: Axios 1.12.2
 - **Storage**: AsyncStorage 2.2.0 para persistencia local
 
-### DevOps & Tools
+### ⚙️DevOps & Tools
 
+- **Testing**: Jest 29.7.0 con React Testing Library
+- **Cobertura**: 41.4% statements (363 tests pasando)
 - **Linting**: ESLint con configuración Expo y Prettier
 - **Formateo**: Prettier
 - **CORS**: Configurado para desarrollo cross-origin
@@ -44,331 +69,111 @@ Una aplicación móvil y web diseñada para conectar usuarios con pequeñas y me
 
 ```
 pymemap/
-├── backend/                    # API REST con FastAPI
-│   ├── app/                   # Código fuente de la API
-│   │   ├── main.py           # Punto de entrada de la API
-│   │   ├── db.py             # Configuración de MongoDB
-│   │   ├── models.py         # Modelos de datos con Pydantic
-│   │   ├── auth.py           # Lógica de autenticación
-│   │   ├── schemas.py        # Schemas de validación
-│   │   ├── routers/          # Endpoints modulares
-│   │   │   ├── auth.py       # Rutas de autenticación
-│   │   │   ├── users.py      # Gestión de usuarios
-│   │   │   └── business.py   # Gestión de negocios
-│   │   ├── services/         # Lógica de negocio
-│   │   └── models/           # Modelos adicionales
-│   ├── requirements.txt      # Dependencias de Python
-│   ├── run_server.sh         # Script de inicio (Linux/macOS)
-│   ├── run_server.bat        # Script de inicio (Windows)
-│   ├── .env                  # Variables de entorno
-│   └── test_backend_multiplataforma.py  # Tests del backend
-│
-└── frontend/                  # App móvil con Expo/React Native
-    ├── app/                  # Páginas de la aplicación (Expo Router)
-    │   ├── _layout.js        # Layout principal
-    │   ├── index.js          # Página de inicio
-    │   ├── home.js           # Página principal
-    │   ├── login.js          # Autenticación
-    │   ├── profile.js        # Perfil de usuario
-    │   ├── settings.js       # Configuraciones
-    │   └── new-business.js   # Registro de negocios
-    ├── api/                  # Servicios de API
-    │   ├── auth-service.js   # Servicios de autenticación
-    │   ├── user-service.js   # Servicios de usuarios
-    │   └── business-service.js # Servicios de negocios
-    ├── components/           # Componentes reutilizables
-    ├── context/              # Context API para estado global
-    ├── config/               # Configuraciones
-    │   └── api.js           # Configuración inteligente de API
-    ├── styles/               # Estilos globales
-    ├── assets/               # Recursos (imágenes, iconos)
-    ├── utils/                # Utilidades
-    └── package.json          # Dependencias de Node.js
+├── backend/          # API REST con FastAPI
+├── frontend/         # App móvil con Expo/React Native
+└── docs/            # Documentación del proyecto
 ```
 
-## 🎯 Plataformas Objetivo
+### Backend (FastAPI + MongoDB)
 
-### Móvil (Clientes y Negocios)
+```
+backend/
+├── app/
+│   ├── main.py              # Punto de entrada
+│   ├── models/              # Modelos de datos
+│   ├── routers/             # Endpoints de la API
+│   └── services/            # Lógica de negocio
+├── tests/                   # Tests
+└── requirements.txt         # Dependencias
+```
 
-- **iOS**: App nativa via Expo
-- **Android**: App nativa via Expo
-- Funcionalidades completas de búsqueda, contratación y pagos
+### Frontend (React Native + Expo)
 
-### Web
+```
+frontend/
+├── app/                     # Páginas (Expo Router)
+│   ├── (tabs)/             # Navegación principal (6 tabs)
+│   │   ├── home.js        # Pantalla principal
+│   │   ├── stores.js      # Listado de negocios
+│   │   ├── chat.js        # Mensajería
+│   │   ├── my-bookings.js # Mis reservas
+│   │   ├── notifications.js # Notificaciones
+│   │   └── profile.js     # Perfil de usuario
+│   └── ...                 # Otras pantallas
+├── api/                     # Servicios de API
+│   ├── auth-service.js    # Autenticación
+│   ├── user-service.js    # Usuarios y balance
+│   ├── business-service.js # Negocios
+│   ├── booking-service.js # Reservas
+│   ├── chat-service.js    # Chat
+│   ├── review-service.js  # Reseñas
+│   └── notifications-service.js # Notificaciones
+├── components/              # Componentes reutilizables
+│   ├── business/          # Componentes de negocios
+│   ├── home/              # Componentes del home
+│   ├── search/            # Componentes de búsqueda
+│   ├── stores/            # Componentes de tiendas
+│   └── ui/                # Componentes UI reutilizables
+├── context/                 # Contextos de React
+│   ├── auth-context.js    # Autenticación global
+│   ├── chat-context.js    # Estado del chat
+│   ├── location-context.js # Geolocalización
+│   ├── notif-context.js   # Notificaciones
+│   └── service-context.js # Servicios
+├── hooks/                   # Custom hooks
+│   ├── useAsyncStorage.js # Hook de almacenamiento
+│   ├── useBusinessData.js # Hook de negocios
+│   └── useRefresh.js      # Hook de refresco
+├── utils/                   # Utilidades
+│   ├── cache-manager.js   # Gestión de caché
+│   ├── geolocation.js     # Utilidades de ubicación
+│   └── logger.js          # Sistema de logging
+├── __tests__/               # Tests (363 tests, 41.4% coverage)
+└── config/                  # Configuraciones
+    └── api.js             # Config de API (Railway/Local)
+```
 
-- **Clientes**: Página informativa
-- **Negocios**: Panel de administración completo
-
-## 📢 Prerrequisitos
-
-### Para todos los sistemas operativos:
-
-- **Python 3.8+** (Backend)
-- **Node.js 18+** (Frontend)
-- **Git** (Control de versiones)
+Para más detalles, ver [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ---
 
-## 🚀 Instalación y Configuración
+## 📣 Instalación
 
-### 🔧 **Variables de Entorno (IMPORTANTE - Hacer primero)**
-
-Crear archivo `.env` en el directorio `backend/`:
-
-```env
-MONGO_URI=mongodb+srv://tu-conexion-mongodb
-JWT_SECRET_KEY=tu-clave-secreta
-```
-
----
-
-## 🖥️ **Instrucciones por Sistema Operativo**
-
-### **🐧 Linux / 🍎 macOS**
-
-#### **Backend:**
+### Opción 1: Solo ver el proyecto (Recomendado)
 
 ```bash
-cd backend
-
-# Crear entorno virtual
-python3 -m venv venv
-
-# Activar entorno virtual
-source venv/bin/activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Ejecutar servidor (opción 1 - script automatizado)
-./run_server.sh
-
-# Ejecutar servidor (opción 2 - manual)
-python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-#### **Frontend:**
-
-```bash
-cd frontend
-
-# Instalar dependencias
+git clone https://github.com/jolopezm/pymemap.git
+cd pymemap/frontend
 npm install
-
-# Para desarrollo web
-npx expo start --web
-
-# Para desarrollo móvil (escanear QR con Expo Go)
-npx expo start
+npm run web:dev
 ```
 
----
+Abre http://localhost:8081 - ¡Listo!
 
-### **🪟 Windows**
+### Opción 2: Desarrollo completo (Backend + Frontend)
 
-#### **Backend:**
-
-```cmd
-cd backend
-
-# Crear entorno virtual
-python -m venv venv
-
-# Activar entorno virtual
-venv\Scripts\activate.bat
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Ejecutar servidor (opción 1 - script automatizado)
-run_server.bat
-
-# Ejecutar servidor (opción 2 - manual)
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-#### **Frontend:**
-
-```cmd
-cd frontend
-
-# Instalar dependencias
-npm install
-
-# Para desarrollo web
-npx expo start --web
-
-# Para desarrollo móvil (escanear QR con Expo Go)
-npx expo start
-```
+Ver guía completa en **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**
 
 ---
 
-## 🌐 **URLs de Desarrollo**
+## 🚀 Despliegue
 
-Una vez que ambos servicios estén corriendo:
+### Backend Desplegado
 
-- **🖥️ Frontend Web:** http://localhost:8081
-- **⚡ Backend API:** http://localhost:8000
-- **📚 Documentación API:** http://localhost:8000/docs
-- **📱 Móvil:** Escanear QR code con Expo Go
+El backend está actualmente funcionando en Railway:
 
----
+**🔗 URL**: https://pymemap-production-306f.up.railway.app  
+**📚 Docs**: https://pymemap-production-306f.up.railway.app/docs
 
-## 📱 **Desarrollo Móvil**
+### Desplegar tu propia instancia
 
-1. **Instalar Expo Go** en tu dispositivo:
+Para desplegar tu propia versión del backend en Railway:
 
-   - [iOS App Store](https://apps.apple.com/app/expo-go/id982107779)
-   - [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
-
-2. **Ejecutar proyecto:**
-
-   ```bash
-   cd frontend
-   npx expo start
-   ```
-
-3. **Conectar dispositivo:**
-   - Escanear el QR code que aparece en la terminal
-   - La app se ejecutará directamente en tu teléfono
+**👉 Ver [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** para la guía completa paso a paso.
 
 ---
 
-## 🧪 **Probar la Instalación**
-
-### **Verificar Backend:**
-
-```bash
-# Desde el directorio backend
-python test_backend_multiplataforma.py
-```
-
-### **Verificar Frontend:**
-
-Abrir http://localhost:8081 en tu navegador
-
----
-
-## 🔄 **Configuración Automática de API**
-
-El frontend detecta automáticamente el entorno:
-
-- **Desarrollo local:** Se conecta a `http://localhost:8000`
-- **Producción:** Se conecta a `https://pymemap-production.up.railway.app`
-
-No necesitas cambiar configuraciones manualmente.
-
-## 🔥🧯 **Troubleshooting**
-
-### **Backend no inicia:**
-
-- ✅ Verificar que Python 3.8+ esté instalado: `python --version`
-- ✅ Activar entorno virtual antes de instalar dependencias
-- ✅ Verificar que el archivo `.env` exista con las variables correctas
-
-### **Frontend no inicia:**
-
-- ✅ Verificar que Node.js 18+ esté instalado: `node --version`
-- ✅ Limpiar caché: `npx expo start --clear`
-- ✅ Reinstalar dependencias: `rm -rf node_modules && npm install`
-
-### **Problemas de conexión:**
-
-- ✅ Verificar que ambos servicios estén corriendo
-- ✅ Backend: http://localhost:8000 debe responder `{"message":"Bienvenido a la API"}`
-- ✅ Frontend: http://localhost:8081 debe cargar la interfaz
-
-### **Reiniciar servicios:**
-
-```bash
-# Detener procesos
-pkill -f uvicorn  # Backend
-pkill -f expo     # Frontend (Linux/macOS)
-# En Windows usar Task Manager
-
-# Reiniciar backend
-cd backend && ./run_server.sh  # Linux/macOS
-cd backend && run_server.bat   # Windows
-
-# Reiniciar frontend
-cd frontend && npx expo start --web
-```
-
----
-
-## 🎯 **Funcionalidades Disponibles**
-
-### **APIs REST (Backend):**
-
-- 🔐 `POST /login` - Iniciar sesión
-- 👤 `GET /users/me` - Perfil usuario actual
-- 👥 `POST /users` - Crear usuario
-- 🏢 `GET /business` - Listar negocios
-- 🏪 `POST /business` - Crear negocio
-- 🗺️ `GET /autocomplete/{query}` - Búsqueda de lugares
-
-### **Funcionalidades Frontend:**
-
-- 🔐 Sistema de autenticación completo
-- 👥 Gestión de perfiles de usuario
-- 🏢 Registro y gestión de negocios
-- 🗺️ Integración con mapas y geolocalización
-- 📱 Interfaz responsive para web y móvil
-
----
-
-## 🛠️ **Comandos de Desarrollo Útiles**
-
-### **Backend:**
-
-```bash
-# Ver logs en tiempo real
-tail -f backend/logs/app.log
-
-# Ejecutar pruebas
-python -m pytest backend/tests/
-
-# Verificar sintaxis
-python -m flake8 backend/app/
-```
-
-### **Frontend:**
-
-```bash
-# Limpiar caché de Expo
-npx expo start --clear
-
-# Verificar errores de ESLint
-npm run lint
-
-# Formatear código
-npm run format
-
-# Instalar para iOS específicamente
-npx expo start --ios
-
-# Instalar para Android específicamente
-npx expo start --android
-```
-
----
-
-## 🚀 **Despliegue a Producción**
-
-### **Backend (Railway):**
-
-- El archivo `start.sh` maneja el despliegue automáticamente
-- Variables de entorno configuradas en Railway dashboard
-
-### **Frontend:**
-
-- Compatible con Vercel, Netlify para web
-- Expo Application Services (EAS) para apps móviles
-
----
-
-## �📞 Contacto
+## ☎️📞 Contacto
 
 Para más información sobre el proyecto PymeMap, no dudes en contactarnos.
 

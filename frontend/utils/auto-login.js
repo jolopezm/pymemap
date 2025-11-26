@@ -25,10 +25,10 @@ export const handleAutoLogin = async (
                 Toast.error('Credenciales inválidas.', { duration: 3000 })
             }
         } catch (e) {
-            console.error('Error de auto-login:', e)
+            logger.error('Error de auto-login:', e)
             if (e.response) {
-                console.error('Datos de respuesta de error:', e.response.data)
-                console.error(
+                logger.error('Datos de respuesta de error:', e.response.data)
+                logger.error(
                     'Estado de respuesta de error:',
                     e.response.status
                 )

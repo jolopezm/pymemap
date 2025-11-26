@@ -1,72 +1,31 @@
 import {
     Text,
-    TextInput,
     Pressable,
-    FlatList,
     View,
+    ScrollView,
     StyleSheet,
+    Link,
+    Image,
 } from 'react-native'
 import Screen from '../../components/screen'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getBusiness } from '../../api/business-service'
-import { updateUser, deleteUser } from '../../api/user-service'
 import { useAuth } from '../../context/auth-context'
-import { Link, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React from 'react'
-import Item from '../../plantillas/business-item'
 import { Ionicons } from '@expo/vector-icons'
-import globalStyles from '../../styles/global'
+import ProfileNoUser from '../../plantillas/profile-no-user'
 
 export default function ProfileScreen() {
-    const { user, isAuthenticated, logout, checkAuthStatus } = useAuth()
-    const [name, setName] = React.useState('')
-    const [email, setEmail] = React.useState('')
-    const [birthdate, setBirthdate] = React.useState('')
-    const [businesses, setBusinesses] = React.useState([])
-    const [userId, setUserId] = React.useState('')
-    const [isEditting, setIsEditting] = React.useState(false)
+    const { user, logout } = useAuth()
     const router = useRouter()
 
-    React.useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await AsyncStorage.getItem('user')
-                if (userData) {
-                    const parsedUser = JSON.parse(userData)
-                    setName(parsedUser.name || '')
-                    setEmail(parsedUser.email || '')
-                    setBirthdate(parsedUser.birthdate || '')
-                    setUserId(parsedUser._id || '')
-                }
-            } catch (error) {
-                console.error('Error fetching user data:', error)
-            }
-        }
-
-        const fetchBusinesses = async () => {
-            try {
-                const data = await getBusiness()
-                setBusinesses(data || [])
-            } catch (error) {
-                console.error('Error fetching businesses:', error)
-            }
-        }
-
-        fetchUserData()
-        fetchBusinesses()
-    }, [])
+    const name = user?.name || ''
+    const email = user?.email || ''
 
     const handleLogout = async () => {
         await logout()
         router.replace('/login')
-    }
-
-    const handleEdit = () => setIsEditting(true)
-
-    const handleSave = () => {
-        setIsEditting(false)
-        const body = { name, email, birthdate }
-        updateUser(userId, body)
     }
 
     const handleDeleteAccount = async () => {
@@ -74,125 +33,192 @@ export default function ProfileScreen() {
             await deleteUser(userId)
             await logout()
             router.push('/login')
-        } catch (error) {
-            console.error('Error deleting account:', error)
-        }
+        } catch (error) {}
     }
 
-    return (
+    return user ? (
         <Screen>
-            {isAuthenticated ? (
-                <View>
-                    <View style={globalStyles.card}>
-                        <TextInput
-                            value={name}
-                            onChangeText={setName}
-                            style={globalStyles.textField}
-                            editable={isEditting}
-                            placeholder="Nombre"
-                        />
-                        <TextInput
-                            value={email}
-                            onChangeText={setEmail}
-                            style={globalStyles.textField}
-                            editable={isEditting}
-                            placeholder="Email"
-                        />
-                        <TextInput
-                            value={birthdate}
-                            onChangeText={setBirthdate}
-                            style={globalStyles.textField}
-                            editable={isEditting}
-                            placeholder="Fecha de nacimiento"
-                        />
-                    </View>
-
-                    <Text style={globalStyles.title}>Mis negocios:</Text>
-                    {businesses.filter(
-                        business => String(business.owner_id) === String(userId)
-                    ).length > 0 ? (
-                        <FlatList
-                            style={{ width: '100%', maxHeight: 250 }}
-                            data={businesses.filter(
-                                business =>
-                                    String(business.owner_id) === String(userId)
+            <ScrollView style={{ flex: 1 }}>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginVertical: 20,
+                    }}
+                >
+                    <View style={styles.profilePictureContainer}>
+                        <View style={styles.profilePicWrapper}>
+                            {user?.profile_pic ? (
+                                <Image
+                                    source={{ uri: user.profile_pic }}
+                                    style={styles.profile_pic}
+                                />
+                            ) : (
+                                <Ionicons
+                                    name="person-circle"
+                                    size={120}
+                                    color="#ccc"
+                                    style={styles.profile_pic}
+                                />
                             )}
-                            renderItem={({ item }) => <Item business={item} />}
-                            keyExtractor={item =>
-                                item._id ?? item.id ?? item.name
-                            }
-                        />
-                    ) : (
-                        <Text>No tienes negocios registrados.</Text>
-                    )}
+                        </View>
+                        <Pressable
+                            style={styles.btn_update_pp}
+                            onPress={() => router.push('/upload-profile-pic')}
+                        >
+                            <Ionicons name="camera" size={20} color="#000" />
+                        </Pressable>
+                    </View>
+                    <View style={{ marginLeft: 20, flex: 1 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
+                            {name}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: '#555' }}>
+                            {email}
+                        </Text>
+                    </View>
+                </View>
 
-                    {isEditting ? (
-                        <Pressable
-                            style={[
-                                globalStyles.button,
-                                globalStyles.button.green,
-                            ]}
-                            onPress={handleSave}
-                        >
-                            <Text style={{ color: '#000' }}>
-                                Guardar cambios
-                            </Text>
-                        </Pressable>
-                    ) : (
-                        <Pressable
-                            style={globalStyles.button}
-                            onPress={handleEdit}
-                        >
-                            <Text style={{ color: '#fff' }}>Editar datos</Text>
-                        </Pressable>
-                    )}
+                <View style={{ alignItems: 'right' }}>
+                    <Pressable
+                        style={styles.buttonContainer}
+                        onPress={() => router.push('/edit-profile')}
+                    >
+                        <Ionicons
+                            name="create-outline"
+                            size={16}
+                            color="#000"
+                        />
+                        <Text style={{ marginBottom: 10 }}>Editar perfil</Text>
+                    </Pressable>
 
                     <Pressable
-                        style={globalStyles.button}
-                        onPress={() => router.push('/change-password')}
+                        style={styles.buttonContainer}
+                        onPress={() => router.push('/businesses-list')}
                     >
-                        <Text style={{ color: '#fff' }}>
-                            Cambiar contraseña
+                        <Ionicons name="heart-outline" size={16} color="#000" />
+                        <Text style={{ marginBottom: 10 }}>Favoritos</Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.buttonContainer}
+                        onPress={() => router.push('/businesses-list')}
+                    >
+                        <Ionicons
+                            name="briefcase-outline"
+                            size={16}
+                            color="#000"
+                        />
+                        <Text style={{ marginBottom: 10 }}>
+                            Ver mis negocios
                         </Text>
                     </Pressable>
 
                     <Pressable
-                        style={[globalStyles.button]}
-                        onPress={() => router.push('/new-business')}
+                        style={styles.buttonContainer}
+                        onPress={() => router.push('/bookings-panel')}
                     >
-                        <Text style={{ color: '#fff' }}>Registrar negocio</Text>
+                        <Ionicons
+                            name="calendar-outline"
+                            size={16}
+                            color="#000"
+                        />
+                        <Text style={{ marginBottom: 10 }}>
+                            Ver todas mis reservas
+                        </Text>
                     </Pressable>
 
                     <Pressable
-                        style={[globalStyles.button, globalStyles.button.red]}
-                        onPress={handleDeleteAccount}
+                        style={styles.buttonContainer}
+                        onPress={() => router.push('/settings')}
                     >
-                        <Text style={{ color: '#fff' }}>Eliminar cuenta</Text>
+                        <Ionicons
+                            name="settings-outline"
+                            size={16}
+                            color="#000"
+                        />
+                        <Text style={{ marginBottom: 20 }}>
+                            Configuraciones
+                        </Text>
                     </Pressable>
 
                     <Pressable
-                        style={[globalStyles.button, globalStyles.button.red]}
+                        style={styles.buttonContainer}
                         onPress={handleLogout}
                     >
-                        <Text style={{ color: '#fff' }}>Cerrar Sesión</Text>
+                        <Ionicons
+                            name="log-out-outline"
+                            size={16}
+                            color="#000"
+                            style={{
+                                transform: [{ rotate: '180deg' }],
+                                color: '#FF4500',
+                            }}
+                        />
+                        <Text style={{ color: '#FF4500' }}>Cerrar sesión</Text>
                     </Pressable>
                 </View>
-            ) : (
-                <Pressable
-                    style={globalStyles.button}
-                    onPress={() => router.push('/login')}
-                >
-                    <Text style={{ color: '#fff' }}>Iniciar Sesión</Text>
-                </Pressable>
-            )}
+            </ScrollView>
         </Screen>
+    ) : (
+        <ProfileNoUser />
     )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
+    buttonContainer: {
+        flexDirection: 'row',
+        gap: 5,
+    },
+
+    profilePictureContainer: {
         alignItems: 'center',
+        marginVertical: 20,
+    },
+
+    profilePicWrapper: {
+        position: 'relative',
+        width: 120,
+        height: 120,
+    },
+
+    profile_pic: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+
+        backgroundColor: '#f0f0f0',
+        borderWidth: 3,
+        borderColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+
+    btn_update_pp: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        width: 32,
+        height: 32,
         justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
 })

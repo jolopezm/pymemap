@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { useAuth } from '../context/auth-context'
 import { changePassword } from '../api/user-service'
 import ProtectedRoute from '../components/protected-route'
-import globalStyles from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 import Screen from '../components/screen'
 
 export default function ChangePassword() {

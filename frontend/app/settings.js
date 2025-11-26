@@ -1,65 +1,101 @@
-import { View, Text, Button, Pressable, ScrollView } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../context/auth-context';
-import globalStyles from '../styles/global';
-import Screen from '../components/screen'
-
-//configurar preferencias de uso de datos
-//terminos y condiciones, politica de privacidad
-//notificaciones, preferencias de idioma, ubicacion, etc
+import { View, Text, ScrollView } from 'react-native'
+import { Link, useRouter } from 'expo-router'
+import { useAuth } from '../context/auth-context'
+import { globalStyles, colors } from '../styles/theme'
+import Button from '../components/ui/Button'
+import DismissKeyboard from '../components/dismiss-keyboard'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 
 export default function Settings() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
+    const { user, isAuthenticated, logout } = useAuth()
+    const router = useRouter()
 
-  const handleLogout = async () => {
-    await logout();
-    // Redirige al usuario a la pantalla de login o a la misma home
-    // para que el estado de la UI se refresque correctamente.
-    router.replace('/login');
-  };
+    const handleLogout = async () => {
+        await logout()
+        router.replace('/login')
+    }
 
-  return (
-    <Screen>
-      <Text style={globalStyles.title}>
-        Bienvenido, {isAuthenticated ? user?.name : 'Invitado'}
-      </Text>
+    return (
+        <DismissKeyboard>
+            <LinearGradient
+                colors={['#9B59B6', '#F8BBD9']}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+            >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View
+                        style={[
+                            globalStyles.gradientContainer,
+                            { paddingVertical: 30 },
+                        ]}
+                    >
+                        <View style={globalStyles.logoContainer}>
+                            <Ionicons
+                                name="settings"
+                                size={64}
+                                color="#FFFFFF"
+                            />
+                        </View>
 
-      {isAuthenticated ? (
-        <View>
-          <Pressable
-            style={[globalStyles.button]}
-            onPress={() => router.push('/profile')}
-          >
-            <Text style={{ color: '#fff' }}>Ver perfil</Text>
-          </Pressable>
+                        <Text style={globalStyles.title}>
+                            Bienvenido,{' '}
+                            {isAuthenticated ? user?.name : 'Invitado'}
+                        </Text>
 
-          <Pressable
-            style={[globalStyles.button]}
-            onPress={() => router.push('/new-business')}
-          >
-            <Text style={{ color: '#fff' }}>Registrar negocio</Text>
-          </Pressable>
+                        {isAuthenticated ? (
+                            <View style={{ width: '100%' }}>
+                                <Button
+                                    title="Ver perfil"
+                                    variant="secondary"
+                                    onPress={() => router.push('/profile')}
+                                    style={{ marginBottom: 10 }}
+                                />
 
-          <Pressable
-            style={[globalStyles.button, globalStyles.button.red]}
-            onPress={handleLogout}
-          >
-            <Text style={{ color: '#fff' }}>Cerrar Sesión</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <Pressable
-          style={globalStyles.button}
-          onPress={() => router.push('/login')}
-        >
-          <Text style={{ color: '#fff' }}>Iniciar Sesión</Text>
-        </Pressable>
-      )}
+                                <Button
+                                    title="Registrar negocio"
+                                    variant="primary"
+                                    onPress={() => router.push('/new-business')}
+                                    style={{ marginBottom: 10 }}
+                                />
 
-      <Link href="/about">
-        <Text style={{ color: 'blue' }}>Sobre nosotros</Text>
-      </Link>
-    </Screen>
-  );
+                                <Button
+                                    title="Cerrar Sesión"
+                                    variant="primary"
+                                    onPress={handleLogout}
+                                    style={{
+                                        marginBottom: 20,
+                                        backgroundColor: '#E74C3C',
+                                    }}
+                                />
+                            </View>
+                        ) : (
+                            <Button
+                                title="Iniciar Sesión"
+                                variant="primary"
+                                onPress={() => router.push('/login')}
+                                style={{ marginBottom: 20 }}
+                            />
+                        )}
+
+                        <Button
+                            title="ℹ️ Sobre nosotros"
+                            variant="outline"
+                            onPress={() => router.push('/about')}
+                            style={{
+                                marginTop: 20,
+                                borderColor: 'rgba(255, 255, 255, 0.7)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            }}
+                        />
+                    </View>
+                </ScrollView>
+            </LinearGradient>
+        </DismissKeyboard>
+    )
 }

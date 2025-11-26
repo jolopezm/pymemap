@@ -14,17 +14,17 @@ def generate_auth_code():
     code = ''.join(random.choice(characters) for _ in range(6))
     return code
 
-def save_code_to_db(email: str, code: str):
+async def save_code_to_db(email: str, code: str):
     auth_code_entry = {
         "email": email,
         "code": code,
         "expires_at": datetime.utcnow() + timedelta(minutes=10)
     }
 
-    db.auth_codes.insert_one(auth_code_entry)
-    db.auth_codes.create_index("expires_at", expireAfterSeconds=0)
+    await db.auth_codes.insert_one(auth_code_entry)
+    await db.auth_codes.create_index("expires_at", expireAfterSeconds=0)
 
-def send_auth_code_via_email(email: str):
+async def send_auth_code_via_email(email: str):
     code = generate_auth_code()
     params: resend.Emails.SendParams = {
         "from": "onboarding@resend.dev",
@@ -34,7 +34,7 @@ def send_auth_code_via_email(email: str):
     }
     
     try:
-        save_code_to_db(email, code)    
+        await save_code_to_db(email, code)    
         email_response = resend.Emails.send(params)
         return {'response': email_response, 'code': code}
     except resend.exceptions.ResendError as e:

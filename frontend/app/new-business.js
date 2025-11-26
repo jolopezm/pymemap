@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Text } from 'react-native'
+import { View, Text, ScrollView } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { createBusiness } from '../api/business-service'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fetchAddressSuggestions } from '../api/gmaps-service'
-import Screen from '../components/screen'
+import { globalStyles, colors } from '../styles/theme'
+import Button from '../components/ui/Button'
+import DismissKeyboard from '../components/dismiss-keyboard'
+import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 import BusinessDataForm from '../plantillas/business-data-form'
 import AddressMapForm from '../plantillas/address-map-form'
 import { Toast } from 'toastify-react-native'
@@ -84,15 +88,55 @@ export default function NewBusiness() {
     }
 
     return (
-        <Screen>
-            {step === 1 ? (
-                <BusinessDataForm {...formProps} />
-            ) : (
-                <AddressMapForm {...addressProps} />
-            )}
-            <Link href="/home">
-                <Text style={{ color: 'blue' }}>Ir a home</Text>
-            </Link>
-        </Screen>
+        <DismissKeyboard>
+            <LinearGradient
+                colors={['#9B59B6', '#F8BBD9']}
+                style={{ flex: 1 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+            >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View
+                        style={[
+                            globalStyles.gradientContainer,
+                            { paddingVertical: 30 },
+                        ]}
+                    >
+                        <View style={globalStyles.logoContainer}>
+                            <Ionicons
+                                name="storefront"
+                                size={64}
+                                color="#FFFFFF"
+                            />
+                        </View>
+
+                        <Text style={globalStyles.title}>
+                            {step === 1 ? 'Nuevo Negocio' : 'Ubicación'}
+                        </Text>
+
+                        {step === 1 ? (
+                            <BusinessDataForm {...formProps} />
+                        ) : (
+                            <AddressMapForm {...addressProps} />
+                        )}
+
+                        <Button
+                            title="🏠 Volver al inicio"
+                            variant="outline"
+                            onPress={() => router.push('/home')}
+                            style={{
+                                marginTop: 20,
+                                borderColor: 'rgba(255, 255, 255, 0.7)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            }}
+                        />
+                    </View>
+                </ScrollView>
+            </LinearGradient>
+        </DismissKeyboard>
     )
 }

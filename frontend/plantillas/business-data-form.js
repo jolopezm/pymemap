@@ -1,7 +1,7 @@
 import React from 'react'
 import { Text, TextInput, Pressable } from 'react-native'
 import DropDownPicker from 'react-native-dropdown-picker'
-import globalStyles from '../styles/global'
+import { globalStyles, colors } from '../styles/theme'
 
 export default function BusinessDataForm({
     name,
@@ -15,10 +15,15 @@ export default function BusinessDataForm({
 }) {
     const [open, setOpen] = React.useState(false)
     const [items, setItems] = React.useState([
-        { label: 'Restaurante', value: 'restaurante' },
-        { label: 'Tienda', value: 'tienda' },
-        { label: 'Cafetería', value: 'cafeteria' },
-        { label: 'Otro', value: 'otro' },
+        { label: 'Comida', value: 'comida' },
+        { label: 'Servicios', value: 'servicios' },
+        { label: 'Retail', value: 'retail' },
+        { label: 'Salud', value: 'salud' },
+        { label: 'Belleza', value: 'belleza' },
+        { label: 'Educación', value: 'educacion' },
+        { label: 'Hogar', value: 'hogar' },
+        { label: 'Otros', value: 'otros' },
+        
     ])
 
     return (

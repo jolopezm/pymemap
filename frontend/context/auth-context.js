@@ -1,92 +1,125 @@
-import { createContext, useState, useContext, useEffect } from 'react'
+import React, {
+    createContext,
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+} from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-    getCurrentUser,
-    login as loginService,
-    logout as logoutService,
-} from '../api/auth-service'
+import { login as loginService, getCurrentUser } from '../api/auth-service'
+import { clearAllCache } from '../utils/cache-manager'
+import logger from '../utils/logger'
 
-const AuthContext = createContext({})
+const AuthContext = createContext()
 
-export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider')
-    }
-    return context
+const STORAGE_KEYS = {
+    USER: '@user_data',
+    TOKEN: '@auth_token',
+    AUTH_DATA: '@auth_data',
 }
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isFromCache, setIsFromCache] = useState(false)
 
     useEffect(() => {
-        checkAuthStatus()
+        const loadUser = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem(STORAGE_KEYS.USER)
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser)
+                    setUser(userData)
+                    setIsFromCache(true)
+
+                    // Intentar refrescar en segundo plano
+                    try {
+                        const freshData = await getCurrentUser()
+                        if (
+                            JSON.stringify(freshData) !==
+                            JSON.stringify(userData)
+                        ) {
+                            await AsyncStorage.setItem(
+                                STORAGE_KEYS.USER,
+                                JSON.stringify(freshData)
+                            )
+                            setUser(freshData)
+                            setIsFromCache(false)
+                        }
+                    } catch (error) {
+                        logger.log(
+                            '⚠️ No se pudo actualizar usuario, usando caché'
+                        )
+                    }
+                }
+            } catch (error) {
+                logger.error('Error loading user from storage:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadUser()
     }, [])
 
-    const checkAuthStatus = async () => {
+    const login = useCallback(async ({ email, password }) => {
         try {
-            const token = await AsyncStorage.getItem('token')
+            await loginService({ email, password })
+            const userData = await getCurrentUser()
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.USER,
+                JSON.stringify(userData)
+            )
+            setUser(userData)
+            setIsFromCache(false)
 
-            if (token) {
-                const userData = await getCurrentUser()
-                setUser(userData)
-                setIsAuthenticated(true)
-            }
-        } catch (error) {
-            setUser(null)
-            setIsAuthenticated(false)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const login = async userData => {
-        try {
-            await loginService(userData)
-            const user = await getCurrentUser()
-
-            setUser(user)
-            setIsAuthenticated(true)
-
-            return { success: true, data: user }
+            return userData
         } catch (error) {
             throw error
         }
-    }
+    }, [])
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
-            await logoutService()
+            // Limpiar TODO el caché de la aplicación
+            await clearAllCache()
             setUser(null)
-            setIsAuthenticated(false)
+            setIsFromCache(false)
         } catch (error) {
-            return {
-                success: false,
-                error: error.response?.data?.detail || 'Error al cerrar sesión',
-            }
+            // Error manejado silenciosamente
         }
-    }
+    }, [])
 
-    const refreshUser = async () => {
+    const refreshUser = useCallback(async () => {
         try {
-            const userData = await getCurrentUser() // Tu función para obtener datos del usuario
+            const userData = await getCurrentUser()
+            await AsyncStorage.setItem(
+                STORAGE_KEYS.USER,
+                JSON.stringify(userData)
+            )
             setUser(userData)
+            setIsFromCache(false)
+            return userData
         } catch (error) {
-            console.error('Error refreshing user:', error)
+            logger.error('Error refreshing user:', error)
+            throw error
         }
-    }
+    }, [])
 
-    const value = {
-        user,
-        loading,
-        isAuthenticated,
-        login,
-        logout,
-        checkAuthStatus,
-        refreshUser,
-    }
+    const value = useMemo(
+        () => ({
+            user,
+            login,
+            logout,
+            refreshUser,
+            loading,
+            isFromCache,
+        }),
+        [user, loading, isFromCache, login, logout, refreshUser]
+    )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
+export const useAuth = () => React.useContext(AuthContext)
+

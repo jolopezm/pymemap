@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from bson import ObjectId
 
 from ..db import db
@@ -6,6 +6,7 @@ from app.models.users import User, UserResponse, UserUpdate, ResetPasswordReques
 from app.models.token import TokenData
 from ..auth import get_current_user, get_password_hash, verify_password
 from ..utils.password_validator import PasswordValidation
+from ..services.upload_images_to_gcp import upload_profile_picture as upload_to_gcp
 
 router = APIRouter()
 
@@ -201,3 +202,45 @@ async def validate_password_endpoint(request: dict):
         "requirements": validation_result['requirements'],
         "errors": validation_result['errors'] if not validation_result['valid'] else []
     }
+
+@router.post("/upload-profile-picture/{user_id}", response_model=UserResponse)
+async def upload_profile_picture_endpoint(user_id: str, file: UploadFile = File(...)):
+    """Sube una nueva foto de perfil para el usuario"""
+    
+    # Limpiar el user_id
+    user_id = user_id.strip()
+    
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato de ID de usuario inválido: {user_id}"
+        )
+
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Usuario no encontrado con ID: {user_id}"
+        )
+
+    try:
+        # Subir imagen a GCP (Ejecutar en threadpool para no bloquear)
+        from fastapi.concurrency import run_in_threadpool
+        image_url = await run_in_threadpool(upload_to_gcp, file, bucket_name="pymap_profile_pics")
+        
+        # Actualizar el perfil del usuario con la nueva URL
+        await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"profile_pic": image_url}}
+        )
+
+        updated_user = await db.users.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+        return UserResponse(**updated_user)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al subir la imagen: {str(e)}"
+        )

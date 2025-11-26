@@ -9,12 +9,16 @@ import {
     View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import DismissKeyboard from './dismiss-keyboard'
+import ErrorBoundary from './ErrorBoundary'
 
 export default function Screen({
     children,
     scroll = true,
     contentContainerStyle,
     maxWidth,
+    dismissKeyboard = true,
+    refreshControl,
 }) {
     const { width, height } = Dimensions.get('window')
     const isTablet = Math.min(width, height) >= 600
@@ -28,6 +32,7 @@ export default function Screen({
                   contentContainerStyle,
               ],
               keyboardShouldPersistTaps: 'handled',
+              refreshControl: refreshControl,
           }
         : {
               style: [
@@ -36,37 +41,35 @@ export default function Screen({
               ],
           }
 
-    // Solo usar TouchableWithoutFeedback en mobile
-    const Wrapper =
-        Platform.OS === 'web' ? React.Fragment : TouchableWithoutFeedback
-    const wrapperProps =
-        Platform.OS === 'web'
-            ? {}
-            : { onPress: Keyboard.dismiss, accessible: false }
+    // Wrapper para dismiss keyboard mejorado
+    const Wrapper = dismissKeyboard ? DismissKeyboard : React.Fragment
+    const wrapperProps = dismissKeyboard ? { style: { flex: 1 } } : {}
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                <Wrapper {...wrapperProps}>
-                    <Container {...containerProps}>
-                        <View
-                            style={{
-                                flexGrow: 1,
-                                width: '100%',
-                                alignSelf: resolvedMaxWidth
-                                    ? 'center'
-                                    : 'stretch',
-                                maxWidth: resolvedMaxWidth,
-                            }}
-                        >
-                            {children}
-                        </View>
-                    </Container>
-                </Wrapper>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+        <ErrorBoundary>
+            <SafeAreaView style={{ flex: 1 }}>
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <Wrapper {...wrapperProps}>
+                        <Container {...containerProps}>
+                            <View
+                                style={{
+                                    flexGrow: 1,
+                                    width: '100%',
+                                    alignSelf: resolvedMaxWidth
+                                        ? 'center'
+                                        : 'stretch',
+                                    maxWidth: resolvedMaxWidth,
+                                }}
+                            >
+                                {children}
+                            </View>
+                        </Container>
+                    </Wrapper>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </ErrorBoundary>
     )
 }

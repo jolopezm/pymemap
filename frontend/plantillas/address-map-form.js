@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
     View,
     Text,
@@ -7,9 +7,14 @@ import {
     FlatList,
     Pressable,
     Platform,
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
 } from 'react-native'
-import globalStyles from '../styles/global'
+import { Ionicons } from '@expo/vector-icons'
+import { globalStyles, colors } from '../styles/theme'
 import GmapsView from '../components/gmaps-view'
+import { getCurrentLocation } from '../utils/geolocation'
 
 export default function AddressMapForm({
     address,
@@ -21,7 +26,13 @@ export default function AddressMapForm({
     setError,
     onBack,
     onSubmit,
+    // Nuevas props para coordenadas
+    latitude,
+    longitude,
+    setLatitude,
+    setLongitude,
 }) {
+    const [isGettingLocation, setIsGettingLocation] = useState(false)
     const handleAddressChange = async text => {
         setAddress(text)
         if (text.length > 2) {
@@ -41,13 +52,56 @@ export default function AddressMapForm({
         setSuggestions([])
     }
 
+    const handleGetCurrentLocation = async () => {
+        try {
+            setIsGettingLocation(true)
+            const location = await getCurrentLocation()
+            
+            if (location) {
+                setAddress(location.address)
+                if (setLatitude && setLongitude) {
+                    setLatitude(location.latitude)
+                    setLongitude(location.longitude)
+                }
+                Alert.alert('Ubicación obtenida', 'Se usó tu ubicación actual')
+            } else {
+                Alert.alert(
+                    'Error',
+                    'No se pudo obtener tu ubicación. Verifica los permisos.'
+                )
+            }
+        } catch (err) {
+            console.error('Error obteniendo ubicación:', err)
+            Alert.alert('Error', 'No se pudo obtener tu ubicación')
+        } finally {
+            setIsGettingLocation(false)
+        }
+    }
+
     const isMobile = Platform.OS === 'ios' || Platform.OS === 'android'
 
     return (
         <>
             <Text style={globalStyles.title}>Dirección del negocio</Text>
+            
+            {/* Botón para usar ubicación actual */}
+            <Pressable
+                style={styles.locationButton}
+                onPress={handleGetCurrentLocation}
+                disabled={isGettingLocation}
+            >
+                {isGettingLocation ? (
+                    <ActivityIndicator size="small" color="#9B59B6" />
+                ) : (
+                    <Ionicons name="location" size={20} color="#9B59B6" />
+                )}
+                <Text style={styles.locationButtonText}>
+                    {isGettingLocation ? 'Obteniendo ubicación...' : 'Usar mi ubicación actual'}
+                </Text>
+            </Pressable>
+
             <TextInput
-                placeholder="Address"
+                placeholder="Buscar dirección"
                 value={address}
                 onChangeText={handleAddressChange}
                 style={globalStyles.textField}
@@ -79,11 +133,22 @@ export default function AddressMapForm({
                 <View style={{ height: 200, width: '100%', marginBottom: 20 }}>
                     <GmapsView
                         address={address}
+                        latitude={latitude}
+                        longitude={longitude}
                         height="200px"
                         isOnMobile={isMobile}
                     />
                 </View>
             ) : null}
+            
+            {latitude && longitude && (
+                <View style={styles.coordsInfo}>
+                    <Text style={styles.coordsText}>
+                        📍 Coordenadas: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                    </Text>
+                </View>
+            )}
+            
             <Pressable style={globalStyles.button} onPress={onSubmit}>
                 <Text style={{ color: '#fff' }}>Confirmar</Text>
             </Pressable>
@@ -94,3 +159,35 @@ export default function AddressMapForm({
         </>
     )
 }
+
+const styles = StyleSheet.create({
+    locationButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F5F5F5',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#9B59B6',
+        gap: 8,
+    },
+    locationButtonText: {
+        color: '#9B59B6',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    coordsInfo: {
+        backgroundColor: '#F0F0F0',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+    },
+    coordsText: {
+        fontSize: 12,
+        color: '#666',
+        fontFamily: 'monospace',
+    },
+})

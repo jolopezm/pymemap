@@ -1,26 +1,38 @@
 {
     "expo": {
-        "name": "pymap",
+        "name": "PyMap",
         "slug": "pymap",
         "version": "1.0.0",
+        "scheme": "pymap",
+        "host": "checkout",
+        "pathPrefix": "/congrats",
+        "category": ["BROWSABLE", "DEFAULT"],
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
-        "newArchEnabled": true,
         "splash": {
             "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
         "ios": {
-            "supportsTablet": true
+            "supportsTablet": true,
+            "infoPlist": {
+                "NSLocationWhenInUseUsageDescription": "PymeMap necesita tu ubicación para mostrarte negocios cercanos y calcular distancias.",
+                "NSLocationAlwaysAndWhenInUseUsageDescription": "PymeMap necesita tu ubicación para mostrarte negocios cercanos y calcular distancias."
+            }
         },
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "edgeToEdgeEnabled": true
+            "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+            "config": {
+                "googleMaps": {
+                    "apiKey": "AIzaSyD5jyA0Asz6GD_d-ojqY09FXxfM4VnBkiU"
+                }
+            }
         },
         "web": {
             "favicon": "./assets/favicon.png",
