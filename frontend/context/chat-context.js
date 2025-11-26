@@ -22,15 +22,13 @@ const STORAGE_KEYS = {
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
 export const ChatProvider = ({ children }) => {
-    const { user } = useAuth()
+    const { user, loading: authLoading } = useAuth()
     const [chats, setChats] = useState([])
     const [otherUsers, setOtherUsers] = useState({})
     const [unreadCount, setUnreadCount] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [isFromCache, setIsFromCache] = useState(false)
-
-    // ============= FUNCIONES DE CACHÉ =============
 
     const saveToCache = async (chatsData, usersData) => {
         try {
@@ -39,9 +37,7 @@ export const ChatProvider = ({ children }) => {
                 [STORAGE_KEYS.OTHER_USERS, JSON.stringify(usersData)],
                 [STORAGE_KEYS.CACHE_TIMESTAMP, Date.now().toString()],
             ])
-        } catch (error) {
-            // Error manejado silenciosamente
-        }
+        } catch (error) {}
     }
 
     const loadFromCache = async () => {
@@ -267,6 +263,8 @@ export const ChatProvider = ({ children }) => {
     }, [fetchChats])
 
     useEffect(() => {
+        if (authLoading) return // Wait for auth to initialize
+
         if (user) {
             fetchChats()
         } else {
@@ -276,7 +274,7 @@ export const ChatProvider = ({ children }) => {
             setLoading(false)
             clearCache() // Limpiar caché al cerrar sesión
         }
-    }, [user, fetchChats, clearCache])
+    }, [user, authLoading, fetchChats, clearCache])
 
     const value = useMemo(
         () => ({
@@ -317,4 +315,3 @@ export const useChat = () => {
     }
     return context
 }
-

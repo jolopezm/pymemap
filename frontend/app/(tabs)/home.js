@@ -24,8 +24,15 @@ import logger from '../../utils/logger'
 
 export default function HomeScreen() {
     useAuth()
-    const { userLocation, updateLocation, fetchLocation, userCoords, isLoadingLocation } = useLocation()
-    const { cardWidth, cardImageHeight, featuredSize, categorySize } = useResponsiveDimensions()
+    const {
+        userLocation,
+        updateLocation,
+        fetchLocation,
+        userCoords,
+        isLoadingLocation,
+    } = useLocation()
+    const { cardWidth, cardImageHeight, featuredSize, categorySize } =
+        useResponsiveDimensions()
     const [, setServices] = useState([])
     const [selectedCategory, setSelectedCategory] = useState(null)
     const [showLocationPicker, setShowLocationPicker] = useState(false)
@@ -46,14 +53,12 @@ export default function HomeScreen() {
         }
         fetchServices()
 
-        // Intentar obtener ubicación automáticamente si no tenemos coordenadas
         if (!userCoords && !isLoadingLocation) {
             fetchLocation()
         }
     }, [])
 
     const { refreshing, onRefresh } = useRefresh(refetch)
-
 
     const filteredBusinesses = useMemo(() => {
         if (!selectedCategory || selectedCategory === 'Todos') return businesses
@@ -68,8 +73,12 @@ export default function HomeScreen() {
         if (nearbyStoresRef.current && scrollViewRef.current) {
             nearbyStoresRef.current.measureLayout(
                 scrollViewRef.current,
-                (_x, y) => scrollViewRef.current.scrollTo({ y: y - 20, animated: true }),
-                () => { }
+                (_x, y) =>
+                    scrollViewRef.current.scrollTo({
+                        y: y - 20,
+                        animated: true,
+                    }),
+                () => {}
             )
         }
     }
@@ -79,16 +88,22 @@ export default function HomeScreen() {
         setTimeout(() => scrollToNearbyStores(), 100)
     }, [])
 
-    const handleBusinessPress = useCallback(businessId => {
-        router.push(`/business-profile?id=${businessId}`)
-    }, [router])
+    const handleBusinessPress = useCallback(
+        businessId => {
+            router.push(`/business-profile?id=${businessId}`)
+        },
+        [router]
+    )
 
-    const handleLocationSelected = useCallback(location => {
-        updateLocation(
-            { latitude: location.latitude, longitude: location.longitude },
-            location.address
-        )
-    }, [updateLocation])
+    const handleLocationSelected = useCallback(
+        location => {
+            updateLocation(
+                { latitude: location.latitude, longitude: location.longitude },
+                location.address
+            )
+        },
+        [updateLocation]
+    )
 
     const renderHeader = () => (
         <View style={styles.header}>
@@ -96,7 +111,10 @@ export default function HomeScreen() {
                 location={userLocation}
                 onPress={() => setShowLocationPicker(true)}
             />
-            <SearchBar editable={false} onPress={() => router.push('/search')} />
+            <SearchBar
+                editable={false}
+                onPress={() => router.push('/search')}
+            />
         </View>
     )
 

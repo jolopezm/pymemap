@@ -38,7 +38,6 @@ export default function BookingsPanel() {
         setLoading(true)
         try {
             const data = await getAllMyBusinessBookings()
-            // Ordenar por fecha y estado (pending primero)
             const sorted = data.sort((a, b) => {
                 if (a.status === 'pending' && b.status !== 'pending') return -1
                 if (a.status !== 'pending' && b.status === 'pending') return 1
@@ -65,7 +64,6 @@ export default function BookingsPanel() {
 
             await confirmBooking(bookingId)
 
-            // Enviar notificación al cliente
             if (booking?.client_id) {
                 try {
                     const notifPayload = {
@@ -105,7 +103,6 @@ export default function BookingsPanel() {
             const booking = bookings.find(b => (b._id || b.id) === bookingId)
             await rejectBooking(bookingId)
 
-            // Enviar notificación al cliente
             if (booking?.client_id) {
                 try {
                     const notifPayload = {
@@ -271,7 +268,6 @@ export default function BookingsPanel() {
         { label: `❌ Canceladas (${cancelledCount})`, value: 'cancelled' },
     ]
 
-    // Filtrar bookings según el estado seleccionado
     const filteredBookings =
         filterStatus === 'all'
             ? bookings

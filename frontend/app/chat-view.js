@@ -42,17 +42,14 @@ export default function ChatView() {
             const messageData = await getMessages(validChatId)
             setMessages(messageData)
         } catch (error) {
-            // Error manejado silenciosamente
         }
     })
 
-    // Validar chatId
     const validChatId = React.useMemo(() => {
         if (!chatId) return null
 
         const cleanId = String(chatId).trim()
 
-        // Validar que sea un ObjectId válido de MongoDB (24 caracteres hexadecimales)
         const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(cleanId)
 
         if (!isValidObjectId) {
@@ -62,10 +59,8 @@ export default function ChatView() {
         return cleanId
     }, [chatId])
 
-    // Obtener información del otro usuario
     const otherUser = otherUsers[validChatId]
 
-    // Actualizar el título del header con el nombre del otro usuario
     React.useEffect(() => {
         if (otherUser?.name) {
             navigation.setOptions({
@@ -89,20 +84,16 @@ export default function ChatView() {
             }
 
             try {
-                // 1. Obtener mensajes
                 const messageData = await getMessages(validChatId)
                 setMessages(messageData)
 
-                // 2. Intentar marcar como leído (con manejo de errores)
                 try {
                     const userId = user.id || user._id
 
                     await markChatAsReadAPI(validChatId, userId)
 
-                    // Marcar el chat como leído en el contexto local
                     markChatAsRead(validChatId)
                 } catch (markError) {
-                    // No bloquear la carga de mensajes si falla marcar como leído
                     logger.error('⚠️ Error marcando chat como leído:', {
                         error: markError.message,
                         status: markError.response?.status,
@@ -110,10 +101,8 @@ export default function ChatView() {
                         chatId: validChatId,
                     })
 
-                    // Aún así, intentar marcar en el contexto local
                     markChatAsRead(validChatId)
 
-                    // Solo mostrar error si es crítico
                     if (markError.response?.status === 400) {
                         logger.error(
                             '🚨 Error crítico 400 - chatId posiblemente inválido'
@@ -135,7 +124,6 @@ export default function ChatView() {
         fetchMessages()
     }, [validChatId, user, markChatAsRead])
 
-    // Auto-scroll al final cuando se cargan mensajes o se envía uno nuevo
     React.useEffect(() => {
         if (messages.length > 0 && scrollViewRef.current) {
             setTimeout(() => {
@@ -162,14 +150,11 @@ export default function ChatView() {
         }
 
         try {
-            // Agregar mensaje temporalmente
             setMessages(prev => [...prev, tempMessage])
             setMessageText('')
 
-            // Enviar al servidor
             const sentMessage = await sendMessage(messageData)
 
-            // Reemplazar mensaje temporal con el real
             setMessages(prev =>
                 prev.map(msg =>
                     msg.id === tempMessage.id || msg._id === tempMessage._id
@@ -182,7 +167,6 @@ export default function ChatView() {
                 )
             )
 
-            // Actualizar el último mensaje en el contexto
             updateLastMessage(validChatId, sentMessage)
         } catch (error) {
             logger.error('❌ Error enviando mensaje:', {
@@ -191,7 +175,6 @@ export default function ChatView() {
                 data: error.response?.data,
             })
 
-            // Eliminar mensaje temporal
             setMessages(prev =>
                 prev.filter(
                     msg =>
@@ -199,13 +182,10 @@ export default function ChatView() {
                 )
             )
 
-            // Restaurar texto para reintentar
             setMessageText(messageData.content)
 
-            // Mostrar error al usuario
             setError('No se pudo enviar el mensaje. Intenta de nuevo.')
 
-            // Limpiar error después de 3 segundos
             setTimeout(() => setError(null), 3000)
         }
     }

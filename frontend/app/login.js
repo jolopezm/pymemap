@@ -57,7 +57,6 @@ export default function Login() {
         setError('')
         setEmailError('')
 
-        // Validación básica de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(user.email)) {
             setEmailError('Por favor ingresa un correo electrónico válido')
@@ -72,7 +71,6 @@ export default function Login() {
         setLoading(true)
 
         try {
-            // La función login ahora hace la petición al backend y obtiene el usuario
             await login({ email: user.email, password: user.password })
             
             Toast.success('¡Has iniciado sesión exitosamente!', {

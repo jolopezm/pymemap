@@ -33,7 +33,6 @@ export default function RateBusiness() {
 
     React.useEffect(() => {
         const fetchBusiness = async () => {
-            // Usar businessId o id como fallback
             const actualBusinessId = businessId || id
             if (!actualBusinessId) {
                 setLoading(false)
@@ -77,7 +76,6 @@ export default function RateBusiness() {
 
         await saveReview()
 
-        // Mostrar modal de confirmación
         setModalVisible(true)
     }
 
@@ -96,13 +94,12 @@ export default function RateBusiness() {
                 comment: comment.trim(),
                 date: new Date().toISOString(),
             }
-            
-            // Si viene de una reserva, agregar esa información
+
             if (bookingId) {
                 reviewData.bookingId = bookingId
-                reviewData.source = 'booking' // Indica que la reseña viene de una reserva pagada
+                reviewData.source = 'booking'
             }
-            
+
             await createReview(reviewData)
         } catch (error) {
             logger.error('Error saving review:', error)
@@ -152,7 +149,6 @@ export default function RateBusiness() {
         <Screen>
             <ScrollView>
                 <View style={styles.container}>
-                    {/* Header */}
                     <Ionicons
                         name="star"
                         size={64}
@@ -161,7 +157,9 @@ export default function RateBusiness() {
                     />
 
                     <Text style={[globalStyles.title, { textAlign: 'center' }]}>
-                        {bookingId ? 'Califica tu reserva' : 'Califica tu experiencia'}
+                        {bookingId
+                            ? 'Califica tu reserva'
+                            : 'Califica tu experiencia'}
                     </Text>
 
                     <Text
@@ -172,7 +170,7 @@ export default function RateBusiness() {
                     >
                         {businessName || business?.name || 'Negocio'}
                     </Text>
-                    
+
                     {bookingId && (
                         <Text
                             style={[
@@ -180,11 +178,11 @@ export default function RateBusiness() {
                                 { textAlign: 'center', marginBottom: 24 },
                             ]}
                         >
-                            ✅ ¡Tu reserva fue completada! Comparte tu experiencia
+                            ✅ ¡Tu reserva fue completada! Comparte tu
+                            experiencia
                         </Text>
                     )}
 
-                    {/* Rating Stars */}
                     <View style={styles.starsContainer}>
                         {[1, 2, 3, 4, 5].map(star => (
                             <Pressable
@@ -215,7 +213,6 @@ export default function RateBusiness() {
                         </Text>
                     )}
 
-                    {/* Comment Section */}
                     <Text style={[globalStyles.subtitle, { marginTop: 24 }]}>
                         Cuéntanos tu experiencia
                     </Text>
@@ -234,7 +231,6 @@ export default function RateBusiness() {
                         {comment.length}/500 caracteres
                     </Text>
 
-                    {/* Submit Button */}
                     <Pressable
                         style={[
                             globalStyles.button,
@@ -261,7 +257,6 @@ export default function RateBusiness() {
                         </Text>
                     </Pressable>
 
-                    {/* Cancel Button */}
                     <Pressable
                         style={[styles.cancelButton]}
                         onPress={() => router.back()}
@@ -271,7 +266,6 @@ export default function RateBusiness() {
                 </View>
             </ScrollView>
 
-            {/* Success Modal */}
             {modalVisible && (
                 <DefaultModal
                     visible={modalVisible}

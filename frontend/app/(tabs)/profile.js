@@ -20,7 +20,6 @@ export default function ProfileScreen() {
     const { user, logout } = useAuth()
     const router = useRouter()
 
-    // Usar directamente los datos del user del contexto
     const name = user?.name || ''
     const email = user?.email || ''
 
@@ -34,9 +33,7 @@ export default function ProfileScreen() {
             await deleteUser(userId)
             await logout()
             router.push('/login')
-        } catch (error) {
-            // Error manejado silenciosamente
-        }
+        } catch (error) {}
     }
 
     return user ? (

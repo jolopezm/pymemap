@@ -45,7 +45,10 @@ export default function SearchScreen() {
 
     useEffect(() => {
         if (userCoords && businesses.length > 0) {
-            const withDistances = calculateBusinessDistances(businesses, userCoords)
+            const withDistances = calculateBusinessDistances(
+                businesses,
+                userCoords
+            )
             setBusinesses(withDistances)
         }
     }, [userCoords])
@@ -59,17 +62,22 @@ export default function SearchScreen() {
                     return !isNaN(dist) && dist <= nearbyDistance
                 })
                 .map(b => ({ type: 'business', data: b }))
-                .sort((a, b) => parseFloat(a.data.distance) - parseFloat(b.data.distance))
+                .sort(
+                    (a, b) =>
+                        parseFloat(a.data.distance) -
+                        parseFloat(b.data.distance)
+                )
         }
 
         if (!searchQuery.trim()) return []
 
         const query = searchQuery.toLowerCase()
         let results = businesses
-            .filter(b =>
-                b.name?.toLowerCase().includes(query) ||
-                b.category?.toLowerCase().includes(query) ||
-                b.description?.toLowerCase().includes(query)
+            .filter(
+                b =>
+                    b.name?.toLowerCase().includes(query) ||
+                    b.category?.toLowerCase().includes(query) ||
+                    b.description?.toLowerCase().includes(query)
             )
             .map(b => ({ type: 'business', data: b }))
 
@@ -83,8 +91,14 @@ export default function SearchScreen() {
 
         if (userCoords) {
             results.sort((a, b) => {
-                const distA = a.data.distance !== undefined ? parseFloat(a.data.distance) : Infinity
-                const distB = b.data.distance !== undefined ? parseFloat(b.data.distance) : Infinity
+                const distA =
+                    a.data.distance !== undefined
+                        ? parseFloat(a.data.distance)
+                        : Infinity
+                const distB =
+                    b.data.distance !== undefined
+                        ? parseFloat(b.data.distance)
+                        : Infinity
                 return distA - distB
             })
         }
@@ -94,11 +108,16 @@ export default function SearchScreen() {
 
     const searchResults = getSearchResults
 
-    const handleSelectResult = useCallback(result => {
-        if (result.type === 'business') {
-            router.push(`/business-profile?id=${result.data.id || result.data._id}`)
-        }
-    }, [router])
+    const handleSelectResult = useCallback(
+        result => {
+            if (result.type === 'business') {
+                router.push(
+                    `/business-profile?id=${result.data.id || result.data._id}`
+                )
+            }
+        },
+        [router]
+    )
 
     const handleQuickSearch = useCallback(query => {
         setSearchQuery(query)
@@ -146,9 +165,9 @@ export default function SearchScreen() {
                 ) : (
                     <>
                         <RecentSearches
-                            searches={[]} // TODO: Implement recent searches logic
+                            searches={[]}
                             onSelectSearch={setSearchQuery}
-                            onClear={() => { }} // TODO: Implement clear logic
+                            onClear={() => {}}
                         />
                         <SearchFilters
                             onQuickSearch={handleQuickSearch}

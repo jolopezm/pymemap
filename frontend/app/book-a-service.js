@@ -57,12 +57,10 @@ export default function BookService() {
             const dateStr = formatDate(selectedDate)
             const timeStr = formatTime(selectedTime)
 
-            // Calcular hora de fin (1 hora después por defecto)
             const endTime = new Date(selectedTime)
             endTime.setHours(endTime.getHours() + 1)
             const endTimeStr = formatTime(endTime)
 
-            // 1. Crear la reserva
             const booking = await createBooking({
                 business_id: businessId,
                 date: dateStr,
@@ -70,7 +68,6 @@ export default function BookService() {
                 end_time: endTimeStr,
             })
 
-            // 2. Obtener el negocio para tener el owner_id
             const businessData = await getBusiness(businessId)
 
             if (!businessData?.owner_id) {
@@ -82,7 +79,6 @@ export default function BookService() {
                 return
             }
 
-            // 3. Crear notificación para el vendedor
             try {
                 const notifPayload = {
                     targetUserId: businessData.owner_id,

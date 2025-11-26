@@ -53,7 +53,6 @@ export default function UploadProfilePic() {
                 filename
             )
 
-            // Refrescar los datos del usuario
             if (refreshUser) {
                 await refreshUser()
             }

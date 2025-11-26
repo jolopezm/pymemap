@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react'
-import { View, Text, Pressable, Modal, Animated, ScrollView, StyleSheet } from 'react-native'
+import {
+    View,
+    Text,
+    Pressable,
+    Modal,
+    Animated,
+    ScrollView,
+    StyleSheet,
+} from 'react-native'
 import PropTypes from 'prop-types'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, borderRadius, shadows } from '../../styles/theme'
@@ -91,7 +99,7 @@ export default function StoresFilterModals({
                     <Animated.View
                         style={[
                             styles.modalContent,
-                            { transform: [{ translateY: slideAnim }] }
+                            { transform: [{ translateY: slideAnim }] },
                         ]}
                     >
                         <View style={styles.modalHeader}>
@@ -102,12 +110,13 @@ export default function StoresFilterModals({
                         </View>
 
                         <View style={styles.sortOptions}>
-                            {sortOptions.map((option) => (
+                            {sortOptions.map(option => (
                                 <Pressable
                                     key={option.id}
                                     style={[
                                         styles.sortOption,
-                                        sortOption === option.label && styles.sortOptionActive
+                                        sortOption === option.label &&
+                                            styles.sortOptionActive,
                                     ]}
                                     onPress={() => onSortSelect(option.label)}
                                 >
@@ -115,17 +124,28 @@ export default function StoresFilterModals({
                                         <Ionicons
                                             name={option.icon}
                                             size={20}
-                                            color={sortOption === option.label ? colors.primary : colors.textSecondary}
+                                            color={
+                                                sortOption === option.label
+                                                    ? colors.primary
+                                                    : colors.textSecondary
+                                            }
                                         />
-                                        <Text style={[
-                                            styles.sortOptionText,
-                                            sortOption === option.label && styles.sortOptionTextActive
-                                        ]}>
+                                        <Text
+                                            style={[
+                                                styles.sortOptionText,
+                                                sortOption === option.label &&
+                                                    styles.sortOptionTextActive,
+                                            ]}
+                                        >
                                             {option.label}
                                         </Text>
                                     </View>
                                     {sortOption === option.label && (
-                                        <Ionicons name="checkmark" size={24} color={colors.primary} />
+                                        <Ionicons
+                                            name="checkmark"
+                                            size={24}
+                                            color={colors.primary}
+                                        />
                                     )}
                                 </Pressable>
                             ))}
@@ -147,7 +167,7 @@ export default function StoresFilterModals({
                 >
                     <Pressable
                         style={styles.modalContent}
-                        onPress={(e) => e.stopPropagation()}
+                        onPress={e => e.stopPropagation()}
                     >
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Categorías</Text>
@@ -157,30 +177,51 @@ export default function StoresFilterModals({
                         </View>
 
                         <ScrollView style={styles.categoryOptions}>
-                            {categoryOptions.map((category) => (
+                            {categoryOptions.map(category => (
                                 <Pressable
                                     key={category.id}
                                     style={[
                                         styles.categoryOption,
-                                        selectedCategories.includes(category.label) && styles.categoryOptionActive
+                                        selectedCategories.includes(
+                                            category.label
+                                        ) && styles.categoryOptionActive,
                                     ]}
-                                    onPress={() => onCategoryToggle(category.label)}
+                                    onPress={() =>
+                                        onCategoryToggle(category.label)
+                                    }
                                 >
                                     <View style={styles.categoryOptionContent}>
                                         <Ionicons
                                             name={category.icon}
                                             size={20}
-                                            color={selectedCategories.includes(category.label) ? colors.primary : colors.textSecondary}
+                                            color={
+                                                selectedCategories.includes(
+                                                    category.label
+                                                )
+                                                    ? colors.primary
+                                                    : colors.textSecondary
+                                            }
                                         />
-                                        <Text style={[
-                                            styles.categoryOptionText,
-                                            selectedCategories.includes(category.label) && styles.categoryOptionTextActive
-                                        ]}>
+                                        <Text
+                                            style={[
+                                                styles.categoryOptionText,
+                                                selectedCategories.includes(
+                                                    category.label
+                                                ) &&
+                                                    styles.categoryOptionTextActive,
+                                            ]}
+                                        >
                                             {category.label}
                                         </Text>
                                     </View>
-                                    {selectedCategories.includes(category.label) && (
-                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                                    {selectedCategories.includes(
+                                        category.label
+                                    ) && (
+                                        <Ionicons
+                                            name="checkmark-circle"
+                                            size={24}
+                                            color={colors.primary}
+                                        />
                                     )}
                                 </Pressable>
                             ))}
@@ -202,7 +243,7 @@ export default function StoresFilterModals({
                 >
                     <Pressable
                         style={styles.modalContent}
-                        onPress={(e) => e.stopPropagation()}
+                        onPress={e => e.stopPropagation()}
                     >
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Vendedores</Text>
@@ -212,44 +253,75 @@ export default function StoresFilterModals({
                         </View>
 
                         <ScrollView style={styles.categoryOptions}>
-                            {sellerOptions.map((seller) => (
+                            {sellerOptions.map(seller => (
                                 <Pressable
                                     key={seller.id}
                                     style={[
                                         styles.sellerOption,
-                                        selectedSellers.includes(seller.id) && styles.sellerOptionActive
+                                        selectedSellers.includes(seller.id) &&
+                                            styles.sellerOptionActive,
                                     ]}
                                     onPress={() => onSellerToggle(seller.id)}
                                 >
                                     <View style={styles.sellerOptionContent}>
-                                        <View style={styles.sellerAvatarContainer}>
+                                        <View
+                                            style={styles.sellerAvatarContainer}
+                                        >
                                             {seller.image ? (
                                                 <OptimizedImage
-                                                    source={{ uri: seller.image }}
+                                                    source={{
+                                                        uri: seller.image,
+                                                    }}
                                                     style={styles.sellerAvatar}
                                                     resizeMode="cover"
                                                 />
                                             ) : (
-                                                <View style={styles.sellerAvatarPlaceholder}>
-                                                    <Ionicons name="person" size={20} color={colors.white} />
+                                                <View
+                                                    style={
+                                                        styles.sellerAvatarPlaceholder
+                                                    }
+                                                >
+                                                    <Ionicons
+                                                        name="person"
+                                                        size={20}
+                                                        color={colors.white}
+                                                    />
                                                 </View>
                                             )}
                                         </View>
-                                        <Text style={[
-                                            styles.sellerOptionText,
-                                            selectedSellers.includes(seller.id) && styles.sellerOptionTextActive
-                                        ]}>
+                                        <Text
+                                            style={[
+                                                styles.sellerOptionText,
+                                                selectedSellers.includes(
+                                                    seller.id
+                                                ) &&
+                                                    styles.sellerOptionTextActive,
+                                            ]}
+                                        >
                                             {seller.label}
                                         </Text>
                                     </View>
                                     {selectedSellers.includes(seller.id) && (
-                                        <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                                        <Ionicons
+                                            name="checkmark-circle"
+                                            size={24}
+                                            color={colors.primary}
+                                        />
                                     )}
                                 </Pressable>
                             ))}
                             {sellerOptions.length === 0 && (
-                                <View style={{ padding: 20, alignItems: 'center' }}>
-                                    <Text style={{ color: colors.textSecondary }}>No hay vendedores disponibles</Text>
+                                <View
+                                    style={{
+                                        padding: 20,
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Text
+                                        style={{ color: colors.textSecondary }}
+                                    >
+                                        No hay vendedores disponibles
+                                    </Text>
                                 </View>
                             )}
                         </ScrollView>
@@ -267,10 +339,12 @@ StoresFilterModals.propTypes = {
     sortOption: PropTypes.string.isRequired,
     selectedCategories: PropTypes.arrayOf(PropTypes.string).isRequired,
     selectedSellers: PropTypes.arrayOf(PropTypes.string),
-    sellerOptions: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
-        label: PropTypes.string,
-    })),
+    sellerOptions: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.string,
+            label: PropTypes.string,
+        })
+    ),
     slideAnim: PropTypes.object.isRequired,
     fadeAnim: PropTypes.object.isRequired,
     onSortSelect: PropTypes.func.isRequired,

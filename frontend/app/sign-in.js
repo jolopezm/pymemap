@@ -51,21 +51,18 @@ export default function SignIn() {
         setEmailError('')
         setRutError('')
 
-        // Validación de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(user.email)) {
             setEmailError('Por favor ingresa un correo electrónico válido')
             return
         }
 
-        // Validación básica de RUT (formato)
         const rutRegex = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/
         if (!rutRegex.test(user.rut)) {
             setRutError('RUT inválido. Formato: 12.345.678-9')
             return
         }
 
-        // Validación de campos obligatorios
         if (!user.name.trim()) {
             setError('El nombre es obligatorio')
             return
@@ -191,18 +188,14 @@ export default function SignIn() {
                                 value={user.rut}
                                 maxLength={12}
                                 onChangeText={value => {
-                                    // Limpiar todo excepto números y K
                                     const cleaned = value
                                         .replace(/[^0-9kK]/g, '')
                                         .toUpperCase()
 
-                                    // Validar que K solo esté al final
                                     let valid = cleaned
 
-                                    // Si hay una K, verificar que esté solo al final
                                     const kIndex = cleaned.indexOf('K')
                                     if (kIndex !== -1) {
-                                        // Si K no está en la última posición, o hay más de una K
                                         if (
                                             kIndex !== cleaned.length - 1 ||
                                             cleaned.split('K').length > 2
@@ -212,7 +205,6 @@ export default function SignIn() {
                                             )
                                             return // No actualizar el valor
                                         }
-                                        // Si K está al principio o hay menos de 2 caracteres
                                         if (cleaned.length < 2) {
                                             setRutError(
                                                 'Ingresa primero los números del RUT'
@@ -221,7 +213,6 @@ export default function SignIn() {
                                         }
                                     }
 
-                                    // Si todo es válido, formatear y actualizar
                                     setRutError('')
                                     updateUser('rut', rutFormatter(valid))
                                 }}

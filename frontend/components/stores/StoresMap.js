@@ -1,11 +1,25 @@
 import React, { useRef, useEffect } from 'react'
-import { View, Text, ScrollView, Pressable, Image, StyleSheet, Platform } from 'react-native'
+import {
+    View,
+    Text,
+    ScrollView,
+    Pressable,
+    Image,
+    StyleSheet,
+    Platform,
+} from 'react-native'
 import MapView from 'react-native-maps'
 const { MapMarker } = require('react-native-maps/lib/MapMarker')
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { formatDistance } from '../../utils/geolocation'
-import { colors, spacing, borderRadius, shadows, responsive } from '../../styles/theme'
+import {
+    colors,
+    spacing,
+    borderRadius,
+    shadows,
+    responsive,
+} from '../../styles/theme'
 
 const CARD_WIDTH = responsive.screenWidth * 0.6 // Reduced from 0.7
 
@@ -20,26 +34,32 @@ export default function StoresMap({
     const scrollViewRef = useRef(null)
 
     // Helper to validate coords
-    const isValidCoords = (coords) => {
-        return coords &&
+    const isValidCoords = coords => {
+        return (
+            coords &&
             typeof coords.latitude === 'number' &&
             typeof coords.longitude === 'number' &&
             !isNaN(coords.latitude) &&
             !isNaN(coords.longitude)
+        )
     }
 
-    const businessesWithCoords = businesses?.filter(b => b.latitude && b.longitude) || []
+    const businessesWithCoords =
+        businesses?.filter(b => b.latitude && b.longitude) || []
 
-    const centerMapOnBusiness = (business) => {
+    const centerMapOnBusiness = business => {
         if (Platform.OS === 'web') return
 
         if (mapRef.current && business.latitude && business.longitude) {
-            mapRef.current.animateToRegion({
-                latitude: business.latitude,
-                longitude: business.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            }, 500)
+            mapRef.current.animateToRegion(
+                {
+                    latitude: business.latitude,
+                    longitude: business.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                },
+                500
+            )
         }
     }
 
@@ -47,19 +67,23 @@ export default function StoresMap({
         if (Platform.OS === 'web') return
 
         if (mapRef.current && isValidCoords(userCoords)) {
-            mapRef.current.animateToRegion({
-                latitude: userCoords.latitude,
-                longitude: userCoords.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-            }, 500)
+            mapRef.current.animateToRegion(
+                {
+                    latitude: userCoords.latitude,
+                    longitude: userCoords.longitude,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                },
+                500
+            )
         }
     }
 
     useEffect(() => {
         if (selectedMapBusiness) {
             const index = businessesWithCoords.findIndex(
-                b => (b.id && b.id === selectedMapBusiness.id) ||
+                b =>
+                    (b.id && b.id === selectedMapBusiness.id) ||
                     (b._id && b._id === selectedMapBusiness._id)
             )
 
@@ -71,17 +95,19 @@ export default function StoresMap({
         }
     }, [selectedMapBusiness])
 
-    const initialRegion = isValidCoords(userCoords) ? {
-        latitude: userCoords.latitude,
-        longitude: userCoords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-    } : {
-        latitude: -33.4489, // Santiago default
-        longitude: -70.6693,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-    }
+    const initialRegion = isValidCoords(userCoords)
+        ? {
+              latitude: userCoords.latitude,
+              longitude: userCoords.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+          }
+        : {
+              latitude: -33.4489, // Santiago default
+              longitude: -70.6693,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+          }
 
     return (
         <View style={styles.container}>
@@ -95,37 +121,41 @@ export default function StoresMap({
                     <MapMarker
                         coordinate={{
                             latitude: userCoords.latitude,
-                            longitude: userCoords.longitude
+                            longitude: userCoords.longitude,
                         }}
                         zIndex={999}
                         tracksViewChanges={false} // Optimization
                     >
-                        <View style={{
-                            backgroundColor: 'white',
-                            borderRadius: 20,
-                            padding: 2,
-                            borderWidth: 2,
-                            borderColor: 'white',
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                            elevation: 5,
-                        }}>
-                            <View style={{
-                                width: 16,
-                                height: 16,
-                                borderRadius: 8,
-                                backgroundColor: colors.info,
+                        <View
+                            style={{
+                                backgroundColor: 'white',
+                                borderRadius: 20,
+                                padding: 2,
                                 borderWidth: 2,
                                 borderColor: 'white',
-                            }} />
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 3.84,
+                                elevation: 5,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: 16,
+                                    height: 16,
+                                    borderRadius: 8,
+                                    backgroundColor: colors.info,
+                                    borderWidth: 2,
+                                    borderColor: 'white',
+                                }}
+                            />
                         </View>
                     </MapMarker>
                 )}
 
                 {/* Marcadores de Negocios */}
-                {businessesWithCoords.map((business) => {
+                {businessesWithCoords.map(business => {
                     const lat = parseFloat(business.latitude)
                     const lng = parseFloat(business.longitude)
 
@@ -136,7 +166,7 @@ export default function StoresMap({
                             key={business.id || business._id}
                             coordinate={{
                                 latitude: lat,
-                                longitude: lng
+                                longitude: lng,
                             }}
                             onPress={() => {
                                 if (onMarkerPress) onMarkerPress(business)
@@ -150,10 +180,7 @@ export default function StoresMap({
             </MapView>
 
             {/* Botón de Recentrar */}
-            <Pressable
-                style={styles.recenterButton}
-                onPress={recenterMap}
-            >
+            <Pressable style={styles.recenterButton} onPress={recenterMap}>
                 <Ionicons name="locate" size={24} color={colors.primary} />
             </Pressable>
 
@@ -170,13 +197,19 @@ export default function StoresMap({
                 >
                     {businessesWithCoords.map((business, index) => {
                         const businessId = business._id || business.id
-                        const selectedId = selectedMapBusiness?._id || selectedMapBusiness?.id
-                        const isSelected = selectedMapBusiness !== null && businessId === selectedId
+                        const selectedId =
+                            selectedMapBusiness?._id || selectedMapBusiness?.id
+                        const isSelected =
+                            selectedMapBusiness !== null &&
+                            businessId === selectedId
 
                         return (
                             <Pressable
                                 key={business.id || business._id || index}
-                                style={[styles.card, isSelected && styles.cardSelected]}
+                                style={[
+                                    styles.card,
+                                    isSelected && styles.cardSelected,
+                                ]}
                                 onPress={() => {
                                     if (onMarkerPress) onMarkerPress(business)
                                     centerMapOnBusiness(business)
@@ -185,7 +218,9 @@ export default function StoresMap({
                                 <View style={styles.cardImage}>
                                     {business.profile_pic ? (
                                         <Image
-                                            source={{ uri: business.profile_pic }}
+                                            source={{
+                                                uri: business.profile_pic,
+                                            }}
                                             style={styles.cardImageFull}
                                             resizeMode="cover"
                                         />
@@ -194,31 +229,61 @@ export default function StoresMap({
                                             colors={['#F5F0FF', '#E8D5FF']}
                                             style={styles.cardImageFull}
                                         >
-                                            <Ionicons name="storefront-outline" size={36} color={colors.primary} />
+                                            <Ionicons
+                                                name="storefront-outline"
+                                                size={36}
+                                                color={colors.primary}
+                                            />
                                         </LinearGradient>
                                     )}
 
                                     {business.distance !== undefined && (
                                         <View style={styles.distanceBadge}>
-                                            <Ionicons name="location" size={10} color={colors.white} />
-                                            <Text style={styles.distanceBadgeText}>
-                                                {formatDistance(business.distance)}
+                                            <Ionicons
+                                                name="location"
+                                                size={10}
+                                                color={colors.white}
+                                            />
+                                            <Text
+                                                style={styles.distanceBadgeText}
+                                            >
+                                                {formatDistance(
+                                                    business.distance
+                                                )}
                                             </Text>
                                         </View>
                                     )}
                                 </View>
 
                                 <View style={styles.cardContent}>
-                                    <Text style={styles.cardTitle} numberOfLines={1}>
+                                    <Text
+                                        style={styles.cardTitle}
+                                        numberOfLines={1}
+                                    >
                                         {business.name}
                                     </Text>
                                     <View style={styles.cardFooter}>
                                         <View style={styles.cardMeta}>
-                                            <Ionicons name="star" size={12} color="#FFB800" />
-                                            <Text style={styles.cardRating}>4.{5 + (index % 5)}</Text>
+                                            <Ionicons
+                                                name="star"
+                                                size={12}
+                                                color="#FFB800"
+                                            />
+                                            <Text style={styles.cardRating}>
+                                                4.{5 + (index % 5)}
+                                            </Text>
                                         </View>
-                                        <Pressable onPress={() => onBusinessSelect && onBusinessSelect(business)}>
-                                            <Ionicons name="chevron-forward-circle" size={24} color={colors.primary} />
+                                        <Pressable
+                                            onPress={() =>
+                                                onBusinessSelect &&
+                                                onBusinessSelect(business)
+                                            }
+                                        >
+                                            <Ionicons
+                                                name="chevron-forward-circle"
+                                                size={24}
+                                                color={colors.primary}
+                                            />
                                         </Pressable>
                                     </View>
                                 </View>

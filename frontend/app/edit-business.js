@@ -24,7 +24,6 @@ export default function EditBusiness() {
     const params = useSearchParams()
     const router = useRouter()
 
-    // Obtener el ID del negocio desde los parámetros de la URL
     const businessId = params.get('businessId') || params.get('id')
 
     const [business, setBusiness] = React.useState(null)
@@ -32,7 +31,6 @@ export default function EditBusiness() {
     const [uploading, setUploading] = React.useState(false)
     const [loading, setLoading] = React.useState(true)
 
-    // Cargar datos del negocio
     React.useEffect(() => {
         const fetchBusiness = async () => {
             if (!businessId) {
@@ -88,7 +86,6 @@ export default function EditBusiness() {
                 filename
             )
 
-            // Actualizar el estado local con el negocio actualizado
             setBusiness(updatedBusiness)
             setImage(updatedBusiness.profile_pic)
 

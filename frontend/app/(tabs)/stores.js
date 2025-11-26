@@ -1,4 +1,11 @@
-import { View, ScrollView, StyleSheet, Animated, Platform, RefreshControl } from 'react-native'
+import {
+    View,
+    ScrollView,
+    StyleSheet,
+    Animated,
+    Platform,
+    RefreshControl,
+} from 'react-native'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -7,7 +14,12 @@ import { useLocation } from '../../context/location-context'
 import LocationPickerModal from '../../components/location-picker-modal'
 import { useRefresh } from '../../hooks/useRefresh'
 import { useBusinessFilters } from '../../hooks'
-import { StoresHeader, StoresList, StoresMap, StoresFilterModals } from '../../components/stores'
+import {
+    StoresHeader,
+    StoresList,
+    StoresMap,
+    StoresFilterModals,
+} from '../../components/stores'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import { colors, spacing } from '../../styles/theme'
 import LoadingState from '../../components/LoadingState'
@@ -30,18 +42,22 @@ export default function StoresScreen() {
     const slideAnim = useRef(new Animated.Value(300)).current
     const fadeAnim = useRef(new Animated.Value(0)).current
 
-    const { businesses: allBusinesses, loading, error, refetch } = useBusinessData()
+    const {
+        businesses: allBusinesses,
+        loading,
+        error,
+        refetch,
+    } = useBusinessData()
     const { refreshing, onRefresh } = useRefresh(refetch)
 
-    // Extract unique sellers
     const sellerOptions = useMemo(() => {
         const sellersMap = new Map()
         allBusinesses.forEach(b => {
             if (b.owner_id) {
-                // Use User.name as label as requested by user
-                // Fallback to owner_name or ID if not present
-                const label = b.User?.name || b.owner_name || `Vendedor ${b.owner_id.substring(0, 6)}...`
-                // Use the business profile pic as the seller image
+                const label =
+                    b.User?.name ||
+                    b.owner_name ||
+                    `Vendedor ${b.owner_id.substring(0, 6)}...`
                 const image = b.profile_pic
 
                 if (!sellersMap.has(b.owner_id)) {
@@ -58,10 +74,17 @@ export default function StoresScreen() {
         }
     }, [activeView])
 
-    const handleLocationSelected = useCallback(async (coords) => {
-        updateLocation(coords, coords.address || `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`)
-        setLocationModalVisible(false)
-    }, [updateLocation])
+    const handleLocationSelected = useCallback(
+        async coords => {
+            updateLocation(
+                coords,
+                coords.address ||
+                    `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`
+            )
+            setLocationModalVisible(false)
+        },
+        [updateLocation]
+    )
 
     const { filteredBusinesses: businesses } = useBusinessFilters(
         allBusinesses,
@@ -70,32 +93,35 @@ export default function StoresScreen() {
         userCoords
     )
 
-    const handleSelectBusiness = useCallback((business) => {
-        const businessId = business.id || business._id
-        if (businessId) {
-            router.push(`/business-profile?id=${businessId}`)
-        }
-    }, [router])
+    const handleSelectBusiness = useCallback(
+        business => {
+            const businessId = business.id || business._id
+            if (businessId) {
+                router.push(`/business-profile?id=${businessId}`)
+            }
+        },
+        [router]
+    )
 
-    const handleMarkerPress = useCallback((business) => {
+    const handleMarkerPress = useCallback(business => {
         setSelectedMapBusiness(business)
     }, [])
 
-    const handleSortSelect = useCallback((option) => {
+    const handleSortSelect = useCallback(option => {
         setSortOption(option)
         setShowSortModal(false)
     }, [])
 
-    const handleCategoryToggle = useCallback((category) => {
+    const handleCategoryToggle = useCallback(category => {
         setSelectedFilters(prev => ({
             ...prev,
             categories: prev.categories.includes(category)
                 ? prev.categories.filter(c => c !== category)
-                : [...prev.categories, category]
+                : [...prev.categories, category],
         }))
     }, [])
 
-    const handleSellerToggle = useCallback((sellerId) => {
+    const handleSellerToggle = useCallback(sellerId => {
         setSelectedFilters(prev => {
             const currentOwners = prev.owners || []
             const newOwners = currentOwners.includes(sellerId)
@@ -115,7 +141,7 @@ export default function StoresScreen() {
                 onLocationPress={() => setLocationModalVisible(true)}
                 onSearchPress={() => router.push('/search')}
                 onViewChange={setActiveView}
-                onFilterChange={(newFilters) => {
+                onFilterChange={newFilters => {
                     setSelectedFilters(newFilters)
                 }}
                 onSortPress={() => setShowSortModal(true)}

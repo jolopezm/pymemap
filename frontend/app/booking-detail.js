@@ -47,7 +47,6 @@ export default function BookingDetail() {
             try {
                 setLoading(true)
 
-                // Obtener todas las reservas (tanto como propietario como cliente)
                 const [businessBookings, clientBookings, businessData] =
                     await Promise.all([
                         getAllMyBusinessBookings().catch(() => []),
@@ -57,7 +56,6 @@ export default function BookingDetail() {
 
                 if (!mounted) return
 
-                // Buscar la reserva en ambas listas
                 let foundBooking = businessBookings.find(
                     b => (b.id || b._id) === bookingId
                 )
@@ -71,13 +69,11 @@ export default function BookingDetail() {
                 if (foundBooking) {
                     setBooking(foundBooking)
 
-                    // Encontrar el negocio relacionado
                     const foundBusiness = businessData.find(
                         b => (b.id || b._id) === foundBooking.business_id
                     )
                     setBusiness(foundBusiness)
 
-                    // Verificar si el usuario es el dueño del negocio
                     const userId = user?.id || user?._id
                     setIsOwner(
                         foundBusiness && foundBusiness.owner_id === userId
@@ -111,7 +107,6 @@ export default function BookingDetail() {
 
             await verifyBookingCode(bookingId, code)
 
-            // Refrescar datos
             const [businessBookings, clientBookings, businessData] =
                 await Promise.all([
                     getAllMyBusinessBookings().catch(() => []),
@@ -134,7 +129,6 @@ export default function BookingDetail() {
             )
             setBusiness(foundBusiness)
 
-            // Enviar notificación al cliente
             await sendNotificationToClient(
                 'Servicio completado',
                 `Tu servicio del ${booking.date} a las ${booking.start_time} ha sido completado. ¡No olvides calificar!`,
@@ -191,7 +185,6 @@ export default function BookingDetail() {
             },
         }
 
-        // Solo agregar acción de calificar si se solicita explícitamente
         if (includeRateAction) {
             notificationData.reference.action = 'rate_business'
             notificationData.reference.actionLabel = 'Calificar'
@@ -217,10 +210,8 @@ export default function BookingDetail() {
                 return
             }
 
-            // Buscar chat existente
             let chat = await getChatByParticipants(currentUserId, otherUserId)
 
-            // Si no existe, crear uno nuevo
             if (!chat) {
                 const chatData = {
                     participants: [currentUserId, otherUserId],
@@ -228,7 +219,6 @@ export default function BookingDetail() {
                 chat = await createChat(chatData)
             }
 
-            // Navegar al chat con el ID correcto
             const chatId = chat._id || chat.id
             router.push(`/chat-view?chatId=${chatId}`)
         } catch (error) {

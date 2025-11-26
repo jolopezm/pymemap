@@ -71,7 +71,6 @@ export default function BusinessProfile() {
             const reviewsData = await getReviewsByBusiness(businessId)
             setReviews(reviewsData)
         } catch (error) {
-            // Error al cargar reseñas
         }
     }
 
@@ -90,12 +89,9 @@ export default function BusinessProfile() {
 
             let chatData = null
 
-            // Intentar obtener chat existente
             chatData = await getChatByParticipants(currentUserId, ownerId)
 
-            // Si no existe, crear uno nuevo
             if (!chatData) {
-                // Creando nuevo chat
                 chatData = await createChat({
                     participants: [currentUserId, ownerId],
                     lastMessage: null,
@@ -118,12 +114,10 @@ export default function BusinessProfile() {
 
             setChat(chatData)
 
-            // Enviar el mensaje
             await newMessage(chatData)
 
             setModalVisible(true)
         } catch (error) {
-            // Error manejado con Toast
             Alert.alert('Error', 'No se pudo iniciar el chat')
         }
     }
@@ -131,11 +125,9 @@ export default function BusinessProfile() {
     const newMessage = async chatObj => {
         if (!message.trim()) return
 
-        // Obtener el ID del chat correctamente
         const chatId = chatObj._id || chatObj.id
 
         if (!chatId) {
-            // Error: No se pudo obtener el chatId
             throw new Error('Chat ID no válido')
         }
 
@@ -151,16 +143,13 @@ export default function BusinessProfile() {
             setMessage('')
             await sendMessage(messageData)
         } catch (error) {
-            // Error manejado con Toast
             setMessage(messageData.content)
             throw error
         }
     }
 
-    // Calcular distancia aproximada cuando tenemos ambas coordenadas desde el contexto
     React.useEffect(() => {
         if (userCoords && business?.latitude && business?.longitude) {
-            // Primero calcular distancia aproximada (con factor urbano)
             const dist = calculateDistance(
                 userCoords.latitude,
                 userCoords.longitude,
@@ -172,7 +161,6 @@ export default function BusinessProfile() {
         }
     }, [userCoords, business])
 
-    // Obtener distancia real por carretera (OSRM) cuando se muestran los detalles
     React.useEffect(() => {
         let mounted = true
 
@@ -189,7 +177,6 @@ export default function BusinessProfile() {
 
                     if (mounted && routing) {
                         setRoutingInfo(routing)
-                        // Actualizar distancia con la real
                         setDistance(routing.distance)
                     }
                 } catch (error) {
@@ -202,7 +189,6 @@ export default function BusinessProfile() {
             }
         }
 
-        // Esperar un poco antes de hacer la llamada a OSRM
         const timer = setTimeout(fetchRoutingDistance, 500)
 
         return () => {
@@ -226,7 +212,6 @@ export default function BusinessProfile() {
                     await fetchOwner(foundBusiness.owner_id)
                 }
 
-                // Cargar reseñas del negocio
                 if (foundBusiness && (foundBusiness._id || foundBusiness.id)) {
                     await fetchReviews(foundBusiness._id || foundBusiness.id)
                 }

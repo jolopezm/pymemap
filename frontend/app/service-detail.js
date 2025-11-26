@@ -53,7 +53,6 @@ export default function ServiceDetail() {
 
                 if (!mounted) return
 
-                // Encontrar el servicio específico
                 const foundService = servicesData.find(
                     s => (s.id || s._id) === serviceId
                 )
@@ -62,13 +61,11 @@ export default function ServiceDetail() {
                     setService(foundService)
                     setPrice(foundService.price?.toString() || '')
 
-                    // Encontrar el negocio relacionado
                     const foundBusiness = businessData.find(
                         b => (b.id || b._id) === foundService.business_id
                     )
                     setBusiness(foundBusiness)
 
-                    // Verificar si el usuario es el dueño
                     const userId = user?.id || user?._id
                     setIsOwner(
                         foundBusiness && foundBusiness.owner_id === userId
@@ -101,7 +98,6 @@ export default function ServiceDetail() {
             }
 
             await requestPayment(serviceId, parsed)
-            // Refrescar datos
             const [servicesData, businessData] = await Promise.all([
                 getServices(),
                 getBusiness(),

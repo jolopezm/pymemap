@@ -152,9 +152,7 @@ export default function ReportScreen() {
                     onPress={async () => {
                         try {
                             setSubmitting(true)
-                            console.log('📤 Enviando reporte...')
 
-                            // Validar que tenemos los datos mínimos requeridos
                             if (!user?.id && !user?._id) {
                                 alert(
                                     '❌ Error: No se pudo identificar al usuario'
@@ -180,14 +178,8 @@ export default function ReportScreen() {
                                 reportedByEmail: user?.email || '',
                             }
 
-                            console.log('📦 Datos del reporte:', reportData)
-
                             const result = await createReport(reportData)
 
-                            console.log(
-                                '✅ Reporte enviado exitosamente:',
-                                result
-                            )
                             alert('✅ Gracias por tu feedback!')
                             setText('')
                             setValue(null)

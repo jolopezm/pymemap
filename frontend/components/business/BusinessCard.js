@@ -3,11 +3,17 @@ import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import PropTypes from 'prop-types'
-import { colors, spacing, borderRadius, shadows, typography } from '../../styles/theme'
+import {
+    colors,
+    spacing,
+    borderRadius,
+    shadows,
+    typography,
+} from '../../styles/theme'
 import RatingDisplay from '../ui/RatingDisplay'
 import OptimizedImage from '../OptimizedImage'
 import HapticPressable from '../ui/HapticPressable'
-
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const BusinessCard = React.memo(function BusinessCard({
     business,
@@ -26,6 +32,8 @@ const BusinessCard = React.memo(function BusinessCard({
     extraInfo,
     style,
 }) {
+    const [ownerImage, setOwnerImage] = React.useState(null)
+
     const cardStyle = [
         styles.card,
         variant === 'horizontal' && styles.cardHorizontal,
@@ -40,6 +48,29 @@ const BusinessCard = React.memo(function BusinessCard({
         imageHeight && { height: imageHeight },
     ]
 
+    React.useEffect(() => {
+        const getOwnerFromCache = async () => {
+            try {
+                const data = await AsyncStorage.getItem('@other_users_data')
+                if (data) {
+                    const parsedData = JSON.parse(data)
+                    const users = Object.values(parsedData)
+
+                    const owner = users.find(
+                        u =>
+                            (u._id && u._id === business.owner_id) ||
+                            (u.id && u.id === business.owner_id)
+                    )
+                    if (owner?.profile_pic) {
+                        setOwnerImage(owner.profile_pic)
+                    }
+                }
+            } catch (error) {}
+        }
+
+        getOwnerFromCache()
+    }, [business.owner_id])
+
     return (
         <HapticPressable
             style={cardStyle}
@@ -53,7 +84,11 @@ const BusinessCard = React.memo(function BusinessCard({
             {showBadge && (
                 <View style={styles.badge}>
                     {badgeText === 'Nuevo' && (
-                        <Ionicons name="sparkles" size={12} color={colors.primary} />
+                        <Ionicons
+                            name="sparkles"
+                            size={12}
+                            color={colors.primary}
+                        />
                     )}
                     <Text style={styles.badgeText}>{badgeText}</Text>
                 </View>
@@ -63,7 +98,7 @@ const BusinessCard = React.memo(function BusinessCard({
             {showFavorite && (
                 <HapticPressable
                     style={styles.favoriteButton}
-                    onPress={(e) => {
+                    onPress={e => {
                         e.stopPropagation()
                         onFavoritePress?.()
                     }}
@@ -72,7 +107,11 @@ const BusinessCard = React.memo(function BusinessCard({
                     accessibilityLabel={`Marcar ${business.name} como favorito`}
                     accessibilityHint="Agrega o quita de tus favoritos"
                 >
-                    <Ionicons name="heart-outline" size={20} color={colors.text} />
+                    <Ionicons
+                        name="heart-outline"
+                        size={20}
+                        color={colors.text}
+                    />
                 </HapticPressable>
             )}
 
@@ -133,17 +172,16 @@ const BusinessCard = React.memo(function BusinessCard({
                         </View>
                     )}
                 </View>
-
-                {/* Info extra (para stores.js) */}
                 {extraInfo}
             </View>
 
-            {/* Logo circular */}
             {showLogo && (
                 <View style={styles.logoContainer}>
-                    {business.profile_pic ? (
+                    {ownerImage || business.User?.profile_pic ? (
                         <OptimizedImage
-                            source={{ uri: business.profile_pic }}
+                            source={{
+                                uri: ownerImage || business.User?.profile_pic,
+                            }}
                             style={styles.logoImage}
                             resizeMode="cover"
                         />
@@ -153,7 +191,9 @@ const BusinessCard = React.memo(function BusinessCard({
                             style={styles.logo}
                         >
                             <Text style={styles.logoText}>
-                                {business.name.substring(0, 2).toUpperCase()}
+                                {(business.User?.name || business.name)
+                                    .substring(0, 2)
+                                    .toUpperCase()}
                             </Text>
                         </LinearGradient>
                     )}
@@ -164,7 +204,6 @@ const BusinessCard = React.memo(function BusinessCard({
 })
 
 const styles = StyleSheet.create({
-    // Base card
     card: {
         backgroundColor: colors.white,
         borderRadius: borderRadius.card,
@@ -180,7 +219,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
 
-    // Badge
     badge: {
         position: 'absolute',
         top: spacing.sm + 2,
@@ -200,8 +238,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: colors.primary,
     },
-
-    // Imagen
     imageContainer: {
         width: '100%',
         height: 160,
@@ -229,7 +265,6 @@ const styles = StyleSheet.create({
         height: '100%',
     },
 
-    // Info
     info: {
         padding: spacing.md,
     },
@@ -266,7 +301,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // Botón favorito
     favoriteButton: {
         position: 'absolute',
         top: spacing.md,
@@ -281,7 +315,6 @@ const styles = StyleSheet.create({
         ...shadows.subtle,
     },
 
-    // Logo circular
     logoContainer: {
         position: 'absolute',
         bottom: spacing.md,

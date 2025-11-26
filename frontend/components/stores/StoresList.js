@@ -5,8 +5,32 @@ import { BusinessCard } from '../business'
 import { formatDistance } from '../../utils/geolocation'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing } from '../../styles/theme'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
-export default function StoresList({ businesses, userCoords, selectedFilters, onBusinessPress }) {
+export default function StoresList({
+    businesses,
+    userCoords,
+    selectedFilters,
+    onBusinessPress,
+}) {
+    const [owners, setOwners] = React.useState([])
+
+    //get the owners from the AsyncStorage @other_users_data where it is equal to the business owner id
+    const getOwners = async () => {
+        const ownerIds = businesses.map(b => b.owner)
+        const otherUsersData = await AsyncStorage.getItem('@other_users_data')
+        /*
+        const otherUsers = JSON.parse(otherUsersData)
+        const owners = otherUsers.filter(u => ownerIds.includes(u.id))
+        setOwners(owners)
+        */
+        console.log(await AsyncStorage.getItem('@other_users_data'))
+    }
+
+    React.useEffect(() => {
+        getOwners()
+    }, [businesses])
+
     if (businesses.length === 0) {
         return (
             <View style={styles.emptyState}>
@@ -24,8 +48,12 @@ export default function StoresList({ businesses, userCoords, selectedFilters, on
             {/* Contador de resultados */}
             <View style={styles.resultsHeader}>
                 <Text style={styles.resultsCount}>
-                    {businesses.length} {businesses.length === 1 ? 'negocio encontrado' : 'negocios encontrados'}
-                    {selectedFilters.distance && ` a menos de ${selectedFilters.distance} km`}
+                    {businesses.length}{' '}
+                    {businesses.length === 1
+                        ? 'negocio encontrado'
+                        : 'negocios encontrados'}
+                    {selectedFilters.distance &&
+                        ` a menos de ${selectedFilters.distance} km`}
                 </Text>
                 {userCoords && businesses.some(b => b.distance) && (
                     <Text style={styles.resultsNote}>
@@ -55,7 +83,11 @@ export default function StoresList({ businesses, userCoords, selectedFilters, on
                         <View style={styles.businessFooter}>
                             {business.distance !== undefined && (
                                 <View style={styles.distanceInfo}>
-                                    <Ionicons name="location" size={14} color={colors.primary} />
+                                    <Ionicons
+                                        name="location"
+                                        size={14}
+                                        color={colors.primary}
+                                    />
                                     <Text style={styles.distanceText}>
                                         {formatDistance(business.distance)}
                                     </Text>
@@ -71,14 +103,16 @@ export default function StoresList({ businesses, userCoords, selectedFilters, on
 }
 
 StoresList.propTypes = {
-    businesses: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
-        _id: PropTypes.string,
-        name: PropTypes.string,
-        category: PropTypes.string,
-        distance: PropTypes.number,
-        profile_pic: PropTypes.string,
-    })).isRequired,
+    businesses: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.string,
+            _id: PropTypes.string,
+            name: PropTypes.string,
+            category: PropTypes.string,
+            distance: PropTypes.number,
+            profile_pic: PropTypes.string,
+        })
+    ).isRequired,
     userCoords: PropTypes.shape({
         latitude: PropTypes.number,
         longitude: PropTypes.number,

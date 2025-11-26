@@ -95,15 +95,23 @@ export default function NewBusiness() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
             >
-                <ScrollView 
+                <ScrollView
                     style={{ flex: 1 }}
                     contentContainerStyle={{ flexGrow: 1 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[globalStyles.gradientContainer, { paddingVertical: 30 }]}>
-                        {/* Icono de negocio */}
+                    <View
+                        style={[
+                            globalStyles.gradientContainer,
+                            { paddingVertical: 30 },
+                        ]}
+                    >
                         <View style={globalStyles.logoContainer}>
-                            <Ionicons name="storefront" size={64} color="#FFFFFF" />
+                            <Ionicons
+                                name="storefront"
+                                size={64}
+                                color="#FFFFFF"
+                            />
                         </View>
 
                         <Text style={globalStyles.title}>
@@ -120,10 +128,10 @@ export default function NewBusiness() {
                             title="🏠 Volver al inicio"
                             variant="outline"
                             onPress={() => router.push('/home')}
-                            style={{ 
+                            style={{
                                 marginTop: 20,
                                 borderColor: 'rgba(255, 255, 255, 0.7)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                             }}
                         />
                     </View>
