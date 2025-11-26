@@ -4,6 +4,9 @@
         "slug": "pymap",
         "version": "1.0.0",
         "scheme": "pymap",
+        "host": "checkout",
+        "pathPrefix": "/congrats",
+        "category": ["BROWSABLE", "DEFAULT"],
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
@@ -24,10 +27,7 @@
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "permissions": [
-                "ACCESS_FINE_LOCATION",
-                "ACCESS_COARSE_LOCATION"
-            ],
+            "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
             "config": {
                 "googleMaps": {
                     "apiKey": "AIzaSyD5jyA0Asz6GD_d-ojqY09FXxfM4VnBkiU"
@@ -41,8 +41,6 @@
         "experiments": {
             "turboModules": true
         },
-        "plugins": [
-            "expo-router"
-        ]
+        "plugins": ["expo-router"]
     }
 }

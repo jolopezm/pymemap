@@ -6,7 +6,7 @@ import traceback
 import os
 import re
 from dotenv import load_dotenv
-from .routers import gmaps, users, auth, business, notifications, chat, reviews, bookings, reports
+from .routers import gmaps, users, auth, business, notifications, chat, reviews, bookings, reports, mercadopago, payment_callbacks, mercadopago_webhook
 from app.services.upload_images_to_gcp import ensure_gcp_credentials
 
 
@@ -59,6 +59,9 @@ app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 app.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
 app.include_router(reports.router, prefix="/reports", tags=["Reports"])
+app.include_router(mercadopago.router, prefix="/mercadopago", tags=["MercadoPago"])
+app.include_router(payment_callbacks.router, prefix="/payment", tags=["Payment Callbacks"])
+app.include_router(mercadopago_webhook.router, prefix="/mercadopago", tags=["MercadoPago Webhooks"])
 
 
 @app.on_event("startup")

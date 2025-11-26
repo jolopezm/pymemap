@@ -24,6 +24,8 @@ import { getBusiness } from '../api/business-service'
 import { createNotification } from '../api/notifications-service'
 import { getChatByParticipants, createChat } from '../api/chat-service'
 import logger from '../utils/logger'
+import { API_URL } from '../config/api'
+import EWBbutton from '../components/EWBbutton'
 
 export default function BookingDetail() {
     const params = useSearchParams()
@@ -40,6 +42,10 @@ export default function BookingDetail() {
     const [loading, setLoading] = React.useState(true)
     const [verificationCode, setVerificationCode] = React.useState('')
     const [isOwner, setIsOwner] = React.useState(false)
+    const [paymentUrl, setPaymentUrl] = React.useState(null)
+    const [loadingPayment, setLoadingPayment] = React.useState(false)
+
+    const fictitiousPrice = 5000
 
     React.useEffect(() => {
         let mounted = true
@@ -196,6 +202,59 @@ export default function BookingDetail() {
         }
     }
 
+    const handleCreatePayment = async () => {
+        try {
+            setLoadingPayment(true)
+            const bookingIdParam = booking?._id || booking?.id || bookingId
+            const url = `${API_URL}/mercadopago/create_preference/${fictitiousPrice}${bookingIdParam ? `?booking_id=${bookingIdParam}` : ''}`
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+
+            const data = await response.json()
+
+            console.log('📦 RESPUESTA COMPLETA DE MERCADOPAGO:')
+            console.log(JSON.stringify(data, null, 2))
+
+            if (
+                data.response &&
+                (data.response.init_point || data.response.sandbox_init_point)
+            ) {
+                const paymentLink =
+                    data.response.init_point || data.response.sandbox_init_point
+                console.log('✅ URL de pago:', paymentLink)
+                console.log('📋 Preference ID:', data.response.id)
+                console.log(
+                    '📌 External Reference (Booking ID):',
+                    data.response.external_reference
+                )
+                setPaymentUrl(paymentLink)
+
+                setTimeout(() => {
+                    alert(
+                        'Después de completar tu pago, cierra el navegador y regresa a la app. Serás redirigido automáticamente al home.'
+                    )
+                }, 1000)
+            } else {
+                console.error(
+                    '❌ Error: No se encontró init_point en la respuesta'
+                )
+                console.log('Respuesta recibida:', data)
+                alert('Error al crear la preferencia de pago')
+            }
+        } catch (error) {
+            console.error('❌ ERROR al crear preferencia:', error)
+            logger.error('Error creating payment preference:', error)
+            alert('Error al conectar con MercadoPago')
+        } finally {
+            setLoadingPayment(false)
+        }
+    }
+
     const handleChatPress = async () => {
         try {
             const currentUserId = user?.id || user?._id
@@ -314,6 +373,14 @@ export default function BookingDetail() {
                     </>
                 )}
 
+                <Text style={globalStyles.subtitle}>Precio del Servicio</Text>
+                <View style={styles.priceContainer}>
+                    <Text style={styles.priceText}>
+                        ${fictitiousPrice.toLocaleString('es-CL')}
+                    </Text>
+                    <Text style={styles.priceLabel}>CLP</Text>
+                </View>
+
                 {booking.requested_price != null && !isOwner && (
                     <>
                         <Text style={globalStyles.subtitle}>
@@ -381,6 +448,40 @@ export default function BookingDetail() {
                             </Text>
                         </View>
                     </>
+                )}
+
+                {!isOwner && booking.status === 'confirmed' && (
+                    <View style={{ marginBottom: 16 }}>
+                        <Text style={globalStyles.subtitle}>
+                            Pagar Servicio
+                        </Text>
+                        <Pressable
+                            onPress={handleCreatePayment}
+                            style={[
+                                styles.paymentButton,
+                                loadingPayment && { opacity: 0.5 },
+                            ]}
+                            disabled={loadingPayment}
+                        >
+                            <Ionicons
+                                name="card"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 8 }}
+                            />
+                            <Text style={styles.paymentButtonText}>
+                                {loadingPayment
+                                    ? 'Creando pago...'
+                                    : 'Pagar con MercadoPago'}
+                            </Text>
+                        </Pressable>
+
+                        {paymentUrl && (
+                            <View style={{ marginTop: 12 }}>
+                                <EWBbutton url={paymentUrl} />
+                            </View>
+                        )}
+                    </View>
                 )}
 
                 <Pressable
@@ -486,5 +587,41 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginLeft: 12,
         flex: 1,
+    },
+    priceContainer: {
+        backgroundColor: '#F0E6FF',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#6A4C93',
+    },
+    priceText: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#6A4C93',
+        marginRight: 8,
+    },
+    priceLabel: {
+        fontSize: 18,
+        color: '#6A4C93',
+        fontWeight: '600',
+    },
+    paymentButton: {
+        backgroundColor: '#009EE3',
+        borderRadius: 8,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+    },
+    paymentButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 })
