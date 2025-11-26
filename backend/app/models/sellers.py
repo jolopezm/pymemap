@@ -87,6 +87,9 @@ class BookingRequest(BaseModel):
     price: Optional[float] = Field(default=None, description="Precio base del servicio")
     requested_price: Optional[float] = Field(default=None, description="Precio solicitado por el vendedor")
     paid_at: Optional[str] = Field(default=None, description="Fecha y hora del pago")
+    payment_method: Optional[str] = Field(default=None, description="mercadopago, cash, etc")
+    payment_status: Optional[str] = Field(default="pending", description="pending, paid, failed")
+    paid_amount: Optional[float] = Field(default=None, description="Monto pagado")
     created_at: datetime = Field(default_factory=datetime.now)
 
 class BookingResponse(BaseModel):
@@ -101,6 +104,9 @@ class BookingResponse(BaseModel):
     price: Optional[float] = None
     requested_price: Optional[float] = None
     paid_at: Optional[str] = None
+    payment_method: Optional[str] = None
+    payment_status: Optional[str] = None
+    paid_amount: Optional[float] = None
     created_at: datetime
     
     class Config:

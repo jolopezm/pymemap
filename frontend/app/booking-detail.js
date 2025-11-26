@@ -42,10 +42,12 @@ export default function BookingDetail() {
     const [loading, setLoading] = React.useState(true)
     const [verificationCode, setVerificationCode] = React.useState('')
     const [isOwner, setIsOwner] = React.useState(false)
+    const [paymentMethod, setPaymentMethod] = React.useState(null) // 'mercadopago' | 'other'
+    const [customPrice, setCustomPrice] = React.useState('')
     const [paymentUrl, setPaymentUrl] = React.useState(null)
     const [loadingPayment, setLoadingPayment] = React.useState(false)
 
-    const fictitiousPrice = 5000
+    // const fictitiousPrice = 5000 // Removed fixed price
 
     React.useEffect(() => {
         let mounted = true
@@ -203,10 +205,19 @@ export default function BookingDetail() {
     }
 
     const handleCreatePayment = async () => {
+        if (
+            !customPrice ||
+            isNaN(parseInt(customPrice)) ||
+            parseInt(customPrice) <= 0
+        ) {
+            alert('Por favor ingresa un precio válido')
+            return
+        }
+
         try {
             setLoadingPayment(true)
             const bookingIdParam = booking?._id || booking?.id || bookingId
-            const url = `${API_URL}/mercadopago/create_preference/${fictitiousPrice}${bookingIdParam ? `?booking_id=${bookingIdParam}` : ''}`
+            const url = `${API_URL}/mercadopago/create_preference/${customPrice}${bookingIdParam ? `?booking_id=${bookingIdParam}` : ''}`
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -372,113 +383,133 @@ export default function BookingDetail() {
                         </Text>
                     </>
                 )}
-
-                <Text style={globalStyles.subtitle}>Precio del Servicio</Text>
-                <View style={styles.priceContainer}>
-                    <Text style={styles.priceText}>
-                        ${fictitiousPrice.toLocaleString('es-CL')}
-                    </Text>
-                    <Text style={styles.priceLabel}>CLP</Text>
-                </View>
-
-                {booking.requested_price != null && !isOwner && (
-                    <>
-                        <Text style={globalStyles.subtitle}>
-                            Tu Código de Verificación
-                        </Text>
-                        <View style={styles.codeContainer}>
-                            <Text style={styles.codeText}>
-                                {booking.requested_price}
-                            </Text>
-                            <Text style={styles.codeHint}>
-                                Muestra este código al vendedor cuando completes
-                                el servicio
-                            </Text>
-                        </View>
-                    </>
-                )}
-
-                {isOwner && booking.status === 'confirmed' && (
-                    <>
-                        <Text style={globalStyles.subtitle}>
-                            Verificar Servicio Completado
-                        </Text>
-                        <Text style={styles.instructionText}>
-                            Pide al cliente su código de 4 dígitos para
-                            confirmar que el servicio fue completado
-                        </Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="código"
-                            keyboardType="numeric"
-                            maxLength={4}
-                            value={verificationCode}
-                            onChangeText={setVerificationCode}
-                        />
-
-                        <Pressable
-                            style={styles.submitButton}
-                            onPress={handleVerifyCode}
-                            disabled={verificationCode.length !== 4}
-                        >
-                            <Text style={styles.submitButtonText}>
-                                Verificar Código
-                            </Text>
-                        </Pressable>
-                    </>
-                )}
-
-                {!isOwner && (
-                    <>
-                        <View style={styles.clientInfo}>
-                            <Ionicons
-                                name="information-circle"
-                                size={24}
-                                color="#6A4C93"
-                            />
-                            <Text style={styles.clientInfoText}>
-                                {booking.status === 'pending'
-                                    ? 'Esperando confirmación del vendedor'
-                                    : booking.status === 'confirmed'
-                                      ? 'Confirmada - Muestra tu código al completar el servicio'
-                                      : booking.status === 'completed'
-                                        ? '¡Servicio completado! No olvides calificar'
-                                        : 'Estado: ' +
-                                          getStatusText(booking.status)}
-                            </Text>
-                        </View>
-                    </>
-                )}
-
                 {!isOwner && booking.status === 'confirmed' && (
-                    <View style={{ marginBottom: 16 }}>
+                    <View style={{ marginBottom: 24 }}>
                         <Text style={globalStyles.subtitle}>
-                            Pagar Servicio
+                            Método de Pago
                         </Text>
-                        <Pressable
-                            onPress={handleCreatePayment}
-                            style={[
-                                styles.paymentButton,
-                                loadingPayment && { opacity: 0.5 },
-                            ]}
-                            disabled={loadingPayment}
-                        >
-                            <Ionicons
-                                name="card"
-                                size={20}
-                                color="#fff"
-                                style={{ marginRight: 8 }}
-                            />
-                            <Text style={styles.paymentButtonText}>
-                                {loadingPayment
-                                    ? 'Creando pago...'
-                                    : 'Pagar con MercadoPago'}
-                            </Text>
-                        </Pressable>
+                        <Text style={styles.selectionLabel}>Selecciona:</Text>
 
-                        {paymentUrl && (
-                            <View style={{ marginTop: 12 }}>
-                                <EWBbutton url={paymentUrl} />
+                        <View style={styles.paymentMethodContainer}>
+                            <Pressable
+                                style={[
+                                    styles.methodOption,
+                                    paymentMethod === 'mercadopago' &&
+                                        styles.methodOptionSelected,
+                                ]}
+                                onPress={() => setPaymentMethod('mercadopago')}
+                            >
+                                <Ionicons
+                                    name="card-outline"
+                                    size={24}
+                                    color={
+                                        paymentMethod === 'mercadopago'
+                                            ? '#6A4C93'
+                                            : '#666'
+                                    }
+                                />
+                                <Text
+                                    style={[
+                                        styles.methodText,
+                                        paymentMethod === 'mercadopago' &&
+                                            styles.methodTextSelected,
+                                    ]}
+                                >
+                                    MercadoPago
+                                </Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={[
+                                    styles.methodOption,
+                                    paymentMethod === 'other' &&
+                                        styles.methodOptionSelected,
+                                ]}
+                                onPress={() => setPaymentMethod('other')}
+                            >
+                                <Ionicons
+                                    name="cash-outline"
+                                    size={24}
+                                    color={
+                                        paymentMethod === 'other'
+                                            ? '#6A4C93'
+                                            : '#666'
+                                    }
+                                />
+                                <Text
+                                    style={[
+                                        styles.methodText,
+                                        paymentMethod === 'other' &&
+                                            styles.methodTextSelected,
+                                    ]}
+                                >
+                                    Otro Método
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        {paymentMethod === 'mercadopago' && (
+                            <View style={styles.paymentSection}>
+                                <Text style={styles.label}>
+                                    Ingresa el monto a pagar:
+                                </Text>
+                                <View style={styles.priceInputContainer}>
+                                    <Text style={styles.currencyPrefix}>$</Text>
+                                    <TextInput
+                                        style={styles.priceInput}
+                                        placeholder="0"
+                                        keyboardType="numeric"
+                                        value={customPrice.to}
+                                        onChangeText={setCustomPrice}
+                                    />
+                                    <Text style={styles.currencySuffix}>
+                                        CLP
+                                    </Text>
+                                </View>
+
+                                <Pressable
+                                    onPress={handleCreatePayment}
+                                    style={[
+                                        styles.paymentButton,
+                                        loadingPayment && { opacity: 0.5 },
+                                    ]}
+                                    disabled={loadingPayment}
+                                >
+                                    <Ionicons
+                                        name="card"
+                                        size={20}
+                                        color="#fff"
+                                        style={{ marginRight: 8 }}
+                                    />
+                                    <Text style={styles.paymentButtonText}>
+                                        {loadingPayment
+                                            ? 'Creando pago...'
+                                            : 'Pagar con MercadoPago'}
+                                    </Text>
+                                </Pressable>
+
+                                {paymentUrl && (
+                                    <View style={{ marginTop: 12 }}>
+                                        <EWBbutton url={paymentUrl} />
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        {paymentMethod === 'other' && (
+                            <View style={styles.codeSection}>
+                                <Text style={globalStyles.subtitle}>
+                                    Tu Código de Verificación
+                                </Text>
+                                <View style={styles.codeContainer}>
+                                    <Text style={styles.codeText}>
+                                        {booking.requested_price}
+                                    </Text>
+                                    <Text style={styles.codeHint}>
+                                        Muestra este código al vendedor cuando
+                                        completes el servicio
+                                    </Text>
+                                </View>
                             </View>
                         )}
                     </View>
@@ -623,5 +654,95 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    paymentMethodContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    methodOption: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+        marginHorizontal: 4,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 3.84,
+        elevation: 2,
+    },
+    methodOptionSelected: {
+        backgroundColor: '#F0E6FF',
+        borderColor: '#6A4C93',
+        borderWidth: 2,
+    },
+    methodText: {
+        marginTop: 8,
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+    methodTextSelected: {
+        color: '#6A4C93',
+        fontWeight: 'bold',
+    },
+    paymentSection: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#eee',
+        marginTop: 8,
+    },
+    label: {
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 12,
+        fontWeight: '500',
+    },
+    selectionLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 8,
+        marginLeft: 4,
+    },
+    priceInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        backgroundColor: '#F9F9F9',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        height: 60,
+    },
+    priceInput: {
+        flex: 1,
+        textAlign: 'right',
+        fontSize: 18,
+        color: '#000',
+        paddingHorizontal: 0,
+    },
+    currencyPrefix: {
+        fontSize: 18,
+        color: '#444',
+        marginRight: 6,
+    },
+    currencySuffix: {
+        fontSize: 16,
+        color: '#555',
+        marginLeft: 6,
+    },
+    codeSection: {
+        marginTop: 8,
     },
 })
