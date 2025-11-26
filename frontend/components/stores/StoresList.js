@@ -15,16 +15,9 @@ export default function StoresList({
 }) {
     const [owners, setOwners] = React.useState([])
 
-    //get the owners from the AsyncStorage @other_users_data where it is equal to the business owner id
     const getOwners = async () => {
         const ownerIds = businesses.map(b => b.owner)
         const otherUsersData = await AsyncStorage.getItem('@other_users_data')
-        /*
-        const otherUsers = JSON.parse(otherUsersData)
-        const owners = otherUsers.filter(u => ownerIds.includes(u.id))
-        setOwners(owners)
-        */
-        console.log(await AsyncStorage.getItem('@other_users_data'))
     }
 
     React.useEffect(() => {
@@ -45,7 +38,6 @@ export default function StoresList({
 
     return (
         <View style={styles.container}>
-            {/* Contador de resultados */}
             <View style={styles.resultsHeader}>
                 <Text style={styles.resultsCount}>
                     {businesses.length}{' '}
@@ -64,7 +56,6 @@ export default function StoresList({
                 )}
             </View>
 
-            {/* Lista de negocios */}
             {businesses.map((business, index) => (
                 <BusinessCard
                     key={business.id || business._id || index}

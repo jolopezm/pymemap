@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, FlatList, Pressable, ActivityIndicator } from 'react-native'
+import {
+    View,
+    Text,
+    FlatList,
+    Pressable,
+    ActivityIndicator,
+} from 'react-native'
 import { useRouter, useFocusEffect } from 'expo-router'
 import DropDownPicker from 'react-native-dropdown-picker'
 import Screen from '../../components/screen'
 import { getMyBookings } from '../../api/booking-service'
 import { Toast } from 'toastify-react-native'
-import { globalStyles, colors, spacing, borderRadius, shadows } from '../../styles/theme'
+import {
+    globalStyles,
+    colors,
+    spacing,
+    borderRadius,
+    shadows,
+} from '../../styles/theme'
 
 export default function MyBookings() {
     const router = useRouter()
     const [bookings, setBookings] = useState([])
     const [loading, setLoading] = useState(false)
-    const [filterStatus, setFilterStatus] = useState('all') // 'all' = mostrar todos
+    const [filterStatus, setFilterStatus] = useState('all')
     const [dropdownOpen, setDropdownOpen] = useState(false)
 
     useEffect(() => {
         fetchBookings()
     }, [])
 
-    // Refrescar cuando la pantalla recibe foco
     useFocusEffect(
         React.useCallback(() => {
             fetchBookings()
@@ -29,7 +40,6 @@ export default function MyBookings() {
         setLoading(true)
         try {
             const data = await getMyBookings()
-            // Ordenar por fecha (más reciente primero)
             const sorted = data.sort(
                 (a, b) => new Date(b.date) - new Date(a.date)
             )
@@ -77,7 +87,6 @@ export default function MyBookings() {
 
         return (
             <View style={styles.card}>
-                {/* Badge de estado */}
                 <View
                     style={[
                         styles.statusBadge,
@@ -91,7 +100,6 @@ export default function MyBookings() {
                     </Text>
                 </View>
 
-                {/* Información de la reserva */}
                 <View style={styles.cardContent}>
                     <Text style={styles.cardTitle}>
                         Negocio ID: {item.business_id}
@@ -121,7 +129,6 @@ export default function MyBookings() {
                         </View>
                     )}
 
-                    {/* Mensaje según estado */}
                     {item.status === 'pending' && (
                         <View style={styles.messageBox}>
                             <Text style={styles.messageText}>
@@ -182,7 +189,6 @@ export default function MyBookings() {
                         </View>
                     )}
 
-                    {/* Botón para ver detalle */}
                     <View style={styles.detailSection}>
                         <Pressable
                             style={styles.detailButton}
@@ -198,7 +204,6 @@ export default function MyBookings() {
                             </Text>
                         </Pressable>
 
-                        {/* Mostrar estado de pago si aplica */}
                         {item.status === 'payment_requested' && (
                             <Pressable
                                 style={styles.payButton}
@@ -215,7 +220,6 @@ export default function MyBookings() {
                             </Pressable>
                         )}
 
-                        {/* Botón para calificar si está completada */}
                         {item.status === 'completed' && (
                             <Pressable
                                 style={styles.rateButton}
@@ -255,7 +259,6 @@ export default function MyBookings() {
         { label: `❌ Canceladas (${cancelledCount})`, value: 'cancelled' },
     ]
 
-    // Filtrar bookings según el estado seleccionado
     const filteredBookings =
         filterStatus === 'all'
             ? bookings
@@ -271,7 +274,6 @@ export default function MyBookings() {
             <View style={styles.container}>
                 <Text style={globalStyles.title}>Mis Reservas</Text>
 
-                {/* Filtro con dropdown */}
                 <View style={styles.filterContainer}>
                     <Text style={styles.filterLabel}>Filtrar por estado:</Text>
                     <DropDownPicker
@@ -289,7 +291,6 @@ export default function MyBookings() {
                     />
                 </View>
 
-                {/* Lista de reservas */}
                 {filteredBookings.length === 0 && !loading ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📅</Text>

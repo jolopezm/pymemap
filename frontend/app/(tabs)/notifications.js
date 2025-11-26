@@ -38,7 +38,6 @@ export default function NotificationsScreen() {
         const businessId = notification.reference?.businessId
 
         if (action === 'rate_business' && businessId) {
-            // Navegar a la pantalla de calificación
             router.push({
                 pathname: '/rate-business',
                 params: {
@@ -48,7 +47,6 @@ export default function NotificationsScreen() {
                 },
             })
 
-            // Marcar notificación como leída
             if (markNotificationAsRead && notification.id) {
                 try {
                     await markNotificationAsRead(notification.id)
@@ -57,9 +55,7 @@ export default function NotificationsScreen() {
                     const sorted = sortNotifications(data)
                     setAllNotifications(sorted)
                     setNotifications(sorted)
-                } catch (error) {
-                    // Error manejado silenciosamente
-                }
+                } catch (error) {}
             }
         }
     }
@@ -91,23 +87,17 @@ export default function NotificationsScreen() {
                 await markNotificationAsRead(notificationId)
                 try {
                     await markNotificationReadLocally(notificationId)
-                } catch (e) {
-                    // Error manejado silenciosamente
-                }
+                } catch (e) {}
 
                 try {
                     await refreshNotifications()
-                } catch (e) {
-                    // Error manejado silenciosamente
-                }
+                } catch (e) {}
             } catch (err) {
                 try {
                     const fresh = await getNotifications(user._id)
                     setAllNotifications(fresh)
                     setNotifications(fresh)
-                } catch (e) {
-                    // Error manejado silenciosamente
-                }
+                } catch (e) {}
             }
         }
     }
@@ -182,7 +172,9 @@ export default function NotificationsScreen() {
             {user ? (
                 <>
                     {loading && (
-                        <View style={{ paddingVertical: 8, alignItems: 'center' }}>
+                        <View
+                            style={{ paddingVertical: 8, alignItems: 'center' }}
+                        >
                             <ActivityIndicator size="small" color="#9B59B6" />
                         </View>
                     )}
@@ -279,7 +271,6 @@ export default function NotificationsScreen() {
                                     {selectedNotification.message}
                                 </Text>
 
-                                {/* Botón para ver solicitud de servicio */}
                                 {selectedNotification.type ===
                                     'service_request' &&
                                     selectedNotification.reference
@@ -304,7 +295,6 @@ export default function NotificationsScreen() {
                                         </Pressable>
                                     )}
 
-                                {/* Botón para calificar servicio */}
                                 {selectedNotification.type ===
                                     'service_review' &&
                                     selectedNotification.reference
@@ -340,7 +330,6 @@ export default function NotificationsScreen() {
                                         </Pressable>
                                     )}
 
-                                {/* Botón para ver detalle de servicio pagado */}
                                 {selectedNotification.type ===
                                     'service_payment' &&
                                     selectedNotification.reference
@@ -365,7 +354,6 @@ export default function NotificationsScreen() {
                                         </Pressable>
                                     )}
 
-                                {/* Botón de calificar para notificaciones de reseñas */}
                                 {selectedNotification?.reference?.action ===
                                     'rate_business' && (
                                     <Pressable
@@ -403,7 +391,7 @@ export default function NotificationsScreen() {
                             </>
                         ) : null}
                     </DefaultModal>
-                </>  
+                </>
             ) : (
                 <Text style={globalStyles.subtitle}>
                     Please log in to view notifications.
